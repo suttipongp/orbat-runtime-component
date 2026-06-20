@@ -1,4 +1,5 @@
 using System.Data;
+using System.Text.Json;
 using System.Linq;
 using OrgHierarchy.Components;
 
@@ -6,6 +7,8 @@ namespace OrgHierarchy.Demo;
 
 public sealed partial class MainForm : Form
 {
+    private const string OrbatClipboardFormat = "OrgHierarchy.Demo.OrbatUnitFormat.v1";
+
     private DataTable? _orbatTable;
     private string? _orbatViewRootId;
     private int _newUnitCounter = 1;
@@ -13,6 +16,7 @@ public sealed partial class MainForm : Form
     public MainForm()
     {
         InitializeComponent();
+        KeyPreview = true;
 
         _showUniqueDesignationCheckBox.CheckedChanged += (_, _) =>
         {
@@ -26,10 +30,14 @@ public sealed partial class MainForm : Form
         _showBranchButton.Click += (_, _) => ShowSelectedBranch();
         _showParentButton.Click += (_, _) => ShowParentBranch();
         _showAllButton.Click += (_, _) => ShowAllUnits();
+        KeyDown += MainForm_KeyDown;
 
         _orbatContextMenu.Items.Add("Add unit under this unit", null, (_, _) => AddChildUnit());
         _orbatContextMenu.Items.Add("Edit unit", null, (_, _) => EditSelectedUnit());
         _orbatContextMenu.Items.Add("Delete unit", null, (_, _) => DeleteSelectedUnit());
+        _orbatContextMenu.Items.Add(new ToolStripSeparator());
+        _orbatContextMenu.Items.Add("Copy unit format", null, (_, _) => CopySelectedUnitFormat());
+        _orbatContextMenu.Items.Add("Paste unit format", null, (_, _) => PasteUnitFormatToSelectedUnit());
         _orbatContextMenu.Items.Add(new ToolStripSeparator());
         _orbatContextMenu.Items.Add("Move left", null, (_, _) => MoveSelectedUnitLeft());
         _orbatContextMenu.Items.Add("Move right", null, (_, _) => MoveSelectedUnitRight());
@@ -60,9 +68,26 @@ public sealed partial class MainForm : Form
         };
     }
 
+    private void MainForm_KeyDown(object? sender, KeyEventArgs args)
+    {
+        if (!args.Control || !args.Shift)
+            return;
+
+        if (args.KeyCode == Keys.C)
+        {
+            CopySelectedUnitFormat();
+            args.Handled = true;
+        }
+        else if (args.KeyCode == Keys.V)
+        {
+            PasteUnitFormatToSelectedUnit();
+            args.Handled = true;
+        }
+    }
+
     private DataTable GetOrbatTable()
     {
-        _orbatTable ??= CreateSampleOrbatTable();
+        _orbatTable ??= LoadOrbatTable();
         return _orbatTable;
     }
 
@@ -109,6 +134,7 @@ public sealed partial class MainForm : Form
             return;
 
         AddOrbatRow(GetOrbatTable(), form.Unit);
+        SaveOrbatTable();
         ReloadOrbatTable();
     }
 
@@ -130,6 +156,7 @@ public sealed partial class MainForm : Form
             return;
 
         UpdateOrbatRow(row, form.Unit);
+        SaveOrbatTable();
         ReloadOrbatTable();
     }
 
@@ -155,6 +182,7 @@ public sealed partial class MainForm : Form
             _orbatViewRootId = GetNullableString(FindOrbatRow(selected.Id)!, "ParentId");
 
         DeleteOrbatRows(selected.Id);
+        SaveOrbatTable();
         _propertyGrid.SelectedObject = null;
         ReloadOrbatTable();
     }
@@ -233,7 +261,102 @@ public sealed partial class MainForm : Form
         var currentSortOrder = Convert.ToInt32(siblings[index]["SortOrder"]);
         siblings[index]["SortOrder"] = Convert.ToInt32(siblings[targetIndex]["SortOrder"]);
         siblings[targetIndex]["SortOrder"] = currentSortOrder;
+        SaveOrbatTable();
         ReloadOrbatTable();
+    }
+
+    private void CopySelectedUnitFormat()
+    {
+        var selected = _orbatChartView.SelectedUnit;
+        if (selected == null)
+        {
+            MessageBox.Show(this, "Please select a unit to copy.", "Copy Unit Format", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        var format = OrbatUnitFormat.FromRecord(selected);
+        var json = JsonSerializer.Serialize(format, new JsonSerializerOptions { WriteIndented = true });
+        var data = new DataObject();
+        data.SetData(OrbatClipboardFormat, json);
+        data.SetText(json);
+        Clipboard.SetDataObject(data, true);
+    }
+
+    private void PasteUnitFormatToSelectedUnit()
+    {
+        var selected = _orbatChartView.SelectedUnit;
+        if (selected == null)
+        {
+            MessageBox.Show(this, "Please select a target unit first.", "Paste Unit Format", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        if (!TryReadClipboardFormat(out var format))
+        {
+            MessageBox.Show(this, "Clipboard does not contain an ORBAT unit format.", "Paste Unit Format", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        var row = FindOrbatRow(selected.Id);
+        if (row == null)
+            return;
+
+        ApplyFormat(row, format);
+        SaveOrbatTable();
+        ReloadOrbatTable();
+    }
+
+    private static bool TryReadClipboardFormat(out OrbatUnitFormat format)
+    {
+        format = new OrbatUnitFormat();
+        string? text = null;
+
+        var data = Clipboard.GetDataObject();
+        if (data != null && data.GetDataPresent(OrbatClipboardFormat))
+            text = Convert.ToString(data.GetData(OrbatClipboardFormat));
+
+        if (string.IsNullOrWhiteSpace(text) && Clipboard.ContainsText())
+            text = Clipboard.GetText();
+
+        if (string.IsNullOrWhiteSpace(text))
+            return false;
+
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<OrbatUnitFormat>(text);
+            if (parsed != null && parsed.IsUsable)
+            {
+                format = parsed;
+                return true;
+            }
+        }
+        catch (JsonException)
+        {
+        }
+
+        if (OrbatSidcParser.TryParse(text, out var sidc))
+        {
+            format = OrbatUnitFormat.FromSidc(sidc.Sidc);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static void ApplyFormat(DataRow row, OrbatUnitFormat format)
+    {
+        row["Affiliation"] = format.Affiliation;
+        row["Echelon"] = format.Echelon;
+        row["UnitType"] = format.UnitType;
+        row["Sidc"] = format.Sidc;
+        row["SymbolText"] = format.SymbolText;
+        row["Headquarters"] = format.Headquarters;
+        row["TaskForce"] = format.TaskForce;
+        row["PlannedAnticipated"] = format.PlannedAnticipated;
+        row["StackCount"] = Math.Max(1, Math.Min(6, format.StackCount));
+        row["ReinforcedReduced"] = format.ReinforcedReduced;
+        row["Reinforced"] = format.ReinforcedReduced is nameof(OrbatReinforcedReduced.Reinforced) or nameof(OrbatReinforcedReduced.ReinforcedAndReduced);
+        row["Reduced"] = format.ReinforcedReduced is nameof(OrbatReinforcedReduced.Reduced) or nameof(OrbatReinforcedReduced.ReinforcedAndReduced);
     }
 
     private List<DataRow> GetSiblingRows(string? parentId)
@@ -518,6 +641,65 @@ public sealed partial class MainForm : Form
         return reduced ? OrbatReinforcedReduced.Reduced : OrbatReinforcedReduced.NotApplicable;
     }
 
+    private static DataTable LoadOrbatTable()
+    {
+        var path = GetOrbatDataPath();
+        if (!File.Exists(path))
+            return CreateSampleOrbatTable();
+
+        try
+        {
+            var table = new DataTable("Orbat");
+            table.ReadXml(path);
+            EnsureOrbatColumns(table);
+            return table;
+        }
+        catch (Exception)
+        {
+            return CreateSampleOrbatTable();
+        }
+    }
+
+    private void SaveOrbatTable()
+    {
+        if (_orbatTable == null)
+            return;
+
+        var path = GetOrbatDataPath();
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        _orbatTable.WriteXml(path, XmlWriteMode.WriteSchema);
+    }
+
+    private static string GetOrbatDataPath()
+    {
+        return Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "OrgHierarchy.Demo",
+            "orbat.xml");
+    }
+
+    private static void EnsureOrbatColumns(DataTable table)
+    {
+        if (!table.Columns.Contains("Sidc"))
+            table.Columns.Add("Sidc", typeof(string));
+        if (!table.Columns.Contains("SymbolText"))
+            table.Columns.Add("SymbolText", typeof(string));
+        if (!table.Columns.Contains("PlannedAnticipated"))
+            table.Columns.Add("PlannedAnticipated", typeof(bool));
+        if (!table.Columns.Contains("StackCount"))
+            table.Columns.Add("StackCount", typeof(int));
+        if (!table.Columns.Contains("ReinforcedReduced"))
+            table.Columns.Add("ReinforcedReduced", typeof(string));
+
+        foreach (DataRow row in table.Rows)
+        {
+            if (row["StackCount"] == DBNull.Value)
+                row["StackCount"] = 1;
+            if (row["ReinforcedReduced"] == DBNull.Value || string.IsNullOrWhiteSpace(Convert.ToString(row["ReinforcedReduced"])))
+                row["ReinforcedReduced"] = GetReinforcedReducedValue(ReadBoolean(row, "Reinforced"), ReadBoolean(row, "Reduced"));
+        }
+    }
+
     private static DataTable CreateSampleHierarchyTable()
     {
         var table = new DataTable("OrgHierarchy");
@@ -703,4 +885,55 @@ public sealed partial class MainForm : Form
         return reduced ? nameof(OrbatReinforcedReduced.Reduced) : nameof(OrbatReinforcedReduced.NotApplicable);
     }
 
+}
+
+internal sealed class OrbatUnitFormat
+{
+    public string Affiliation { get; set; } = nameof(OrbatAffiliation.Friend);
+    public string Echelon { get; set; } = nameof(OrbatEchelon.Unspecified);
+    public string UnitType { get; set; } = nameof(OrbatUnitType.Unspecified);
+    public string Sidc { get; set; } = string.Empty;
+    public string SymbolText { get; set; } = string.Empty;
+    public bool Headquarters { get; set; }
+    public bool TaskForce { get; set; }
+    public bool PlannedAnticipated { get; set; }
+    public int StackCount { get; set; } = 1;
+    public string ReinforcedReduced { get; set; } = nameof(OrbatReinforcedReduced.NotApplicable);
+
+    public bool IsUsable =>
+        !string.IsNullOrWhiteSpace(Affiliation)
+        && !string.IsNullOrWhiteSpace(Echelon)
+        && !string.IsNullOrWhiteSpace(UnitType);
+
+    public static OrbatUnitFormat FromRecord(OrbatUnitRecord unit)
+    {
+        return new OrbatUnitFormat
+        {
+            Affiliation = unit.Affiliation.ToString(),
+            Echelon = unit.Echelon.ToString(),
+            UnitType = unit.UnitType.ToString(),
+            Sidc = unit.Sidc ?? string.Empty,
+            SymbolText = unit.SymbolText ?? string.Empty,
+            Headquarters = unit.Headquarters,
+            TaskForce = unit.TaskForce,
+            PlannedAnticipated = unit.PlannedAnticipated,
+            StackCount = unit.StackCount,
+            ReinforcedReduced = unit.ReinforcedReduced.ToString()
+        };
+    }
+
+    public static OrbatUnitFormat FromSidc(string sidc)
+    {
+        var parsed = OrbatSidcParser.Parse(sidc);
+        return new OrbatUnitFormat
+        {
+            Affiliation = (parsed.Affiliation ?? OrbatAffiliation.Friend).ToString(),
+            Echelon = (parsed.Echelon ?? OrbatEchelon.Unspecified).ToString(),
+            UnitType = (parsed.UnitType ?? OrbatUnitType.Unspecified).ToString(),
+            Sidc = parsed.Sidc,
+            Headquarters = parsed.Headquarters ?? false,
+            TaskForce = parsed.TaskForce ?? false,
+            PlannedAnticipated = parsed.PlannedAnticipated ?? false
+        };
+    }
 }
