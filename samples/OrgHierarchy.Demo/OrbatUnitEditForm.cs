@@ -53,18 +53,35 @@ internal sealed class OrbatUnitEditForm : Form
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
-        ClientSize = new Size(430, 594);
+        ClientSize = new Size(460, 640);
         Padding = new Padding(12);
+
+        var root = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 2
+        };
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 48));
+
+        var scrollPanel = new Panel
+        {
+            Dock = DockStyle.Fill,
+            AutoScroll = true
+        };
 
         var layout = new TableLayoutPanel
         {
-            Dock = DockStyle.Fill,
+            Dock = DockStyle.Top,
             ColumnCount = 2,
-            RowCount = 17,
-            AutoSize = false
+            RowCount = 16,
+            AutoSize = true
         };
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 136));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        for (var row = 0; row < layout.RowCount; row++)
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
 
         AddTextRow(layout, "Id", _idTextBox, unit.Id, 0, true);
         AddTextRow(layout, "Parent Id", _parentIdTextBox, unit.ParentId ?? string.Empty, 1, true);
@@ -82,9 +99,11 @@ internal sealed class OrbatUnitEditForm : Form
         AddCheckRow(layout, _plannedAnticipatedCheckBox, "Planned/Anticipated", unit.PlannedAnticipated, 13);
         AddNumberRow(layout, "Stack count", _stackCountInput, unit.StackCount, 1, 6, 14);
         AddNumberRow(layout, "Sort order", _sortOrderInput, unit.SortOrder, 0, 100000, 15);
-        AddButtonRow(layout, 16);
+        AddButtonRow(root, 1);
 
-        Controls.Add(layout);
+        scrollPanel.Controls.Add(layout);
+        root.Controls.Add(scrollPanel, 0, 0);
+        Controls.Add(root);
 
         AcceptButton = _okButton;
         CancelButton = _cancelButton;
@@ -188,7 +207,8 @@ internal sealed class OrbatUnitEditForm : Form
         panel.Controls.Add(_okButton);
         panel.Controls.Add(_cancelButton);
         layout.Controls.Add(panel, 0, row);
-        layout.SetColumnSpan(panel, 2);
+        if (layout.ColumnCount > 1)
+            layout.SetColumnSpan(panel, 2);
     }
 
     private static void AddLabel(TableLayoutPanel layout, string text, int row)
