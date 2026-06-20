@@ -119,12 +119,13 @@ public sealed partial class MainForm : Form
         }
 
         var childEchelon = GetChildEchelon(parent.Echelon);
+        var draftId = CreateNewUnitId(childEchelon, OrbatUnitType.Infantry);
         var draft = new OrbatUnitDraft
         {
-            Id = CreateNewUnitId(childEchelon, OrbatUnitType.Infantry),
+            Id = draftId,
             ParentId = parent.Id,
-            Name = "New Unit",
-            ShortName = "New Unit",
+            Name = draftId,
+            ShortName = draftId,
             UniqueDesignation = string.Empty,
             Affiliation = parent.Affiliation,
             Echelon = childEchelon,
@@ -146,7 +147,13 @@ public sealed partial class MainForm : Form
         if (!ValidateParentChange(form.Unit))
             return;
 
-        form.Unit.Id = CreateNewUnitId(form.Unit.Echelon, form.Unit.UnitType);
+        var savedId = CreateNewUnitId(form.Unit.Echelon, form.Unit.UnitType);
+        if (ShouldUseGeneratedUnitName(form.Unit.Name, form.Unit.Id))
+            form.Unit.Name = savedId;
+        if (ShouldUseGeneratedUnitName(form.Unit.ShortName, form.Unit.Id))
+            form.Unit.ShortName = savedId;
+
+        form.Unit.Id = savedId;
         if (!TryAddOrbatRow(GetOrbatTable(), form.Unit, "Add Unit"))
             return;
 
@@ -828,6 +835,13 @@ public sealed partial class MainForm : Form
         };
     }
 
+    private static bool ShouldUseGeneratedUnitName(string value, string currentId)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            || value.Equals("New Unit", StringComparison.OrdinalIgnoreCase)
+            || value.Equals(currentId, StringComparison.OrdinalIgnoreCase);
+    }
+
     private int GetNextSortOrder(string parentId)
     {
         var siblingOrders = GetOrbatTable()
@@ -1427,8 +1441,8 @@ internal sealed class OrbatUnitTemplate
         {
             Id = newId,
             ParentId = parentId,
-            Name = Name,
-            ShortName = ShortName,
+            Name = ShouldUseGeneratedUnitName(Name, Id) ? newId : Name,
+            ShortName = ShouldUseGeneratedUnitName(ShortName, Id) ? newId : ShortName,
             UniqueDesignation = UniqueDesignation,
             Affiliation = ParseEnum(Affiliation, OrbatAffiliation.Friend),
             Echelon = ParseEnum(Echelon, OrbatEchelon.Unspecified),
@@ -1496,5 +1510,12 @@ internal sealed class OrbatUnitTemplate
 
         var normalized = value.Replace(" ", string.Empty).Replace("-", string.Empty).Replace("_", string.Empty);
         return Enum.TryParse(normalized, true, out parsed) ? parsed : fallback;
+    }
+
+    private static bool ShouldUseGeneratedUnitName(string value, string currentId)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            || value.Equals("New Unit", StringComparison.OrdinalIgnoreCase)
+            || value.Equals(currentId, StringComparison.OrdinalIgnoreCase);
     }
 }
