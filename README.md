@@ -170,3 +170,9 @@ You can rename the expected ORBAT columns through `IdColumn`, `ParentIdColumn`,
 `EchelonColumn`, `UnitTypeColumn`, `SidcColumn`, `SymbolTextColumn`, `HeadquartersColumn`, `TaskForceColumn`,
 `PlannedAnticipatedColumn`, `StackCountColumn`,
 `ReinforcedColumn`, `ReducedColumn`, and `SortColumn`.
+
+When `Sidc` is present, `OrbatChartView` can derive common MIL-STD-2525D-style
+values for affiliation, echelon, selected unit types, headquarters, task force,
+and planned/anticipated status. Explicit table columns still take precedence for
+the enum values, while boolean flags are enabled when either the table column or
+SIDC indicates them.

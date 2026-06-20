@@ -33,6 +33,7 @@ internal sealed class OrbatUnitEditForm : Form
     private readonly ComboBox _echelonComboBox = new();
     private readonly ComboBox _unitTypeComboBox = new();
     private readonly TextBox _sidcTextBox = new();
+    private readonly Button _applySidcButton = new();
     private readonly TextBox _symbolTextTextBox = new();
     private readonly ComboBox _reinforcedReducedComboBox = new();
     private readonly CheckBox _headquartersCheckBox = new();
@@ -73,7 +74,7 @@ internal sealed class OrbatUnitEditForm : Form
         AddComboRow(layout, "Affiliation", _affiliationComboBox, unit.Affiliation, 5);
         AddComboRow(layout, "Echelon", _echelonComboBox, unit.Echelon, 6);
         AddComboRow(layout, "Unit type", _unitTypeComboBox, unit.UnitType, 7);
-        AddTextRow(layout, "SIDC", _sidcTextBox, unit.Sidc, 8, false);
+        AddSidcRow(layout, unit.Sidc, 8);
         AddTextRow(layout, "Symbol text", _symbolTextTextBox, unit.SymbolText, 9, false);
         AddComboRow(layout, "Reinforced/reduced", _reinforcedReducedComboBox, unit.ReinforcedReduced, 10);
         AddCheckRow(layout, _headquartersCheckBox, "Headquarters", unit.Headquarters, 11);
@@ -98,6 +99,32 @@ internal sealed class OrbatUnitEditForm : Form
         textBox.ReadOnly = readOnly;
         textBox.Text = value;
         layout.Controls.Add(textBox, 1, row);
+    }
+
+    private void AddSidcRow(TableLayoutPanel layout, string value, int row)
+    {
+        AddLabel(layout, "SIDC", row);
+
+        var panel = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 2,
+            RowCount = 1,
+            Margin = Padding.Empty
+        };
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 92));
+
+        _sidcTextBox.Dock = DockStyle.Fill;
+        _sidcTextBox.Text = value;
+
+        _applySidcButton.Text = "Apply";
+        _applySidcButton.Dock = DockStyle.Fill;
+        _applySidcButton.Click += (_, _) => ApplySidc();
+
+        panel.Controls.Add(_sidcTextBox, 0, 0);
+        panel.Controls.Add(_applySidcButton, 1, 0);
+        layout.Controls.Add(panel, 1, row);
     }
 
     private static void AddComboRow<TEnum>(TableLayoutPanel layout, string label, ComboBox comboBox, TEnum value, int row)
@@ -206,6 +233,35 @@ internal sealed class OrbatUnitEditForm : Form
         };
 
         return true;
+    }
+
+    private void ApplySidc()
+    {
+        if (!OrbatSidcParser.TryParse(_sidcTextBox.Text, out var parsed))
+        {
+            MessageBox.Show(this, "SIDC must contain at least 20 digits.", "ORBAT Unit", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            _sidcTextBox.Focus();
+            return;
+        }
+
+        if (parsed.Affiliation.HasValue)
+            SelectComboValue(_affiliationComboBox, parsed.Affiliation.Value);
+        if (parsed.Echelon.HasValue)
+            SelectComboValue(_echelonComboBox, parsed.Echelon.Value);
+        if (parsed.UnitType.HasValue)
+            SelectComboValue(_unitTypeComboBox, parsed.UnitType.Value);
+        if (parsed.Headquarters.HasValue)
+            _headquartersCheckBox.Checked = parsed.Headquarters.Value;
+        if (parsed.TaskForce.HasValue)
+            _taskForceCheckBox.Checked = parsed.TaskForce.Value;
+        if (parsed.PlannedAnticipated.HasValue)
+            _plannedAnticipatedCheckBox.Checked = parsed.PlannedAnticipated.Value;
+    }
+
+    private static void SelectComboValue<TEnum>(ComboBox comboBox, TEnum value)
+        where TEnum : struct, Enum
+    {
+        comboBox.SelectedItem = value.ToString();
     }
 
     private static TEnum GetSelected<TEnum>(ComboBox comboBox, TEnum fallback)

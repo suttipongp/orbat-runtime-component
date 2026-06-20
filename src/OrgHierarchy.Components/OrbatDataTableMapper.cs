@@ -39,6 +39,11 @@ public static class OrbatDataTableMapper
             var legacyReinforced = ReadBoolean(row, reinforcedColumn);
             var legacyReduced = ReadBoolean(row, reducedColumn);
             var reinforcedReduced = ReadReinforcedReduced(row, reinforcedReducedColumn, legacyReinforced, legacyReduced);
+            var sidc = ReadOptionalString(row, sidcColumn);
+            var sidcParts = OrbatSidcParser.Parse(sidc);
+            var affiliationText = ReadString(row, affiliationColumn);
+            var echelonText = ReadString(row, echelonColumn);
+            var unitTypeText = ReadString(row, unitTypeColumn);
 
             records.Add(new OrbatUnitRecord
             {
@@ -47,14 +52,14 @@ public static class OrbatDataTableMapper
                 Name = ReadString(row, nameColumn),
                 ShortName = ReadOptionalString(row, shortNameColumn),
                 UniqueDesignation = ReadOptionalString(row, uniqueDesignationColumn),
-                Affiliation = ReadEnum(row, affiliationColumn, OrbatAffiliation.Friend),
-                Echelon = ReadEnum(row, echelonColumn, OrbatEchelon.Battalion),
-                UnitType = ReadUnitType(row, unitTypeColumn),
-                Sidc = ReadOptionalString(row, sidcColumn),
+                Affiliation = ReadEnum(affiliationText, sidcParts.Affiliation ?? OrbatAffiliation.Friend),
+                Echelon = ReadEnum(echelonText, sidcParts.Echelon ?? OrbatEchelon.Battalion),
+                UnitType = ReadUnitType(unitTypeText, sidcParts.UnitType ?? OrbatUnitType.Unspecified),
+                Sidc = sidc,
                 SymbolText = ReadOptionalString(row, symbolTextColumn),
-                Headquarters = ReadBoolean(row, headquartersColumn),
-                TaskForce = ReadBoolean(row, taskForceColumn),
-                PlannedAnticipated = ReadBoolean(row, plannedAnticipatedColumn),
+                Headquarters = ReadBoolean(row, headquartersColumn) || sidcParts.Headquarters == true,
+                TaskForce = ReadBoolean(row, taskForceColumn) || sidcParts.TaskForce == true,
+                PlannedAnticipated = ReadBoolean(row, plannedAnticipatedColumn) || sidcParts.PlannedAnticipated == true,
                 StackCount = Math.Max(1, Math.Min(6, ReadInteger(row, stackCountColumn))),
                 ReinforcedReduced = reinforcedReduced,
                 Reinforced = reinforcedReduced == OrbatReinforcedReduced.Reinforced || reinforcedReduced == OrbatReinforcedReduced.ReinforcedAndReduced,
@@ -86,20 +91,18 @@ public static class OrbatDataTableMapper
         return string.IsNullOrWhiteSpace(value) ? null : value;
     }
 
-    private static TEnum ReadEnum<TEnum>(DataRow row, string columnName, TEnum fallback)
+    private static TEnum ReadEnum<TEnum>(string value, TEnum fallback)
         where TEnum : struct
     {
-        var value = ReadString(row, columnName);
         return Enum.TryParse(value, true, out TEnum parsed) ? parsed : fallback;
     }
 
-    private static OrbatUnitType ReadUnitType(DataRow row, string columnName)
+    private static OrbatUnitType ReadUnitType(string value, OrbatUnitType fallback)
     {
-        var value = ReadString(row, columnName);
         if (value.Equals("Unknown", StringComparison.OrdinalIgnoreCase))
             return OrbatUnitType.Unspecified;
 
-        return Enum.TryParse(value, true, out OrbatUnitType parsed) ? parsed : OrbatUnitType.Unspecified;
+        return Enum.TryParse(value, true, out OrbatUnitType parsed) ? parsed : fallback;
     }
 
     private static bool ReadBoolean(DataRow row, string columnName)
