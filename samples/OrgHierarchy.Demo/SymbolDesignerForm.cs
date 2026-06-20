@@ -42,6 +42,7 @@ public sealed class SymbolDesignerForm : Form
         };
 
         var loadButton = CreateButton("Load reference", LoadReferenceImage);
+        var loadClipboardButton = CreateButton("Load clipboard", LoadReferenceFromClipboard);
         var undoButton = CreateButton("Undo", () => _canvas.Undo());
         var clearButton = CreateButton("Clear", () => _canvas.ClearCommands());
         var airDefenseButton = CreateButton("Air defense arc", AddAirDefenseArc);
@@ -59,6 +60,7 @@ public sealed class SymbolDesignerForm : Form
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Tool", Margin = new Padding(14, 6, 4, 0) });
         toolbar.Controls.Add(_toolComboBox);
         toolbar.Controls.Add(loadButton);
+        toolbar.Controls.Add(loadClipboardButton);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Reference", Margin = new Padding(14, 6, 4, 0) });
         toolbar.Controls.Add(_referenceOpacityTrackBar);
         toolbar.Controls.Add(undoButton);
@@ -142,6 +144,24 @@ public sealed class SymbolDesignerForm : Form
         _canvas.LoadReferenceImage(dialog.FileName);
     }
 
+    private void LoadReferenceFromClipboard()
+    {
+        if (!Clipboard.ContainsImage())
+        {
+            MessageBox.Show(this, "Clipboard does not contain an image.", "Symbol Designer", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        var image = Clipboard.GetImage();
+        if (image == null)
+        {
+            MessageBox.Show(this, "Clipboard image could not be loaded.", "Symbol Designer", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        _canvas.LoadReferenceImage(image);
+    }
+
     private void AddAirDefenseArc()
     {
         _canvas.AddCommand(SymbolDrawCommand.AirDefenseArc());
@@ -212,6 +232,13 @@ internal sealed class SymbolDesignerCanvas : Control
     {
         _referenceImage?.Dispose();
         _referenceImage = new Bitmap(fileName);
+        Invalidate();
+    }
+
+    public void LoadReferenceImage(Image image)
+    {
+        _referenceImage?.Dispose();
+        _referenceImage = new Bitmap(image);
         Invalidate();
     }
 
