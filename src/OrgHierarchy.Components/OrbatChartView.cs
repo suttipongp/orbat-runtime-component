@@ -655,8 +655,8 @@ public sealed class OrbatChartView : UserControl
                 graphics.FillEllipse(brush, icon.Left + icon.Width / 2f - 12, icon.Top + icon.Height / 2f - 12, 24, 24);
                 break;
             case OrbatUnitType.AirDefense:
-                graphics.DrawArc(pen, icon, 200, 140);
-                graphics.DrawLine(pen, icon.Left + icon.Width / 2f, icon.Top + 4, icon.Left + icon.Width / 2f, icon.Bottom);
+                var airDefenseArc = new RectangleF(bounds.Left + 12f, bounds.Bottom - 22f, bounds.Width - 24f, 24f);
+                graphics.DrawArc(pen, airDefenseArc, 200, 140);
                 break;
             case OrbatUnitType.Aviation:
             case OrbatUnitType.Air:
