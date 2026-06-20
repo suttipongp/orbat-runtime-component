@@ -12,7 +12,6 @@ public sealed partial class MainForm : Form
 
     private DataTable? _orbatTable;
     private string? _orbatViewRootId;
-    private int _newUnitCounter = 1;
 
     public MainForm()
     {
@@ -119,17 +118,18 @@ public sealed partial class MainForm : Form
             return;
         }
 
+        var childEchelon = GetChildEchelon(parent.Echelon);
         var draft = new OrbatUnitDraft
         {
-            Id = CreateNewUnitId(),
+            Id = CreateNewUnitId(childEchelon, OrbatUnitType.Infantry),
             ParentId = parent.Id,
             Name = "New Unit",
             ShortName = "New Unit",
             UniqueDesignation = string.Empty,
             Affiliation = parent.Affiliation,
-            Echelon = GetChildEchelon(parent.Echelon),
+            Echelon = childEchelon,
             UnitType = OrbatUnitType.Infantry,
-            Sidc = OrbatSidcParser.Compose(parent.Affiliation, GetChildEchelon(parent.Echelon), OrbatUnitType.Infantry, false, false, false),
+            Sidc = OrbatSidcParser.Compose(parent.Affiliation, childEchelon, OrbatUnitType.Infantry, false, false, false),
             SymbolText = string.Empty,
             Headquarters = false,
             TaskForce = false,
@@ -146,6 +146,7 @@ public sealed partial class MainForm : Form
         if (!ValidateParentChange(form.Unit))
             return;
 
+        form.Unit.Id = CreateNewUnitId(form.Unit.Echelon, form.Unit.UnitType);
         AddOrbatRow(GetOrbatTable(), form.Unit);
         SaveOrbatTable();
         ReloadOrbatTable();
@@ -385,7 +386,7 @@ public sealed partial class MainForm : Form
 
         foreach (var unit in structure.Units)
         {
-            var newId = CreateNewUnitId();
+            var newId = CreateNewUnitId(ParseEnum(unit.Echelon, OrbatEchelon.Unspecified), ParseUnitType(unit.UnitType));
             idMap[unit.Id] = newId;
 
             var parentId = !string.IsNullOrWhiteSpace(unit.ParentId) && idMap.TryGetValue(unit.ParentId, out var mappedParentId)
@@ -750,18 +751,71 @@ public sealed partial class MainForm : Form
         return !string.IsNullOrWhiteSpace(_orbatViewRootId) && GetSubtreeIds(rootId).Contains(_orbatViewRootId);
     }
 
-    private string CreateNewUnitId()
+    private string CreateNewUnitId(OrbatEchelon echelon, OrbatUnitType unitType)
     {
         var table = GetOrbatTable();
+        var prefix = $"{GetEchelonCode(echelon)}-{GetUnitTypeCode(unitType)}";
+        var serial = 1;
         string id;
         do
         {
-            id = $"NEW-{_newUnitCounter:000}";
-            _newUnitCounter++;
+            id = $"{prefix}-{serial:000}";
+            serial++;
         }
         while (table.Rows.Cast<DataRow>().Any(row => string.Equals(Convert.ToString(row["Id"]), id, StringComparison.OrdinalIgnoreCase)));
 
         return id;
+    }
+
+    private static string GetEchelonCode(OrbatEchelon echelon)
+    {
+        return echelon switch
+        {
+            OrbatEchelon.Team => "TM",
+            OrbatEchelon.Squad => "SQD",
+            OrbatEchelon.Section => "SEC",
+            OrbatEchelon.Platoon => "PLT",
+            OrbatEchelon.Company => "CO",
+            OrbatEchelon.Battalion => "BN",
+            OrbatEchelon.Regiment => "REG",
+            OrbatEchelon.Brigade => "BDE",
+            OrbatEchelon.Division => "DIV",
+            OrbatEchelon.Corps => "CORPS",
+            OrbatEchelon.Army => "ARMY",
+            OrbatEchelon.ArmyGroup => "AG",
+            OrbatEchelon.Region => "RGN",
+            OrbatEchelon.Command => "CMD",
+            _ => "UNIT"
+        };
+    }
+
+    private static string GetUnitTypeCode(OrbatUnitType unitType)
+    {
+        return unitType switch
+        {
+            OrbatUnitType.Headquarters => "HQ",
+            OrbatUnitType.Infantry => "INF",
+            OrbatUnitType.Armor => "ARM",
+            OrbatUnitType.MechanizedInfantry => "MECH",
+            OrbatUnitType.Artillery => "ARTY",
+            OrbatUnitType.AirDefense => "AD",
+            OrbatUnitType.Aviation => "AVN",
+            OrbatUnitType.Engineer => "ENG",
+            OrbatUnitType.Reconnaissance => "RECON",
+            OrbatUnitType.Signal => "SIG",
+            OrbatUnitType.MilitaryPolice => "MP",
+            OrbatUnitType.Medical => "MED",
+            OrbatUnitType.Logistics => "LOG",
+            OrbatUnitType.Maintenance => "MAINT",
+            OrbatUnitType.Transportation => "TRANS",
+            OrbatUnitType.SpecialOperations => "SOF",
+            OrbatUnitType.Naval => "NAV",
+            OrbatUnitType.Air => "AIR",
+            OrbatUnitType.Cyber => "CYB",
+            OrbatUnitType.Intelligence => "INT",
+            OrbatUnitType.PsychologicalOperations => "PSYOP",
+            _ => "GEN"
+        };
     }
 
     private int GetNextSortOrder(string parentId)
