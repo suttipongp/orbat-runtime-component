@@ -26,11 +26,13 @@ internal sealed class OrbatParentOption
 {
     public string? Id { get; }
     public string DisplayText { get; }
+    public OrbatEchelon? Echelon { get; }
 
-    public OrbatParentOption(string? id, string displayText)
+    public OrbatParentOption(string? id, string displayText, OrbatEchelon? echelon = null)
     {
         Id = id;
         DisplayText = displayText;
+        Echelon = echelon;
     }
 
     public override string ToString()
@@ -62,6 +64,7 @@ internal sealed class OrbatUnitEditForm : Form
     private readonly NumericUpDown _sortOrderInput = new();
     private readonly Button _okButton = new();
     private readonly Button _cancelButton = new();
+    private List<OrbatParentOption> _parentOptions = new();
     private bool _applyingValues;
     private bool _fieldsChangedAfterSidc;
 
@@ -105,7 +108,7 @@ internal sealed class OrbatUnitEditForm : Form
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
 
         AddTextRow(layout, "Id", _idTextBox, unit.Id, 0, true);
-        AddParentRow(layout, unit.ParentId, parentOptions, 1);
+        AddParentRow(layout, unit.ParentId, parentOptions, unit.Echelon, 1);
         AddTextRow(layout, "Name", _nameTextBox, unit.Name, 2, false);
         AddTextRow(layout, "Short name", _shortNameTextBox, unit.ShortName, 3, false);
         AddTextRow(layout, "Unique designation", _uniqueDesignationTextBox, unit.UniqueDesignation, 4, false);
@@ -128,6 +131,7 @@ internal sealed class OrbatUnitEditForm : Form
         Controls.Add(root);
 
         WireSourceTracking();
+        RefreshParentOptions(GetSelectedParentId(), GetSelected(_echelonComboBox, unit.Echelon));
         UpdateSidcStatus();
         AcceptButton = _okButton;
         CancelButton = _cancelButton;
@@ -144,18 +148,17 @@ internal sealed class OrbatUnitEditForm : Form
         layout.Controls.Add(textBox, 1, row);
     }
 
-    private void AddParentRow(TableLayoutPanel layout, string? parentId, IEnumerable<OrbatParentOption>? parentOptions, int row)
+    private void AddParentRow(TableLayoutPanel layout, string? parentId, IEnumerable<OrbatParentOption>? parentOptions, OrbatEchelon currentEchelon, int row)
     {
         AddLabel(layout, "Parent unit", row);
         _parentComboBox.Dock = DockStyle.Fill;
         _parentComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
 
-        var options = (parentOptions ?? new[] { new OrbatParentOption(null, "(Root / no parent)") }).ToList();
-        if (options.All(option => option.Id != null))
-            options.Insert(0, new OrbatParentOption(null, "(Root / no parent)"));
+        _parentOptions = (parentOptions ?? new[] { new OrbatParentOption(null, "(Root / no parent)") }).ToList();
+        if (_parentOptions.All(option => option.Id != null))
+            _parentOptions.Insert(0, new OrbatParentOption(null, "(Root / no parent)"));
 
-        _parentComboBox.Items.AddRange(options.Cast<object>().ToArray());
-        _parentComboBox.SelectedItem = options.FirstOrDefault(option => string.Equals(option.Id, parentId, StringComparison.OrdinalIgnoreCase)) ?? options[0];
+        RefreshParentOptions(parentId, currentEchelon);
         layout.Controls.Add(_parentComboBox, 1, row);
     }
 
@@ -344,6 +347,63 @@ internal sealed class OrbatUnitEditForm : Form
         return _parentComboBox.SelectedItem is OrbatParentOption option ? option.Id : null;
     }
 
+    private void RefreshParentOptions(string? preferredParentId, OrbatEchelon currentEchelon)
+    {
+        var filteredOptions = _parentOptions
+            .Where(option => option.Id == null || (option.Echelon.HasValue && IsHigherEchelon(option.Echelon.Value, currentEchelon)))
+            .ToList();
+
+        if (filteredOptions.Count == 0 || filteredOptions.All(option => option.Id != null))
+            filteredOptions.Insert(0, new OrbatParentOption(null, "(Root / no parent)"));
+
+        var selected = filteredOptions.FirstOrDefault(option => string.Equals(option.Id, preferredParentId, StringComparison.OrdinalIgnoreCase))
+            ?? filteredOptions[0];
+
+        _parentComboBox.BeginUpdate();
+        try
+        {
+            _parentComboBox.Items.Clear();
+            _parentComboBox.Items.AddRange(filteredOptions.Cast<object>().ToArray());
+            _parentComboBox.SelectedItem = selected;
+        }
+        finally
+        {
+            _parentComboBox.EndUpdate();
+        }
+    }
+
+    private static bool IsHigherEchelon(OrbatEchelon parentEchelon, OrbatEchelon childEchelon)
+    {
+        var parentRank = GetEchelonRank(parentEchelon);
+        var childRank = GetEchelonRank(childEchelon);
+        if (childRank == 0)
+            return parentRank > 0;
+
+        return parentRank > childRank;
+    }
+
+    private static int GetEchelonRank(OrbatEchelon echelon)
+    {
+        return echelon switch
+        {
+            OrbatEchelon.Team => 1,
+            OrbatEchelon.Squad => 2,
+            OrbatEchelon.Section => 3,
+            OrbatEchelon.Platoon => 4,
+            OrbatEchelon.Company => 5,
+            OrbatEchelon.Battalion => 6,
+            OrbatEchelon.Regiment => 7,
+            OrbatEchelon.Brigade => 8,
+            OrbatEchelon.Division => 9,
+            OrbatEchelon.Corps => 10,
+            OrbatEchelon.Army => 11,
+            OrbatEchelon.ArmyGroup => 12,
+            OrbatEchelon.Region => 13,
+            OrbatEchelon.Command => 14,
+            _ => 0
+        };
+    }
+
     private string GetSidcForSave(
         OrbatAffiliation affiliation,
         OrbatEchelon echelon,
@@ -427,7 +487,11 @@ internal sealed class OrbatUnitEditForm : Form
         };
 
         _affiliationComboBox.SelectedIndexChanged += (_, _) => MarkFieldsChanged();
-        _echelonComboBox.SelectedIndexChanged += (_, _) => MarkFieldsChanged();
+        _echelonComboBox.SelectedIndexChanged += (_, _) =>
+        {
+            RefreshParentOptions(GetSelectedParentId(), GetSelected(_echelonComboBox, OrbatEchelon.Unspecified));
+            MarkFieldsChanged();
+        };
         _unitTypeComboBox.SelectedIndexChanged += (_, _) => MarkFieldsChanged();
         _headquartersCheckBox.CheckedChanged += (_, _) => MarkFieldsChanged();
         _taskForceCheckBox.CheckedChanged += (_, _) => MarkFieldsChanged();

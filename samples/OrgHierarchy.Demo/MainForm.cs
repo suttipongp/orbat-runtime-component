@@ -141,7 +141,7 @@ public sealed partial class MainForm : Form
         if (form.ShowDialog(this) != DialogResult.OK)
             return;
 
-        if (!ValidateParentChange(form.Unit.Id, form.Unit.ParentId))
+        if (!ValidateParentChange(form.Unit))
             return;
 
         AddOrbatRow(GetOrbatTable(), form.Unit);
@@ -162,11 +162,12 @@ public sealed partial class MainForm : Form
         if (row == null)
             return;
 
-        using var form = new OrbatUnitEditForm(CreateDraft(row), false, CreateParentOptions(selected.Id));
+        var draft = CreateDraft(row);
+        using var form = new OrbatUnitEditForm(draft, false, CreateParentOptions(selected.Id));
         if (form.ShowDialog(this) != DialogResult.OK)
             return;
 
-        if (!ValidateParentChange(form.Unit.Id, form.Unit.ParentId))
+        if (!ValidateParentChange(form.Unit))
             return;
 
         UpdateOrbatRow(row, form.Unit);
@@ -637,19 +638,24 @@ public sealed partial class MainForm : Form
 
         foreach (var row in GetOrbatTable().Rows.Cast<DataRow>()
             .Where(row => !excludedIds.Contains(Convert.ToString(row["Id"]) ?? string.Empty))
-            .OrderBy(row => Convert.ToInt32(row["SortOrder"]))
+            .OrderByDescending(row => GetEchelonRank(ParseEnum(row["Echelon"], OrbatEchelon.Unspecified)))
+            .ThenBy(row => Convert.ToInt32(row["SortOrder"]))
             .ThenBy(row => Convert.ToString(row["Name"]), StringComparer.CurrentCultureIgnoreCase))
         {
             var id = Convert.ToString(row["Id"]) ?? string.Empty;
             var name = Convert.ToString(row["Name"]) ?? id;
-            options.Add(new OrbatParentOption(id, $"{name} ({id})"));
+            var echelon = ParseEnum(row["Echelon"], OrbatEchelon.Unspecified);
+            options.Add(new OrbatParentOption(id, $"{echelon} - {name} ({id})", echelon));
         }
 
         return options;
     }
 
-    private bool ValidateParentChange(string unitId, string? parentId)
+    private bool ValidateParentChange(OrbatUnitDraft unit)
     {
+        var unitId = unit.Id;
+        var parentId = unit.ParentId;
+
         if (string.IsNullOrWhiteSpace(parentId))
             return true;
 
@@ -671,7 +677,47 @@ public sealed partial class MainForm : Form
             return false;
         }
 
+        var parent = FindOrbatRow(parentId);
+        var parentEchelon = parent == null ? OrbatEchelon.Unspecified : ParseEnum(parent["Echelon"], OrbatEchelon.Unspecified);
+        if (!IsHigherEchelon(parentEchelon, unit.Echelon))
+        {
+            MessageBox.Show(this, "Parent unit must have a higher echelon than the current unit.", "ORBAT Unit", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return false;
+        }
+
         return true;
+    }
+
+    private static bool IsHigherEchelon(OrbatEchelon parentEchelon, OrbatEchelon childEchelon)
+    {
+        var parentRank = GetEchelonRank(parentEchelon);
+        var childRank = GetEchelonRank(childEchelon);
+        if (childRank == 0)
+            return parentRank > 0;
+
+        return parentRank > childRank;
+    }
+
+    private static int GetEchelonRank(OrbatEchelon echelon)
+    {
+        return echelon switch
+        {
+            OrbatEchelon.Team => 1,
+            OrbatEchelon.Squad => 2,
+            OrbatEchelon.Section => 3,
+            OrbatEchelon.Platoon => 4,
+            OrbatEchelon.Company => 5,
+            OrbatEchelon.Battalion => 6,
+            OrbatEchelon.Regiment => 7,
+            OrbatEchelon.Brigade => 8,
+            OrbatEchelon.Division => 9,
+            OrbatEchelon.Corps => 10,
+            OrbatEchelon.Army => 11,
+            OrbatEchelon.ArmyGroup => 12,
+            OrbatEchelon.Region => 13,
+            OrbatEchelon.Command => 14,
+            _ => 0
+        };
     }
 
     private bool IsCurrentViewWithin(string rootId)
