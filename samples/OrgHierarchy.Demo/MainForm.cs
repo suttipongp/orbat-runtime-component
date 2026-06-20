@@ -58,6 +58,7 @@ public sealed partial class MainForm : Form
         _hierarchyTreeView.NodeActivated += (_, args) => _propertyGrid.SelectedObject = args.Record;
         _organizationChartView.NodeActivated += (_, args) => _propertyGrid.SelectedObject = args.Record;
         _orbatChartView.UnitActivated += (_, args) => _propertyGrid.SelectedObject = args.Unit;
+        _symbolGalleryChartView.UnitActivated += (_, args) => _propertyGrid.SelectedObject = args.Unit;
         _orbatChartView.UnitContextRequested += (_, args) =>
         {
             _propertyGrid.SelectedObject = args.Unit;
@@ -66,14 +67,17 @@ public sealed partial class MainForm : Form
         _hierarchyTreeView.SetDataLoader(_ => Task.FromResult(CreateSampleHierarchyTable()));
         _organizationChartView.SetDataLoader(_ => Task.FromResult(CreateSampleHierarchyTable()));
         _orbatChartView.SetDataLoader(_ => Task.FromResult(GetCurrentOrbatViewTable()));
+        _symbolGalleryChartView.SetDataLoader(_ => Task.FromResult(CreateSymbolGalleryTable()));
 
         Load += async (_, _) =>
         {
             await _hierarchyTreeView.ReloadAsync();
             await _organizationChartView.ReloadAsync();
             await _orbatChartView.ReloadAsync();
+            await _symbolGalleryChartView.ReloadAsync();
             _organizationChartView.FitToView();
             _orbatChartView.FitToView();
+            _symbolGalleryChartView.FitToView();
         };
     }
 
@@ -1242,25 +1246,7 @@ public sealed partial class MainForm : Form
 
     private static DataTable CreateSampleOrbatTable()
     {
-        var table = new DataTable("Orbat");
-        table.Columns.Add("Id", typeof(string));
-        table.Columns.Add("ParentId", typeof(string));
-        table.Columns.Add("Name", typeof(string));
-        table.Columns.Add("ShortName", typeof(string));
-        table.Columns.Add("UniqueDesignation", typeof(string));
-        table.Columns.Add("Affiliation", typeof(string));
-        table.Columns.Add("Echelon", typeof(string));
-        table.Columns.Add("UnitType", typeof(string));
-        table.Columns.Add("Sidc", typeof(string));
-        table.Columns.Add("SymbolText", typeof(string));
-        table.Columns.Add("Headquarters", typeof(bool));
-        table.Columns.Add("TaskForce", typeof(bool));
-        table.Columns.Add("PlannedAnticipated", typeof(bool));
-        table.Columns.Add("StackCount", typeof(int));
-        table.Columns.Add("ReinforcedReduced", typeof(string));
-        table.Columns.Add("Reinforced", typeof(bool));
-        table.Columns.Add("Reduced", typeof(bool));
-        table.Columns.Add("SortOrder", typeof(int));
+        var table = CreateOrbatSchemaTable();
 
         AddUnit(table, "III-CORPS", null, "III Corps", "III Corps", "", "Friend", "Corps", "Headquarters", true, false, false, false, 10);
         AddUnit(table, "CJTF-HQ", "III-CORPS", "Combined Joint Task Force HQ", "CJTF HQ", "CJTF HQ", "Hostile", "Corps", "Headquarters", true, true, false, false, 10);
@@ -1284,6 +1270,99 @@ public sealed partial class MainForm : Form
         AddUnit(table, "13-LOG", "III-CORPS", "13 Combat Service Support", "13 CSS", "13", "Friend", "Battalion", "Logistics", false, false, false, false, 230);
 
         return table;
+    }
+
+    private static DataTable CreateOrbatSchemaTable()
+    {
+        var table = new DataTable("Orbat");
+        table.Columns.Add("Id", typeof(string));
+        table.Columns.Add("ParentId", typeof(string));
+        table.Columns.Add("Name", typeof(string));
+        table.Columns.Add("ShortName", typeof(string));
+        table.Columns.Add("UniqueDesignation", typeof(string));
+        table.Columns.Add("Affiliation", typeof(string));
+        table.Columns.Add("Echelon", typeof(string));
+        table.Columns.Add("UnitType", typeof(string));
+        table.Columns.Add("Sidc", typeof(string));
+        table.Columns.Add("SymbolText", typeof(string));
+        table.Columns.Add("Headquarters", typeof(bool));
+        table.Columns.Add("TaskForce", typeof(bool));
+        table.Columns.Add("PlannedAnticipated", typeof(bool));
+        table.Columns.Add("StackCount", typeof(int));
+        table.Columns.Add("ReinforcedReduced", typeof(string));
+        table.Columns.Add("Reinforced", typeof(bool));
+        table.Columns.Add("Reduced", typeof(bool));
+        table.Columns.Add("SortOrder", typeof(int));
+
+        return table;
+    }
+
+    private static DataTable CreateSymbolGalleryTable()
+    {
+        var table = CreateOrbatSchemaTable();
+        AddUnit(table, "SYM-ROOT", null, "Military Symbols", "Symbols", "", "Friend", "Command", "Headquarters", true, false, false, false, 10);
+        AddGalleryGroup(table, "SYM-COMBAT", "SYM-ROOT", "Combat", 10);
+        AddGalleryGroup(table, "SYM-SUPPORT", "SYM-ROOT", "Support", 20);
+        AddGalleryGroup(table, "SYM-DOMAIN", "SYM-ROOT", "Domain/Special", 30);
+
+        AddSymbolCatalogUnit(table, "SYM-HQ", "SYM-COMBAT", OrbatUnitType.Headquarters, 10);
+        AddSymbolCatalogUnit(table, "SYM-INF", "SYM-COMBAT", OrbatUnitType.Infantry, 20);
+        AddSymbolCatalogUnit(table, "SYM-ARM", "SYM-COMBAT", OrbatUnitType.Armor, 30);
+        AddSymbolCatalogUnit(table, "SYM-MECH", "SYM-COMBAT", OrbatUnitType.MechanizedInfantry, 40);
+        AddSymbolCatalogUnit(table, "SYM-ARTY", "SYM-COMBAT", OrbatUnitType.Artillery, 50);
+        AddSymbolCatalogUnit(table, "SYM-AD", "SYM-COMBAT", OrbatUnitType.AirDefense, 60);
+        AddSymbolCatalogUnit(table, "SYM-AVN", "SYM-COMBAT", OrbatUnitType.Aviation, 70);
+        AddSymbolCatalogUnit(table, "SYM-ENG", "SYM-COMBAT", OrbatUnitType.Engineer, 80);
+        AddSymbolCatalogUnit(table, "SYM-RECON", "SYM-COMBAT", OrbatUnitType.Reconnaissance, 90);
+        AddSymbolCatalogUnit(table, "SYM-SIG", "SYM-COMBAT", OrbatUnitType.Signal, 100);
+
+        AddSymbolCatalogUnit(table, "SYM-MP", "SYM-SUPPORT", OrbatUnitType.MilitaryPolice, 10);
+        AddSymbolCatalogUnit(table, "SYM-MED", "SYM-SUPPORT", OrbatUnitType.Medical, 20);
+        AddSymbolCatalogUnit(table, "SYM-LOG", "SYM-SUPPORT", OrbatUnitType.Logistics, 30);
+        AddSymbolCatalogUnit(table, "SYM-MAINT", "SYM-SUPPORT", OrbatUnitType.Maintenance, 40);
+        AddSymbolCatalogUnit(table, "SYM-TRANS", "SYM-SUPPORT", OrbatUnitType.Transportation, 50);
+        AddSymbolCatalogUnit(table, "SYM-INT", "SYM-SUPPORT", OrbatUnitType.Intelligence, 60);
+        AddSymbolCatalogUnit(table, "SYM-PSYOP", "SYM-SUPPORT", OrbatUnitType.PsychologicalOperations, 70);
+
+        AddSymbolCatalogUnit(table, "SYM-SOF", "SYM-DOMAIN", OrbatUnitType.SpecialOperations, 10);
+        AddSymbolCatalogUnit(table, "SYM-NAV", "SYM-DOMAIN", OrbatUnitType.Naval, 20);
+        AddSymbolCatalogUnit(table, "SYM-AIR", "SYM-DOMAIN", OrbatUnitType.Air, 30);
+        AddSymbolCatalogUnit(table, "SYM-CYB", "SYM-DOMAIN", OrbatUnitType.Cyber, 40);
+        AddSymbolCatalogUnit(table, "SYM-UNSPEC", "SYM-DOMAIN", OrbatUnitType.Unspecified, 50);
+
+        return table;
+    }
+
+    private static void AddGalleryGroup(DataTable table, string id, string parentId, string name, int sortOrder)
+    {
+        AddUnit(table, id, parentId, name, name, "", "Unspecified", "Unspecified", "Unspecified", false, false, false, false, sortOrder);
+    }
+
+    private static void AddSymbolCatalogUnit(DataTable table, string id, string parentId, OrbatUnitType unitType, int sortOrder)
+    {
+        var echelon = unitType == OrbatUnitType.Headquarters ? OrbatEchelon.Brigade : OrbatEchelon.Company;
+        var headquarters = unitType == OrbatUnitType.Headquarters;
+        var unitTypeCode = GetUnitTypeCode(unitType);
+        var name = unitType.ToString();
+
+        AddUnit(
+            table,
+            id,
+            parentId,
+            name,
+            unitTypeCode,
+            unitTypeCode,
+            "Friend",
+            echelon.ToString(),
+            unitType.ToString(),
+            headquarters,
+            false,
+            false,
+            false,
+            sortOrder);
+
+        var row = table.Rows[table.Rows.Count - 1];
+        row["Sidc"] = OrbatSidcParser.Compose(OrbatAffiliation.Friend, echelon, unitType, headquarters, false, false);
     }
 
     private static void AddUnit(

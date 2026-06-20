@@ -8,6 +8,7 @@ partial class MainForm
     private OrgHierarchyTreeView _hierarchyTreeView = null!;
     private OrganizationChartView _organizationChartView = null!;
     private OrbatChartView _orbatChartView = null!;
+    private OrbatChartView _symbolGalleryChartView = null!;
     private CheckBox _showUniqueDesignationCheckBox = null!;
     private Button _addUnitButton = null!;
     private Button _editUnitButton = null!;
@@ -30,6 +31,7 @@ partial class MainForm
     private TabPage _treeTab = null!;
     private TabPage _chartTab = null!;
     private TabPage _orbatTab = null!;
+    private TabPage _symbolsTab = null!;
 
     protected override void Dispose(bool disposing)
     {
@@ -45,6 +47,7 @@ partial class MainForm
         _hierarchyTreeView = new OrgHierarchyTreeView();
         _organizationChartView = new OrganizationChartView();
         _orbatChartView = new OrbatChartView();
+        _symbolGalleryChartView = new OrbatChartView();
         _showUniqueDesignationCheckBox = new CheckBox();
         _addUnitButton = new Button();
         _editUnitButton = new Button();
@@ -67,6 +70,7 @@ partial class MainForm
         _treeTab = new TabPage();
         _chartTab = new TabPage();
         _orbatTab = new TabPage();
+        _symbolsTab = new TabPage();
         ((System.ComponentModel.ISupportInitialize)_splitContainer).BeginInit();
         _splitContainer.Panel1.SuspendLayout();
         _splitContainer.Panel2.SuspendLayout();
@@ -75,6 +79,7 @@ partial class MainForm
         _treeTab.SuspendLayout();
         _chartTab.SuspendLayout();
         _orbatTab.SuspendLayout();
+        _symbolsTab.SuspendLayout();
         _orbatOptionsPanel.SuspendLayout();
         SuspendLayout();
         // 
@@ -101,6 +106,14 @@ partial class MainForm
         _orbatChartView.Name = "_orbatChartView";
         _orbatChartView.Size = new Size(766, 618);
         _orbatChartView.TabIndex = 1;
+        // 
+        // _symbolGalleryChartView
+        // 
+        _symbolGalleryChartView.Dock = DockStyle.Fill;
+        _symbolGalleryChartView.Location = new Point(3, 3);
+        _symbolGalleryChartView.Name = "_symbolGalleryChartView";
+        _symbolGalleryChartView.Size = new Size(766, 728);
+        _symbolGalleryChartView.TabIndex = 0;
         // 
         // _showUniqueDesignationCheckBox
         // 
@@ -297,6 +310,7 @@ partial class MainForm
         _viewTabs.Controls.Add(_treeTab);
         _viewTabs.Controls.Add(_chartTab);
         _viewTabs.Controls.Add(_orbatTab);
+        _viewTabs.Controls.Add(_symbolsTab);
         _viewTabs.Dock = DockStyle.Fill;
         _viewTabs.Location = new Point(0, 0);
         _viewTabs.Name = "_viewTabs";
@@ -338,6 +352,17 @@ partial class MainForm
         _orbatTab.Text = "ORBAT";
         _orbatTab.UseVisualStyleBackColor = true;
         // 
+        // _symbolsTab
+        // 
+        _symbolsTab.Controls.Add(_symbolGalleryChartView);
+        _symbolsTab.Location = new Point(4, 24);
+        _symbolsTab.Name = "_symbolsTab";
+        _symbolsTab.Padding = new Padding(3);
+        _symbolsTab.Size = new Size(772, 734);
+        _symbolsTab.TabIndex = 3;
+        _symbolsTab.Text = "Symbols";
+        _symbolsTab.UseVisualStyleBackColor = true;
+        // 
         // MainForm
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
@@ -355,6 +380,7 @@ partial class MainForm
         _treeTab.ResumeLayout(false);
         _chartTab.ResumeLayout(false);
         _orbatTab.ResumeLayout(false);
+        _symbolsTab.ResumeLayout(false);
         _orbatOptionsPanel.ResumeLayout(false);
         _orbatOptionsPanel.PerformLayout();
         ResumeLayout(false);
