@@ -31,8 +31,8 @@ public sealed partial class MainForm : Form
         _showBranchButton.Click += (_, _) => ShowSelectedBranch();
         _showParentButton.Click += (_, _) => ShowParentBranch();
         _showAllButton.Click += (_, _) => ShowAllUnits();
-        _copyFormatButton.Click += (_, _) => CopySelectedUnitFormat();
-        _pasteFormatButton.Click += (_, _) => PasteUnitFormatToSelectedUnit();
+        _copyFormatButton.Click += (_, _) => CopySelectedUnit();
+        _pasteFormatButton.Click += (_, _) => PasteCopiedUnitToSelectedUnit();
         _copyStructureButton.Click += (_, _) => CopySelectedUnitStructure();
         _pasteStructureButton.Click += (_, _) => PasteUnitStructureToSelectedUnit();
         _exportOrbatButton.Click += (_, _) => ExportOrbatData();
@@ -44,10 +44,10 @@ public sealed partial class MainForm : Form
         _orbatContextMenu.Items.Add("Edit unit", null, (_, _) => EditSelectedUnit());
         _orbatContextMenu.Items.Add("Delete unit", null, (_, _) => DeleteSelectedUnit());
         _orbatContextMenu.Items.Add(new ToolStripSeparator());
-        _orbatContextMenu.Items.Add("Copy unit format", null, (_, _) => CopySelectedUnitFormat());
-        _orbatContextMenu.Items.Add("Paste unit format", null, (_, _) => PasteUnitFormatToSelectedUnit());
-        _orbatContextMenu.Items.Add("Copy subordinate structure", null, (_, _) => CopySelectedUnitStructure());
-        _orbatContextMenu.Items.Add("Paste subordinate structure", null, (_, _) => PasteUnitStructureToSelectedUnit());
+        _orbatContextMenu.Items.Add("Copy unit", null, (_, _) => CopySelectedUnit());
+        _orbatContextMenu.Items.Add("Paste unit", null, (_, _) => PasteCopiedUnitToSelectedUnit());
+        _orbatContextMenu.Items.Add("Copy structure", null, (_, _) => CopySelectedUnitStructure());
+        _orbatContextMenu.Items.Add("Paste structure", null, (_, _) => PasteUnitStructureToSelectedUnit());
         _orbatContextMenu.Items.Add(new ToolStripSeparator());
         _orbatContextMenu.Items.Add("Move left", null, (_, _) => MoveSelectedUnitLeft());
         _orbatContextMenu.Items.Add("Move right", null, (_, _) => MoveSelectedUnitRight());
@@ -85,12 +85,12 @@ public sealed partial class MainForm : Form
 
         if (args.KeyCode == Keys.C)
         {
-            CopySelectedUnitFormat();
+            CopySelectedUnit();
             args.Handled = true;
         }
         else if (args.KeyCode == Keys.V)
         {
-            PasteUnitFormatToSelectedUnit();
+            PasteCopiedUnitToSelectedUnit();
             args.Handled = true;
         }
     }
@@ -282,45 +282,40 @@ public sealed partial class MainForm : Form
         ReloadOrbatTable();
     }
 
-    private void CopySelectedUnitFormat()
+    private void CopySelectedUnit()
     {
         var selected = _orbatChartView.SelectedUnit;
         if (selected == null)
         {
-            MessageBox.Show(this, "Please select a unit to copy.", "Copy Unit Format", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, "Please select a unit to copy.", "Copy Unit", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
-        var format = OrbatUnitFormat.FromRecord(selected);
-        var json = JsonSerializer.Serialize(format, new JsonSerializerOptions { WriteIndented = true });
-        var data = new DataObject();
-        data.SetData(OrbatClipboardFormat, json);
-        data.SetText(json);
-        Clipboard.SetDataObject(data, true);
+        CopyUnitsToClipboard(new HashSet<string>(StringComparer.OrdinalIgnoreCase) { selected.Id }, selected.Id);
     }
 
-    private void PasteUnitFormatToSelectedUnit()
+    private void PasteCopiedUnitToSelectedUnit()
     {
         var selected = _orbatChartView.SelectedUnit;
         if (selected == null)
         {
-            MessageBox.Show(this, "Please select a target unit first.", "Paste Unit Format", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, "Please select a target parent unit first.", "Paste Unit", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
-        if (!TryReadClipboardFormat(out var format))
+        if (!TryReadClipboardStructure(out var structure))
         {
-            MessageBox.Show(this, "Clipboard does not contain an ORBAT unit format.", "Paste Unit Format", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, "Clipboard does not contain an ORBAT unit.", "Paste Unit", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
-        var row = FindOrbatRow(selected.Id);
-        if (row == null)
+        if (structure.Units.Count != 1)
+        {
+            MessageBox.Show(this, "Clipboard contains a structure. Use Paste structure instead.", "Paste Unit", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
+        }
 
-        ApplyFormat(row, format);
-        SaveOrbatTable();
-        ReloadOrbatTable();
+        PasteStructureUnderSelectedUnit(selected, structure, "Paste Unit");
     }
 
     private void CopySelectedUnitStructure()
@@ -328,23 +323,19 @@ public sealed partial class MainForm : Form
         var selected = _orbatChartView.SelectedUnit;
         if (selected == null)
         {
-            MessageBox.Show(this, "Please select a unit to copy its subordinate structure.", "Copy Subordinate Structure", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, "Please select a unit to copy its structure.", "Copy Structure", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
+        CopyUnitsToClipboard(GetSubtreeIds(selected.Id), selected.Id);
+    }
+
+    private void CopyUnitsToClipboard(HashSet<string> unitIds, string sourceRootId)
+    {
         var source = GetOrbatTable();
-        var subordinateIds = GetSubtreeIds(selected.Id);
-        subordinateIds.Remove(selected.Id);
-
-        if (subordinateIds.Count == 0)
-        {
-            MessageBox.Show(this, "This unit has no subordinate units to copy.", "Copy Subordinate Structure", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return;
-        }
-
         var units = source.Rows
             .Cast<DataRow>()
-            .Where(row => subordinateIds.Contains(Convert.ToString(row["Id"]) ?? string.Empty))
+            .Where(row => unitIds.Contains(Convert.ToString(row["Id"]) ?? string.Empty))
             .OrderBy(GetRowDepth)
             .ThenBy(row => Convert.ToInt32(row["SortOrder"]))
             .ThenBy(row => Convert.ToString(row["Name"]), StringComparer.CurrentCultureIgnoreCase)
@@ -353,7 +344,7 @@ public sealed partial class MainForm : Form
 
         var structure = new OrbatSubtreeClipboard
         {
-            SourceRootId = selected.Id,
+            SourceRootId = sourceRootId,
             Units = units
         };
 
@@ -369,16 +360,21 @@ public sealed partial class MainForm : Form
         var selected = _orbatChartView.SelectedUnit;
         if (selected == null)
         {
-            MessageBox.Show(this, "Please select a target parent unit first.", "Paste Subordinate Structure", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, "Please select a target parent unit first.", "Paste Structure", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
         if (!TryReadClipboardStructure(out var structure))
         {
-            MessageBox.Show(this, "Clipboard does not contain an ORBAT subordinate structure.", "Paste Subordinate Structure", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, "Clipboard does not contain an ORBAT structure.", "Paste Structure", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
+        PasteStructureUnderSelectedUnit(selected, structure, "Paste Structure");
+    }
+
+    private void PasteStructureUnderSelectedUnit(OrbatUnitRecord selected, OrbatSubtreeClipboard structure, string title)
+    {
         var targetParentRow = FindOrbatRow(selected.Id);
         if (targetParentRow == null)
             return;
@@ -406,7 +402,7 @@ public sealed partial class MainForm : Form
 
         SaveOrbatTable();
         ReloadOrbatTable();
-        MessageBox.Show(this, $"Pasted {insertedCount} subordinate unit(s) under {selected.Name}.", "Paste Subordinate Structure", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        MessageBox.Show(this, $"Pasted {insertedCount} unit(s) under {selected.Name}.", title, MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     private static bool TryReadClipboardFormat(out OrbatUnitFormat format)

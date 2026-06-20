@@ -181,7 +181,7 @@ partial class MainForm
         _copyFormatButton.Name = "_copyFormatButton";
         _copyFormatButton.Size = new Size(86, 28);
         _copyFormatButton.TabIndex = 7;
-        _copyFormatButton.Text = "Copy format";
+        _copyFormatButton.Text = "Copy unit";
         _copyFormatButton.UseVisualStyleBackColor = true;
         // 
         // _pasteFormatButton
@@ -191,7 +191,7 @@ partial class MainForm
         _pasteFormatButton.Name = "_pasteFormatButton";
         _pasteFormatButton.Size = new Size(86, 28);
         _pasteFormatButton.TabIndex = 8;
-        _pasteFormatButton.Text = "Paste format";
+        _pasteFormatButton.Text = "Paste unit";
         _pasteFormatButton.UseVisualStyleBackColor = true;
         // 
         // _copyStructureButton
