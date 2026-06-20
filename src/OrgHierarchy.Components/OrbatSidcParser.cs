@@ -2,6 +2,8 @@ namespace OrgHierarchy.Components;
 
 public static class OrbatSidcParser
 {
+    private const string LandUnitSymbolSet = "10";
+
     public static string Compose(OrbatUnitRecord unit)
     {
         if (unit == null)
@@ -40,21 +42,33 @@ public static class OrbatSidcParser
     {
         var result = new OrbatSidcParseResult();
         var normalized = NormalizeSidc(sidc);
-        result.Sidc = normalized;
+        result.Sidc = normalized.Length > 20 ? normalized.Substring(0, 20) : normalized;
 
         if (normalized.Length < 20)
+        {
+            result.Warnings.Add("SIDC must contain at least 20 digits.");
             return result;
+        }
+
+        if (normalized.Length > 20)
+            result.Warnings.Add("SIDC contains more than 20 digits; only the first 20 digits were used.");
 
         result.IsValid = true;
-        result.Affiliation = ParseAffiliation(normalized[3]);
-        result.PlannedAnticipated = normalized[6] == '1';
-        result.Headquarters = normalized[7] is '2' or '3' or '6' or '7';
-        result.TaskForce = normalized[7] is '4' or '5' or '6' or '7';
-        result.Echelon = ParseEchelon(normalized.Substring(8, 2));
+        result.Affiliation = ParseAffiliation(result.Sidc[3]);
+        result.PlannedAnticipated = result.Sidc[6] == '1';
+        result.Headquarters = result.Sidc[7] is '2' or '3' or '6' or '7';
+        result.TaskForce = result.Sidc[7] is '4' or '5' or '6' or '7';
+        result.Echelon = ParseEchelon(result.Sidc.Substring(8, 2));
 
-        var symbolSet = normalized.Substring(4, 2);
-        var entity = normalized.Substring(10, 6);
-        result.UnitType = ParseUnitType(symbolSet, entity);
+        result.SymbolSet = result.Sidc.Substring(4, 2);
+        result.EntityCode = result.Sidc.Substring(10, 6);
+        result.IsSupportedSymbolSet = result.SymbolSet == LandUnitSymbolSet;
+        result.UnitType = ParseUnitType(result.SymbolSet, result.EntityCode);
+        result.HasKnownUnitType = result.UnitType.HasValue && result.UnitType.Value != OrbatUnitType.Unspecified;
+        if (!result.IsSupportedSymbolSet)
+            result.Warnings.Add($"Symbol set {result.SymbolSet} is not mapped as a land unit.");
+        if (!result.HasKnownUnitType)
+            result.Warnings.Add($"Entity {result.EntityCode} is not mapped to a known unit type.");
 
         return result;
     }
@@ -164,10 +178,19 @@ public static class OrbatSidcParser
 
     private static OrbatUnitType? ParseUnitType(string symbolSet, string entity)
     {
-        if (symbolSet != "10")
+        if (symbolSet != LandUnitSymbolSet)
             return OrbatUnitType.Unspecified;
 
-        var exact = entity switch
+        var exact = ParseExactLandUnitEntity(entity);
+        if (exact != OrbatUnitType.Unspecified)
+            return exact;
+
+        return ParseLandUnitEntityPrefix(entity);
+    }
+
+    private static OrbatUnitType ParseExactLandUnitEntity(string entity)
+    {
+        return entity switch
         {
             "110000" => OrbatUnitType.Headquarters,
             "121100" => OrbatUnitType.Infantry,
@@ -186,12 +209,13 @@ public static class OrbatSidcParser
             "200100" => OrbatUnitType.Maintenance,
             "210100" => OrbatUnitType.Transportation,
             "220100" => OrbatUnitType.Intelligence,
+            "220200" => OrbatUnitType.PsychologicalOperations,
             _ => OrbatUnitType.Unspecified
         };
+    }
 
-        if (exact != OrbatUnitType.Unspecified)
-            return exact;
-
+    private static OrbatUnitType ParseLandUnitEntityPrefix(string entity)
+    {
         if (entity.StartsWith("121102", StringComparison.Ordinal))
             return OrbatUnitType.MechanizedInfantry;
         if (entity.StartsWith("1211", StringComparison.Ordinal))
@@ -244,11 +268,11 @@ public static class OrbatSidcParser
             OrbatUnitType.Maintenance => "200100",
             OrbatUnitType.Transportation => "210100",
             OrbatUnitType.Intelligence => "220100",
-            OrbatUnitType.SpecialOperations => "121300",
+            OrbatUnitType.PsychologicalOperations => "220200",
             OrbatUnitType.Naval => "000000",
             OrbatUnitType.Air => "000000",
             OrbatUnitType.Cyber => "000000",
-            OrbatUnitType.PsychologicalOperations => "000000",
+            OrbatUnitType.SpecialOperations => "000000",
             _ => "000000"
         };
     }

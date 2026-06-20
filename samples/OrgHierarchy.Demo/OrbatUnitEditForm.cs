@@ -35,6 +35,7 @@ internal sealed class OrbatUnitEditForm : Form
     private readonly TextBox _sidcTextBox = new();
     private readonly Button _fromSidcButton = new();
     private readonly Button _toSidcButton = new();
+    private readonly Label _sidcStatusLabel = new();
     private readonly TextBox _symbolTextTextBox = new();
     private readonly ComboBox _reinforcedReducedComboBox = new();
     private readonly CheckBox _headquartersCheckBox = new();
@@ -78,7 +79,7 @@ internal sealed class OrbatUnitEditForm : Form
         {
             Dock = DockStyle.Top,
             ColumnCount = 2,
-            RowCount = 16,
+            RowCount = 17,
             AutoSize = true
         };
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 136));
@@ -95,13 +96,14 @@ internal sealed class OrbatUnitEditForm : Form
         AddComboRow(layout, "Echelon", _echelonComboBox, unit.Echelon, 6);
         AddComboRow(layout, "Unit type", _unitTypeComboBox, unit.UnitType, 7);
         AddSidcRow(layout, unit.Sidc, 8);
-        AddTextRow(layout, "Symbol text", _symbolTextTextBox, unit.SymbolText, 9, false);
-        AddComboRow(layout, "Reinforced/reduced", _reinforcedReducedComboBox, unit.ReinforcedReduced, 10);
-        AddCheckRow(layout, _headquartersCheckBox, "Headquarters", unit.Headquarters, 11);
-        AddCheckRow(layout, _taskForceCheckBox, "Task force", unit.TaskForce, 12);
-        AddCheckRow(layout, _plannedAnticipatedCheckBox, "Planned/Anticipated", unit.PlannedAnticipated, 13);
-        AddNumberRow(layout, "Stack count", _stackCountInput, unit.StackCount, 1, 6, 14);
-        AddNumberRow(layout, "Sort order", _sortOrderInput, unit.SortOrder, 0, 100000, 15);
+        AddSidcStatusRow(layout, 9);
+        AddTextRow(layout, "Symbol text", _symbolTextTextBox, unit.SymbolText, 10, false);
+        AddComboRow(layout, "Reinforced/reduced", _reinforcedReducedComboBox, unit.ReinforcedReduced, 11);
+        AddCheckRow(layout, _headquartersCheckBox, "Headquarters", unit.Headquarters, 12);
+        AddCheckRow(layout, _taskForceCheckBox, "Task force", unit.TaskForce, 13);
+        AddCheckRow(layout, _plannedAnticipatedCheckBox, "Planned/Anticipated", unit.PlannedAnticipated, 14);
+        AddNumberRow(layout, "Stack count", _stackCountInput, unit.StackCount, 1, 6, 15);
+        AddNumberRow(layout, "Sort order", _sortOrderInput, unit.SortOrder, 0, 100000, 16);
         AddButtonRow(root, 1);
 
         scrollPanel.Controls.Add(layout);
@@ -109,6 +111,7 @@ internal sealed class OrbatUnitEditForm : Form
         Controls.Add(root);
 
         WireSourceTracking();
+        UpdateSidcStatus();
         AcceptButton = _okButton;
         CancelButton = _cancelButton;
     }
@@ -154,6 +157,16 @@ internal sealed class OrbatUnitEditForm : Form
         panel.Controls.Add(_fromSidcButton, 1, 0);
         panel.Controls.Add(_toSidcButton, 2, 0);
         layout.Controls.Add(panel, 1, row);
+    }
+
+    private void AddSidcStatusRow(TableLayoutPanel layout, int row)
+    {
+        layout.Controls.Add(new Label(), 0, row);
+        _sidcStatusLabel.AutoEllipsis = true;
+        _sidcStatusLabel.Dock = DockStyle.Fill;
+        _sidcStatusLabel.ForeColor = SystemColors.GrayText;
+        _sidcStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
+        layout.Controls.Add(_sidcStatusLabel, 1, row);
     }
 
     private static void AddComboRow<TEnum>(TableLayoutPanel layout, string label, ComboBox comboBox, TEnum value, int row)
@@ -330,6 +343,7 @@ internal sealed class OrbatUnitEditForm : Form
         }
 
         _fieldsChangedAfterSidc = false;
+        UpdateSidcStatus();
     }
 
     private void UpdateSidcFromFields()
@@ -351,6 +365,7 @@ internal sealed class OrbatUnitEditForm : Form
         }
 
         _fieldsChangedAfterSidc = true;
+        UpdateSidcStatus();
     }
 
     private void WireSourceTracking()
@@ -361,6 +376,7 @@ internal sealed class OrbatUnitEditForm : Form
                 return;
 
             _fieldsChangedAfterSidc = false;
+            UpdateSidcStatus();
         };
 
         _affiliationComboBox.SelectedIndexChanged += (_, _) => MarkFieldsChanged();
@@ -377,6 +393,18 @@ internal sealed class OrbatUnitEditForm : Form
             return;
 
         _fieldsChangedAfterSidc = true;
+        UpdateSidcStatus();
+    }
+
+    private void UpdateSidcStatus()
+    {
+        var parsed = OrbatSidcParser.Parse(_sidcTextBox.Text);
+        _sidcStatusLabel.Text = parsed.GetSummary();
+        _sidcStatusLabel.ForeColor = parsed.IsValid && parsed.Warnings.Count == 0
+            ? Color.ForestGreen
+            : parsed.IsValid
+                ? Color.DarkOrange
+                : SystemColors.GrayText;
     }
 
     private static void SelectComboValue<TEnum>(ComboBox comboBox, TEnum value)

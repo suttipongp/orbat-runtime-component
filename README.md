@@ -180,3 +180,8 @@ authoritative and SIDC should act only as fallback/supporting data.
 
 When `Sidc` is missing, the component creates a best-effort 20-digit SIDC from
 the existing ORBAT fields so older data can still expose a usable SIDC value.
+
+`OrbatSidcParser.Parse` returns validation details including normalized SIDC,
+symbol set, entity code, known unit type status, and warnings. The demo edit
+dialog shows this summary below the SIDC field so unsupported or partial mappings
+are visible while editing.
