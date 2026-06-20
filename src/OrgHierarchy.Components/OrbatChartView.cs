@@ -652,7 +652,7 @@ public sealed class OrbatChartView : UserControl
                 graphics.DrawLine(pen, bounds.Right, bounds.Top, bounds.Left, bounds.Bottom);
                 break;
             case OrbatUnitType.Artillery:
-                graphics.FillEllipse(brush, icon.Left + icon.Width / 2f - 6, icon.Top + icon.Height / 2f - 6, 12, 12);
+                graphics.FillEllipse(brush, icon.Left + icon.Width / 2f - 12, icon.Top + icon.Height / 2f - 12, 24, 24);
                 break;
             case OrbatUnitType.AirDefense:
                 graphics.DrawArc(pen, icon, 200, 140);
