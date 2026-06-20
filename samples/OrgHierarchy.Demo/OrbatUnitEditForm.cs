@@ -33,7 +33,8 @@ internal sealed class OrbatUnitEditForm : Form
     private readonly ComboBox _echelonComboBox = new();
     private readonly ComboBox _unitTypeComboBox = new();
     private readonly TextBox _sidcTextBox = new();
-    private readonly Button _applySidcButton = new();
+    private readonly Button _fromSidcButton = new();
+    private readonly Button _toSidcButton = new();
     private readonly TextBox _symbolTextTextBox = new();
     private readonly ComboBox _reinforcedReducedComboBox = new();
     private readonly CheckBox _headquartersCheckBox = new();
@@ -43,6 +44,8 @@ internal sealed class OrbatUnitEditForm : Form
     private readonly NumericUpDown _sortOrderInput = new();
     private readonly Button _okButton = new();
     private readonly Button _cancelButton = new();
+    private bool _applyingValues;
+    private bool _fieldsChangedAfterSidc;
 
     public OrbatUnitEditForm(OrbatUnitDraft unit, bool isNew)
     {
@@ -105,6 +108,7 @@ internal sealed class OrbatUnitEditForm : Form
         root.Controls.Add(scrollPanel, 0, 0);
         Controls.Add(root);
 
+        WireSourceTracking();
         AcceptButton = _okButton;
         CancelButton = _cancelButton;
     }
@@ -127,22 +131,28 @@ internal sealed class OrbatUnitEditForm : Form
         var panel = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            ColumnCount = 2,
+            ColumnCount = 3,
             RowCount = 1,
             Margin = Padding.Empty
         };
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 92));
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 78));
 
         _sidcTextBox.Dock = DockStyle.Fill;
         _sidcTextBox.Text = value;
 
-        _applySidcButton.Text = "Apply";
-        _applySidcButton.Dock = DockStyle.Fill;
-        _applySidcButton.Click += (_, _) => ApplySidc();
+        _fromSidcButton.Text = "From SIDC";
+        _fromSidcButton.Dock = DockStyle.Fill;
+        _fromSidcButton.Click += (_, _) => ApplySidc();
+
+        _toSidcButton.Text = "To SIDC";
+        _toSidcButton.Dock = DockStyle.Fill;
+        _toSidcButton.Click += (_, _) => UpdateSidcFromFields();
 
         panel.Controls.Add(_sidcTextBox, 0, 0);
-        panel.Controls.Add(_applySidcButton, 1, 0);
+        panel.Controls.Add(_fromSidcButton, 1, 0);
+        panel.Controls.Add(_toSidcButton, 2, 0);
         layout.Controls.Add(panel, 1, row);
     }
 
@@ -232,16 +242,16 @@ internal sealed class OrbatUnitEditForm : Form
             return false;
         }
 
-        var sidc = GetOrCreateSidc();
-        var sidcParts = OrbatSidcParser.Parse(sidc);
         var affiliation = GetSelected(_affiliationComboBox, OrbatAffiliation.Friend);
         var echelon = GetSelected(_echelonComboBox, OrbatEchelon.Unspecified);
         var unitType = GetSelected(_unitTypeComboBox, OrbatUnitType.Unspecified);
         var headquarters = _headquartersCheckBox.Checked;
         var taskForce = _taskForceCheckBox.Checked;
         var plannedAnticipated = _plannedAnticipatedCheckBox.Checked;
+        var sidc = GetSidcForSave(affiliation, echelon, unitType, headquarters, taskForce, plannedAnticipated);
+        var sidcParts = OrbatSidcParser.Parse(sidc);
 
-        if (sidcParts.IsValid)
+        if (sidcParts.IsValid && !_fieldsChangedAfterSidc)
         {
             affiliation = sidcParts.Affiliation ?? affiliation;
             echelon = sidcParts.Echelon ?? echelon;
@@ -274,19 +284,19 @@ internal sealed class OrbatUnitEditForm : Form
         return true;
     }
 
-    private string GetOrCreateSidc()
+    private string GetSidcForSave(
+        OrbatAffiliation affiliation,
+        OrbatEchelon echelon,
+        OrbatUnitType unitType,
+        bool headquarters,
+        bool taskForce,
+        bool plannedAnticipated)
     {
         var sidc = _sidcTextBox.Text.Trim();
-        if (!string.IsNullOrWhiteSpace(sidc))
+        if (!string.IsNullOrWhiteSpace(sidc) && !_fieldsChangedAfterSidc)
             return sidc;
 
-        return OrbatSidcParser.Compose(
-            GetSelected(_affiliationComboBox, OrbatAffiliation.Friend),
-            GetSelected(_echelonComboBox, OrbatEchelon.Unspecified),
-            GetSelected(_unitTypeComboBox, OrbatUnitType.Unspecified),
-            _headquartersCheckBox.Checked,
-            _taskForceCheckBox.Checked,
-            _plannedAnticipatedCheckBox.Checked);
+        return OrbatSidcParser.Compose(affiliation, echelon, unitType, headquarters, taskForce, plannedAnticipated);
     }
 
     private void ApplySidc()
@@ -298,18 +308,75 @@ internal sealed class OrbatUnitEditForm : Form
             return;
         }
 
-        if (parsed.Affiliation.HasValue)
-            SelectComboValue(_affiliationComboBox, parsed.Affiliation.Value);
-        if (parsed.Echelon.HasValue)
-            SelectComboValue(_echelonComboBox, parsed.Echelon.Value);
-        if (parsed.UnitType.HasValue)
-            SelectComboValue(_unitTypeComboBox, parsed.UnitType.Value);
-        if (parsed.Headquarters.HasValue)
-            _headquartersCheckBox.Checked = parsed.Headquarters.Value;
-        if (parsed.TaskForce.HasValue)
-            _taskForceCheckBox.Checked = parsed.TaskForce.Value;
-        if (parsed.PlannedAnticipated.HasValue)
-            _plannedAnticipatedCheckBox.Checked = parsed.PlannedAnticipated.Value;
+        _applyingValues = true;
+        try
+        {
+            if (parsed.Affiliation.HasValue)
+                SelectComboValue(_affiliationComboBox, parsed.Affiliation.Value);
+            if (parsed.Echelon.HasValue)
+                SelectComboValue(_echelonComboBox, parsed.Echelon.Value);
+            if (parsed.UnitType.HasValue)
+                SelectComboValue(_unitTypeComboBox, parsed.UnitType.Value);
+            if (parsed.Headquarters.HasValue)
+                _headquartersCheckBox.Checked = parsed.Headquarters.Value;
+            if (parsed.TaskForce.HasValue)
+                _taskForceCheckBox.Checked = parsed.TaskForce.Value;
+            if (parsed.PlannedAnticipated.HasValue)
+                _plannedAnticipatedCheckBox.Checked = parsed.PlannedAnticipated.Value;
+        }
+        finally
+        {
+            _applyingValues = false;
+        }
+
+        _fieldsChangedAfterSidc = false;
+    }
+
+    private void UpdateSidcFromFields()
+    {
+        _applyingValues = true;
+        try
+        {
+            _sidcTextBox.Text = OrbatSidcParser.Compose(
+                GetSelected(_affiliationComboBox, OrbatAffiliation.Friend),
+                GetSelected(_echelonComboBox, OrbatEchelon.Unspecified),
+                GetSelected(_unitTypeComboBox, OrbatUnitType.Unspecified),
+                _headquartersCheckBox.Checked,
+                _taskForceCheckBox.Checked,
+                _plannedAnticipatedCheckBox.Checked);
+        }
+        finally
+        {
+            _applyingValues = false;
+        }
+
+        _fieldsChangedAfterSidc = true;
+    }
+
+    private void WireSourceTracking()
+    {
+        _sidcTextBox.TextChanged += (_, _) =>
+        {
+            if (_applyingValues)
+                return;
+
+            _fieldsChangedAfterSidc = false;
+        };
+
+        _affiliationComboBox.SelectedIndexChanged += (_, _) => MarkFieldsChanged();
+        _echelonComboBox.SelectedIndexChanged += (_, _) => MarkFieldsChanged();
+        _unitTypeComboBox.SelectedIndexChanged += (_, _) => MarkFieldsChanged();
+        _headquartersCheckBox.CheckedChanged += (_, _) => MarkFieldsChanged();
+        _taskForceCheckBox.CheckedChanged += (_, _) => MarkFieldsChanged();
+        _plannedAnticipatedCheckBox.CheckedChanged += (_, _) => MarkFieldsChanged();
+    }
+
+    private void MarkFieldsChanged()
+    {
+        if (_applyingValues)
+            return;
+
+        _fieldsChangedAfterSidc = true;
     }
 
     private static void SelectComboValue<TEnum>(ComboBox comboBox, TEnum value)
