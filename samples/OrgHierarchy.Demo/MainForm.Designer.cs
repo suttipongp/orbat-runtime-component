@@ -23,8 +23,10 @@ partial class MainForm
     private Button _exportOrbatButton = null!;
     private Button _importOrbatButton = null!;
     private Button _resetOrbatButton = null!;
+    private Button _openSymbolDesignerButton = null!;
     private ContextMenuStrip _orbatContextMenu = null!;
     private Panel _orbatOptionsPanel = null!;
+    private Panel _symbolsHeaderPanel = null!;
     private PropertyGrid _propertyGrid = null!;
     private SplitContainer _splitContainer = null!;
     private TabControl _viewTabs = null!;
@@ -62,8 +64,10 @@ partial class MainForm
         _exportOrbatButton = new Button();
         _importOrbatButton = new Button();
         _resetOrbatButton = new Button();
+        _openSymbolDesignerButton = new Button();
         _orbatContextMenu = new ContextMenuStrip(components);
         _orbatOptionsPanel = new Panel();
+        _symbolsHeaderPanel = new Panel();
         _propertyGrid = new PropertyGrid();
         _splitContainer = new SplitContainer();
         _viewTabs = new TabControl();
@@ -81,6 +85,7 @@ partial class MainForm
         _orbatTab.SuspendLayout();
         _symbolsTab.SuspendLayout();
         _orbatOptionsPanel.SuspendLayout();
+        _symbolsHeaderPanel.SuspendLayout();
         SuspendLayout();
         // 
         // _hierarchyTreeView
@@ -110,10 +115,10 @@ partial class MainForm
         // _symbolGalleryChartView
         // 
         _symbolGalleryChartView.Dock = DockStyle.Fill;
-        _symbolGalleryChartView.Location = new Point(3, 3);
+        _symbolGalleryChartView.Location = new Point(3, 47);
         _symbolGalleryChartView.Name = "_symbolGalleryChartView";
-        _symbolGalleryChartView.Size = new Size(766, 728);
-        _symbolGalleryChartView.TabIndex = 0;
+        _symbolGalleryChartView.Size = new Size(766, 684);
+        _symbolGalleryChartView.TabIndex = 1;
         // 
         // _showUniqueDesignationCheckBox
         // 
@@ -257,6 +262,16 @@ partial class MainForm
         _resetOrbatButton.Text = "Reset data";
         _resetOrbatButton.UseVisualStyleBackColor = true;
         // 
+        // _openSymbolDesignerButton
+        // 
+        _openSymbolDesignerButton.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+        _openSymbolDesignerButton.Location = new Point(10, 8);
+        _openSymbolDesignerButton.Name = "_openSymbolDesignerButton";
+        _openSymbolDesignerButton.Size = new Size(142, 28);
+        _openSymbolDesignerButton.TabIndex = 0;
+        _openSymbolDesignerButton.Text = "Open symbol designer";
+        _openSymbolDesignerButton.UseVisualStyleBackColor = true;
+        // 
         // _orbatOptionsPanel
         // 
         _orbatOptionsPanel.Controls.Add(_showUniqueDesignationCheckBox);
@@ -279,6 +294,16 @@ partial class MainForm
         _orbatOptionsPanel.Padding = new Padding(10, 7, 10, 5);
         _orbatOptionsPanel.Size = new Size(766, 110);
         _orbatOptionsPanel.TabIndex = 0;
+        // 
+        // _symbolsHeaderPanel
+        // 
+        _symbolsHeaderPanel.Controls.Add(_openSymbolDesignerButton);
+        _symbolsHeaderPanel.Dock = DockStyle.Top;
+        _symbolsHeaderPanel.Location = new Point(3, 3);
+        _symbolsHeaderPanel.Name = "_symbolsHeaderPanel";
+        _symbolsHeaderPanel.Padding = new Padding(10, 7, 10, 5);
+        _symbolsHeaderPanel.Size = new Size(766, 44);
+        _symbolsHeaderPanel.TabIndex = 0;
         // 
         // _propertyGrid
         // 
@@ -355,6 +380,7 @@ partial class MainForm
         // _symbolsTab
         // 
         _symbolsTab.Controls.Add(_symbolGalleryChartView);
+        _symbolsTab.Controls.Add(_symbolsHeaderPanel);
         _symbolsTab.Location = new Point(4, 24);
         _symbolsTab.Name = "_symbolsTab";
         _symbolsTab.Padding = new Padding(3);
@@ -383,6 +409,7 @@ partial class MainForm
         _symbolsTab.ResumeLayout(false);
         _orbatOptionsPanel.ResumeLayout(false);
         _orbatOptionsPanel.PerformLayout();
+        _symbolsHeaderPanel.ResumeLayout(false);
         ResumeLayout(false);
     }
 

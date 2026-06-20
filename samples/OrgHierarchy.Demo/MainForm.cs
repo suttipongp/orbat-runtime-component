@@ -37,6 +37,7 @@ public sealed partial class MainForm : Form
         _exportOrbatButton.Click += (_, _) => ExportOrbatData();
         _importOrbatButton.Click += (_, _) => ImportOrbatData();
         _resetOrbatButton.Click += (_, _) => ResetOrbatData();
+        _openSymbolDesignerButton.Click += (_, _) => OpenSymbolDesigner();
         KeyDown += MainForm_KeyDown;
 
         _orbatContextMenu.Items.Add("Add unit under this unit", null, (_, _) => AddChildUnit());
@@ -96,6 +97,12 @@ public sealed partial class MainForm : Form
             PasteCopiedUnitToSelectedUnit();
             args.Handled = true;
         }
+    }
+
+    private void OpenSymbolDesigner()
+    {
+        using var form = new SymbolDesignerForm();
+        form.ShowDialog(this);
     }
 
     private DataTable GetOrbatTable()
