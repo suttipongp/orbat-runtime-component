@@ -33,6 +33,8 @@ public sealed partial class MainForm : Form
         _showAllButton.Click += (_, _) => ShowAllUnits();
         _copyFormatButton.Click += (_, _) => CopySelectedUnitFormat();
         _pasteFormatButton.Click += (_, _) => PasteUnitFormatToSelectedUnit();
+        _copyStructureButton.Click += (_, _) => CopySelectedUnitStructure();
+        _pasteStructureButton.Click += (_, _) => PasteUnitStructureToSelectedUnit();
         _exportOrbatButton.Click += (_, _) => ExportOrbatData();
         _importOrbatButton.Click += (_, _) => ImportOrbatData();
         _resetOrbatButton.Click += (_, _) => ResetOrbatData();

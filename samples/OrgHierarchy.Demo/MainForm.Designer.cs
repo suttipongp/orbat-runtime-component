@@ -17,6 +17,8 @@ partial class MainForm
     private Button _showAllButton = null!;
     private Button _copyFormatButton = null!;
     private Button _pasteFormatButton = null!;
+    private Button _copyStructureButton = null!;
+    private Button _pasteStructureButton = null!;
     private Button _exportOrbatButton = null!;
     private Button _importOrbatButton = null!;
     private Button _resetOrbatButton = null!;
@@ -52,6 +54,8 @@ partial class MainForm
         _showAllButton = new Button();
         _copyFormatButton = new Button();
         _pasteFormatButton = new Button();
+        _copyStructureButton = new Button();
+        _pasteStructureButton = new Button();
         _exportOrbatButton = new Button();
         _importOrbatButton = new Button();
         _resetOrbatButton = new Button();
@@ -93,9 +97,9 @@ partial class MainForm
         // _orbatChartView
         // 
         _orbatChartView.Dock = DockStyle.Fill;
-        _orbatChartView.Location = new Point(3, 79);
+        _orbatChartView.Location = new Point(3, 113);
         _orbatChartView.Name = "_orbatChartView";
-        _orbatChartView.Size = new Size(766, 652);
+        _orbatChartView.Size = new Size(766, 618);
         _orbatChartView.TabIndex = 1;
         // 
         // _showUniqueDesignationCheckBox
@@ -190,33 +194,53 @@ partial class MainForm
         _pasteFormatButton.Text = "Paste format";
         _pasteFormatButton.UseVisualStyleBackColor = true;
         // 
+        // _copyStructureButton
+        // 
+        _copyStructureButton.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+        _copyStructureButton.Location = new Point(428, 40);
+        _copyStructureButton.Name = "_copyStructureButton";
+        _copyStructureButton.Size = new Size(104, 28);
+        _copyStructureButton.TabIndex = 9;
+        _copyStructureButton.Text = "Copy structure";
+        _copyStructureButton.UseVisualStyleBackColor = true;
+        // 
+        // _pasteStructureButton
+        // 
+        _pasteStructureButton.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+        _pasteStructureButton.Location = new Point(538, 40);
+        _pasteStructureButton.Name = "_pasteStructureButton";
+        _pasteStructureButton.Size = new Size(108, 28);
+        _pasteStructureButton.TabIndex = 10;
+        _pasteStructureButton.Text = "Paste structure";
+        _pasteStructureButton.UseVisualStyleBackColor = true;
+        // 
         // _exportOrbatButton
         // 
         _exportOrbatButton.Anchor = AnchorStyles.Left | AnchorStyles.Top;
-        _exportOrbatButton.Location = new Point(428, 40);
+        _exportOrbatButton.Location = new Point(230, 74);
         _exportOrbatButton.Name = "_exportOrbatButton";
         _exportOrbatButton.Size = new Size(76, 28);
-        _exportOrbatButton.TabIndex = 9;
+        _exportOrbatButton.TabIndex = 11;
         _exportOrbatButton.Text = "Export";
         _exportOrbatButton.UseVisualStyleBackColor = true;
         // 
         // _importOrbatButton
         // 
         _importOrbatButton.Anchor = AnchorStyles.Left | AnchorStyles.Top;
-        _importOrbatButton.Location = new Point(510, 40);
+        _importOrbatButton.Location = new Point(312, 74);
         _importOrbatButton.Name = "_importOrbatButton";
         _importOrbatButton.Size = new Size(76, 28);
-        _importOrbatButton.TabIndex = 10;
+        _importOrbatButton.TabIndex = 12;
         _importOrbatButton.Text = "Import";
         _importOrbatButton.UseVisualStyleBackColor = true;
         // 
         // _resetOrbatButton
         // 
         _resetOrbatButton.Anchor = AnchorStyles.Left | AnchorStyles.Top;
-        _resetOrbatButton.Location = new Point(592, 40);
+        _resetOrbatButton.Location = new Point(394, 74);
         _resetOrbatButton.Name = "_resetOrbatButton";
         _resetOrbatButton.Size = new Size(86, 28);
-        _resetOrbatButton.TabIndex = 11;
+        _resetOrbatButton.TabIndex = 13;
         _resetOrbatButton.Text = "Reset data";
         _resetOrbatButton.UseVisualStyleBackColor = true;
         // 
@@ -231,6 +255,8 @@ partial class MainForm
         _orbatOptionsPanel.Controls.Add(_showAllButton);
         _orbatOptionsPanel.Controls.Add(_copyFormatButton);
         _orbatOptionsPanel.Controls.Add(_pasteFormatButton);
+        _orbatOptionsPanel.Controls.Add(_copyStructureButton);
+        _orbatOptionsPanel.Controls.Add(_pasteStructureButton);
         _orbatOptionsPanel.Controls.Add(_exportOrbatButton);
         _orbatOptionsPanel.Controls.Add(_importOrbatButton);
         _orbatOptionsPanel.Controls.Add(_resetOrbatButton);
@@ -238,7 +264,7 @@ partial class MainForm
         _orbatOptionsPanel.Location = new Point(3, 3);
         _orbatOptionsPanel.Name = "_orbatOptionsPanel";
         _orbatOptionsPanel.Padding = new Padding(10, 7, 10, 5);
-        _orbatOptionsPanel.Size = new Size(766, 76);
+        _orbatOptionsPanel.Size = new Size(766, 110);
         _orbatOptionsPanel.TabIndex = 0;
         // 
         // _propertyGrid
