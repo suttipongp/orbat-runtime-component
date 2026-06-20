@@ -232,6 +232,25 @@ internal sealed class OrbatUnitEditForm : Form
             return false;
         }
 
+        var sidc = GetOrCreateSidc();
+        var sidcParts = OrbatSidcParser.Parse(sidc);
+        var affiliation = GetSelected(_affiliationComboBox, OrbatAffiliation.Friend);
+        var echelon = GetSelected(_echelonComboBox, OrbatEchelon.Unspecified);
+        var unitType = GetSelected(_unitTypeComboBox, OrbatUnitType.Unspecified);
+        var headquarters = _headquartersCheckBox.Checked;
+        var taskForce = _taskForceCheckBox.Checked;
+        var plannedAnticipated = _plannedAnticipatedCheckBox.Checked;
+
+        if (sidcParts.IsValid)
+        {
+            affiliation = sidcParts.Affiliation ?? affiliation;
+            echelon = sidcParts.Echelon ?? echelon;
+            unitType = sidcParts.UnitType ?? unitType;
+            headquarters = sidcParts.Headquarters ?? headquarters;
+            taskForce = sidcParts.TaskForce ?? taskForce;
+            plannedAnticipated = sidcParts.PlannedAnticipated ?? plannedAnticipated;
+        }
+
         Unit = new OrbatUnitDraft
         {
             Id = _idTextBox.Text.Trim(),
@@ -239,14 +258,14 @@ internal sealed class OrbatUnitEditForm : Form
             Name = _nameTextBox.Text.Trim(),
             ShortName = string.IsNullOrWhiteSpace(_shortNameTextBox.Text) ? _nameTextBox.Text.Trim() : _shortNameTextBox.Text.Trim(),
             UniqueDesignation = _uniqueDesignationTextBox.Text.Trim(),
-            Affiliation = GetSelected(_affiliationComboBox, OrbatAffiliation.Friend),
-            Echelon = GetSelected(_echelonComboBox, OrbatEchelon.Unspecified),
-            UnitType = GetSelected(_unitTypeComboBox, OrbatUnitType.Unspecified),
-            Sidc = GetOrCreateSidc(),
+            Affiliation = affiliation,
+            Echelon = echelon,
+            UnitType = unitType,
+            Sidc = sidc,
             SymbolText = _symbolTextTextBox.Text.Trim(),
-            Headquarters = _headquartersCheckBox.Checked,
-            TaskForce = _taskForceCheckBox.Checked,
-            PlannedAnticipated = _plannedAnticipatedCheckBox.Checked,
+            Headquarters = headquarters,
+            TaskForce = taskForce,
+            PlannedAnticipated = plannedAnticipated,
             StackCount = (int)_stackCountInput.Value,
             ReinforcedReduced = GetSelected(_reinforcedReducedComboBox, OrbatReinforcedReduced.NotApplicable),
             SortOrder = (int)_sortOrderInput.Value

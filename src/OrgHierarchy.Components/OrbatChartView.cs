@@ -75,6 +75,10 @@ public sealed class OrbatChartView : UserControl
     public string SidcColumn { get; set; } = "Sidc";
 
     [Category("Data")]
+    [DefaultValue(true)]
+    public bool SidcOverridesFields { get; set; } = true;
+
+    [Category("Data")]
     [DefaultValue("SymbolText")]
     public string SymbolTextColumn { get; set; } = "SymbolText";
 
@@ -201,7 +205,8 @@ public sealed class OrbatChartView : UserControl
             ReinforcedReducedColumn,
             ReinforcedColumn,
             ReducedColumn,
-            SortColumn);
+            SortColumn,
+            SidcOverridesFields);
 
         LoadFromUnits(records);
     }

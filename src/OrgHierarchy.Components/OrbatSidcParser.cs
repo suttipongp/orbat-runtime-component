@@ -167,7 +167,7 @@ public static class OrbatSidcParser
         if (symbolSet != "10")
             return OrbatUnitType.Unspecified;
 
-        return entity switch
+        var exact = entity switch
         {
             "110000" => OrbatUnitType.Headquarters,
             "121100" => OrbatUnitType.Infantry,
@@ -188,6 +188,40 @@ public static class OrbatSidcParser
             "220100" => OrbatUnitType.Intelligence,
             _ => OrbatUnitType.Unspecified
         };
+
+        if (exact != OrbatUnitType.Unspecified)
+            return exact;
+
+        if (entity.StartsWith("121102", StringComparison.Ordinal))
+            return OrbatUnitType.MechanizedInfantry;
+        if (entity.StartsWith("1211", StringComparison.Ordinal))
+            return OrbatUnitType.Infantry;
+        if (entity.StartsWith("1212", StringComparison.Ordinal))
+            return OrbatUnitType.Armor;
+        if (entity.StartsWith("1213", StringComparison.Ordinal))
+            return OrbatUnitType.Reconnaissance;
+        if (entity.StartsWith("13", StringComparison.Ordinal))
+            return OrbatUnitType.Artillery;
+        if (entity.StartsWith("14", StringComparison.Ordinal))
+            return OrbatUnitType.Aviation;
+        if (entity.StartsWith("15", StringComparison.Ordinal))
+            return OrbatUnitType.Engineer;
+        if (entity.StartsWith("16", StringComparison.Ordinal))
+            return OrbatUnitType.Signal;
+        if (entity.StartsWith("17", StringComparison.Ordinal))
+            return OrbatUnitType.MilitaryPolice;
+        if (entity.StartsWith("18", StringComparison.Ordinal))
+            return OrbatUnitType.Logistics;
+        if (entity.StartsWith("19", StringComparison.Ordinal))
+            return OrbatUnitType.Medical;
+        if (entity.StartsWith("20", StringComparison.Ordinal))
+            return OrbatUnitType.Maintenance;
+        if (entity.StartsWith("21", StringComparison.Ordinal))
+            return OrbatUnitType.Transportation;
+        if (entity.StartsWith("22", StringComparison.Ordinal))
+            return OrbatUnitType.Intelligence;
+
+        return OrbatUnitType.Unspecified;
     }
 
     private static string ComposeEntity(OrbatUnitType unitType)

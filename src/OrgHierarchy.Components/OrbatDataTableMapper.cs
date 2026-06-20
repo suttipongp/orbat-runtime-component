@@ -21,7 +21,8 @@ public static class OrbatDataTableMapper
         string reinforcedReducedColumn,
         string reinforcedColumn,
         string reducedColumn,
-        string sortColumn)
+        string sortColumn,
+        bool sidcOverridesFields = true)
     {
         if (table == null)
             throw new ArgumentNullException(nameof(table));
@@ -44,12 +45,25 @@ public static class OrbatDataTableMapper
             var affiliationText = ReadString(row, affiliationColumn);
             var echelonText = ReadString(row, echelonColumn);
             var unitTypeText = ReadString(row, unitTypeColumn);
-            var affiliation = ReadEnum(affiliationText, sidcParts.Affiliation ?? OrbatAffiliation.Friend);
-            var echelon = ReadEnum(echelonText, sidcParts.Echelon ?? OrbatEchelon.Battalion);
-            var unitType = ReadUnitType(unitTypeText, sidcParts.UnitType ?? OrbatUnitType.Unspecified);
-            var headquarters = ReadBoolean(row, headquartersColumn) || sidcParts.Headquarters == true;
-            var taskForce = ReadBoolean(row, taskForceColumn) || sidcParts.TaskForce == true;
-            var plannedAnticipated = ReadBoolean(row, plannedAnticipatedColumn) || sidcParts.PlannedAnticipated == true;
+            var useSidc = sidcOverridesFields && sidcParts.IsValid;
+            var affiliation = useSidc && sidcParts.Affiliation.HasValue
+                ? sidcParts.Affiliation.Value
+                : ReadEnum(affiliationText, sidcParts.Affiliation ?? OrbatAffiliation.Friend);
+            var echelon = useSidc && sidcParts.Echelon.HasValue
+                ? sidcParts.Echelon.Value
+                : ReadEnum(echelonText, sidcParts.Echelon ?? OrbatEchelon.Battalion);
+            var unitType = useSidc && sidcParts.UnitType.HasValue
+                ? sidcParts.UnitType.Value
+                : ReadUnitType(unitTypeText, sidcParts.UnitType ?? OrbatUnitType.Unspecified);
+            var headquarters = useSidc && sidcParts.Headquarters.HasValue
+                ? sidcParts.Headquarters.Value
+                : ReadBoolean(row, headquartersColumn) || sidcParts.Headquarters == true;
+            var taskForce = useSidc && sidcParts.TaskForce.HasValue
+                ? sidcParts.TaskForce.Value
+                : ReadBoolean(row, taskForceColumn) || sidcParts.TaskForce == true;
+            var plannedAnticipated = useSidc && sidcParts.PlannedAnticipated.HasValue
+                ? sidcParts.PlannedAnticipated.Value
+                : ReadBoolean(row, plannedAnticipatedColumn) || sidcParts.PlannedAnticipated == true;
             sidc ??= OrbatSidcParser.Compose(affiliation, echelon, unitType, headquarters, taskForce, plannedAnticipated);
 
             records.Add(new OrbatUnitRecord

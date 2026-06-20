@@ -173,9 +173,10 @@ You can rename the expected ORBAT columns through `IdColumn`, `ParentIdColumn`,
 
 When `Sidc` is present, `OrbatChartView` can derive common MIL-STD-2525D-style
 values for affiliation, echelon, selected unit types, headquarters, task force,
-and planned/anticipated status. Explicit table columns still take precedence for
-the enum values, while boolean flags are enabled when either the table column or
-SIDC indicates them.
+and planned/anticipated status. By default, a valid SIDC overrides those
+individual table fields so replacing the SIDC also changes the rendered unit
+symbol. Set `SidcOverridesFields` to `false` when your table columns should stay
+authoritative and SIDC should act only as fallback/supporting data.
 
 When `Sidc` is missing, the component creates a best-effort 20-digit SIDC from
 the existing ORBAT fields so older data can still expose a usable SIDC value.
