@@ -12,6 +12,7 @@ internal sealed class OrbatUnitDraft
     public OrbatAffiliation Affiliation { get; set; } = OrbatAffiliation.Friend;
     public OrbatEchelon Echelon { get; set; } = OrbatEchelon.Unspecified;
     public OrbatUnitType UnitType { get; set; } = OrbatUnitType.Unspecified;
+    public string Sidc { get; set; } = string.Empty;
     public string SymbolText { get; set; } = string.Empty;
     public bool Headquarters { get; set; }
     public bool TaskForce { get; set; }
@@ -31,6 +32,7 @@ internal sealed class OrbatUnitEditForm : Form
     private readonly ComboBox _affiliationComboBox = new();
     private readonly ComboBox _echelonComboBox = new();
     private readonly ComboBox _unitTypeComboBox = new();
+    private readonly TextBox _sidcTextBox = new();
     private readonly TextBox _symbolTextTextBox = new();
     private readonly ComboBox _reinforcedReducedComboBox = new();
     private readonly CheckBox _headquartersCheckBox = new();
@@ -50,14 +52,14 @@ internal sealed class OrbatUnitEditForm : Form
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
-        ClientSize = new Size(430, 560);
+        ClientSize = new Size(430, 594);
         Padding = new Padding(12);
 
         var layout = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
             ColumnCount = 2,
-            RowCount = 16,
+            RowCount = 17,
             AutoSize = false
         };
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 136));
@@ -71,14 +73,15 @@ internal sealed class OrbatUnitEditForm : Form
         AddComboRow(layout, "Affiliation", _affiliationComboBox, unit.Affiliation, 5);
         AddComboRow(layout, "Echelon", _echelonComboBox, unit.Echelon, 6);
         AddComboRow(layout, "Unit type", _unitTypeComboBox, unit.UnitType, 7);
-        AddTextRow(layout, "Symbol text", _symbolTextTextBox, unit.SymbolText, 8, false);
-        AddComboRow(layout, "Reinforced/reduced", _reinforcedReducedComboBox, unit.ReinforcedReduced, 9);
-        AddCheckRow(layout, _headquartersCheckBox, "Headquarters", unit.Headquarters, 10);
-        AddCheckRow(layout, _taskForceCheckBox, "Task force", unit.TaskForce, 11);
-        AddCheckRow(layout, _plannedAnticipatedCheckBox, "Planned/Anticipated", unit.PlannedAnticipated, 12);
-        AddNumberRow(layout, "Stack count", _stackCountInput, unit.StackCount, 1, 6, 13);
-        AddNumberRow(layout, "Sort order", _sortOrderInput, unit.SortOrder, 0, 100000, 14);
-        AddButtonRow(layout, 15);
+        AddTextRow(layout, "SIDC", _sidcTextBox, unit.Sidc, 8, false);
+        AddTextRow(layout, "Symbol text", _symbolTextTextBox, unit.SymbolText, 9, false);
+        AddComboRow(layout, "Reinforced/reduced", _reinforcedReducedComboBox, unit.ReinforcedReduced, 10);
+        AddCheckRow(layout, _headquartersCheckBox, "Headquarters", unit.Headquarters, 11);
+        AddCheckRow(layout, _taskForceCheckBox, "Task force", unit.TaskForce, 12);
+        AddCheckRow(layout, _plannedAnticipatedCheckBox, "Planned/Anticipated", unit.PlannedAnticipated, 13);
+        AddNumberRow(layout, "Stack count", _stackCountInput, unit.StackCount, 1, 6, 14);
+        AddNumberRow(layout, "Sort order", _sortOrderInput, unit.SortOrder, 0, 100000, 15);
+        AddButtonRow(layout, 16);
 
         Controls.Add(layout);
 
@@ -192,6 +195,7 @@ internal sealed class OrbatUnitEditForm : Form
             Affiliation = GetSelected(_affiliationComboBox, OrbatAffiliation.Friend),
             Echelon = GetSelected(_echelonComboBox, OrbatEchelon.Unspecified),
             UnitType = GetSelected(_unitTypeComboBox, OrbatUnitType.Unspecified),
+            Sidc = _sidcTextBox.Text.Trim(),
             SymbolText = _symbolTextTextBox.Text.Trim(),
             Headquarters = _headquartersCheckBox.Checked,
             TaskForce = _taskForceCheckBox.Checked,

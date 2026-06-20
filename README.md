@@ -125,6 +125,7 @@ from ID and Parent ID columns.
 | `Affiliation` | `Unspecified`, `Friend`, `Hostile`, `Neutral`, `Unknown`, `Suspect`, `Civilian` | No |
 | `Echelon` | `Team`, `Company`, `Battalion`, `Brigade`, `Division`, `Corps` | No |
 | `UnitType` | `Unspecified`, `Headquarters`, `Infantry`, `Armor`, `MechanizedInfantry`, `Artillery`, `Air`, `Naval`, `SpecialOperations`, `Logistics` | No |
+| `Sidc` | `10031010171211000000` | No |
 | `SymbolText` | `CG`, `CSS`, `HQ` | No |
 | `Headquarters` | `true` | No |
 | `TaskForce` | `true` | No |
@@ -166,6 +167,6 @@ orbat.FitToView();
 
 You can rename the expected ORBAT columns through `IdColumn`, `ParentIdColumn`,
 `NameColumn`, `ShortNameColumn`, `UniqueDesignationColumn`, `AffiliationColumn`,
-`EchelonColumn`, `UnitTypeColumn`, `SymbolTextColumn`, `HeadquartersColumn`, `TaskForceColumn`,
+`EchelonColumn`, `UnitTypeColumn`, `SidcColumn`, `SymbolTextColumn`, `HeadquartersColumn`, `TaskForceColumn`,
 `PlannedAnticipatedColumn`, `StackCountColumn`,
 `ReinforcedColumn`, `ReducedColumn`, and `SortColumn`.

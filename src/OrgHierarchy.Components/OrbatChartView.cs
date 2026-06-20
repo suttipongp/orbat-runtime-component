@@ -71,6 +71,10 @@ public sealed class OrbatChartView : UserControl
     public string UnitTypeColumn { get; set; } = "UnitType";
 
     [Category("Data")]
+    [DefaultValue("Sidc")]
+    public string SidcColumn { get; set; } = "Sidc";
+
+    [Category("Data")]
     [DefaultValue("SymbolText")]
     public string SymbolTextColumn { get; set; } = "SymbolText";
 
@@ -188,6 +192,7 @@ public sealed class OrbatChartView : UserControl
             AffiliationColumn,
             EchelonColumn,
             UnitTypeColumn,
+            SidcColumn,
             SymbolTextColumn,
             HeadquartersColumn,
             TaskForceColumn,

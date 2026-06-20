@@ -94,6 +94,7 @@ public sealed partial class MainForm : Form
             Affiliation = parent.Affiliation,
             Echelon = GetChildEchelon(parent.Echelon),
             UnitType = OrbatUnitType.Infantry,
+            Sidc = string.Empty,
             SymbolText = string.Empty,
             Headquarters = false,
             TaskForce = false,
@@ -383,7 +384,8 @@ public sealed partial class MainForm : Form
             Affiliation = ParseEnum(row["Affiliation"], OrbatAffiliation.Friend),
             Echelon = ParseEnum(row["Echelon"], OrbatEchelon.Unspecified),
             UnitType = ParseUnitType(row["UnitType"]),
-            SymbolText = Convert.ToString(row["SymbolText"]) ?? string.Empty,
+            Sidc = ReadString(row, "Sidc"),
+            SymbolText = ReadString(row, "SymbolText"),
             Headquarters = Convert.ToBoolean(row["Headquarters"]),
             TaskForce = Convert.ToBoolean(row["TaskForce"]),
             PlannedAnticipated = ReadBoolean(row, "PlannedAnticipated"),
@@ -404,6 +406,7 @@ public sealed partial class MainForm : Form
             unit.Affiliation.ToString(),
             unit.Echelon.ToString(),
             unit.UnitType.ToString(),
+            unit.Sidc,
             unit.SymbolText,
             unit.Headquarters,
             unit.TaskForce,
@@ -423,6 +426,7 @@ public sealed partial class MainForm : Form
         row["Affiliation"] = unit.Affiliation.ToString();
         row["Echelon"] = unit.Echelon.ToString();
         row["UnitType"] = unit.UnitType.ToString();
+        row["Sidc"] = unit.Sidc;
         row["SymbolText"] = unit.SymbolText;
         row["Headquarters"] = unit.Headquarters;
         row["TaskForce"] = unit.TaskForce;
@@ -437,6 +441,14 @@ public sealed partial class MainForm : Form
     private static string? GetNullableString(DataRow row, string columnName)
     {
         return row[columnName] == DBNull.Value ? null : Convert.ToString(row[columnName]);
+    }
+
+    private static string ReadString(DataRow row, string columnName)
+    {
+        if (!row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value)
+            return string.Empty;
+
+        return Convert.ToString(row[columnName]) ?? string.Empty;
     }
 
     private static bool ReadBoolean(DataRow row, string columnName)
@@ -605,6 +617,7 @@ public sealed partial class MainForm : Form
         table.Columns.Add("Affiliation", typeof(string));
         table.Columns.Add("Echelon", typeof(string));
         table.Columns.Add("UnitType", typeof(string));
+        table.Columns.Add("Sidc", typeof(string));
         table.Columns.Add("SymbolText", typeof(string));
         table.Columns.Add("Headquarters", typeof(bool));
         table.Columns.Add("TaskForce", typeof(bool));
@@ -664,6 +677,7 @@ public sealed partial class MainForm : Form
             affiliation,
             echelon,
             unitType,
+            string.Empty,
             string.Empty,
             headquarters,
             taskForce,

@@ -13,6 +13,7 @@ public sealed class OrbatUnitRecord
     public OrbatAffiliation Affiliation { get; set; } = OrbatAffiliation.Friend;
     public OrbatEchelon Echelon { get; set; } = OrbatEchelon.Battalion;
     public OrbatUnitType UnitType { get; set; } = OrbatUnitType.Infantry;
+    public string? Sidc { get; set; }
     public string? SymbolText { get; set; }
     public bool Headquarters { get; set; }
     public bool TaskForce { get; set; }
