@@ -147,7 +147,9 @@ public sealed partial class MainForm : Form
             return;
 
         form.Unit.Id = CreateNewUnitId(form.Unit.Echelon, form.Unit.UnitType);
-        AddOrbatRow(GetOrbatTable(), form.Unit);
+        if (!TryAddOrbatRow(GetOrbatTable(), form.Unit, "Add Unit"))
+            return;
+
         SaveOrbatTable();
         ReloadOrbatTable();
     }
@@ -397,7 +399,9 @@ public sealed partial class MainForm : Form
                 ? GetNextSortOrder(parentId)
                 : unit.SortOrder;
 
-            AddOrbatRow(table, unit.ToDraft(newId, parentId, sortOrder));
+            if (!TryAddOrbatRow(table, unit.ToDraft(newId, parentId, sortOrder), title))
+                return;
+
             insertedCount++;
         }
 
@@ -524,6 +528,12 @@ public sealed partial class MainForm : Form
             var table = new DataTable("Orbat");
             table.ReadXml(dialog.FileName);
             EnsureOrbatColumns(table);
+            if (TryFindDuplicateUnitId(table, out var duplicateId))
+            {
+                MessageBox.Show(this, $"Import contains duplicate ORBAT unit Id '{duplicateId}'. Please fix the file before importing.", "Import ORBAT Data", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             _orbatTable = table;
             _orbatViewRootId = null;
             SaveOrbatTable();
@@ -762,7 +772,7 @@ public sealed partial class MainForm : Form
             id = $"{prefix}-{serial:000}";
             serial++;
         }
-        while (table.Rows.Cast<DataRow>().Any(row => string.Equals(Convert.ToString(row["Id"]), id, StringComparison.OrdinalIgnoreCase)));
+        while (ContainsUnitId(table, id));
 
         return id;
     }
@@ -855,6 +865,44 @@ public sealed partial class MainForm : Form
             .Rows
             .Cast<DataRow>()
             .FirstOrDefault(row => string.Equals(Convert.ToString(row["Id"]), id, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private bool TryAddOrbatRow(DataTable table, OrbatUnitDraft unit, string title)
+    {
+        if (ContainsUnitId(table, unit.Id))
+        {
+            MessageBox.Show(this, $"ORBAT unit Id '{unit.Id}' already exists. Please try again or choose a different unit type/echelon.", title, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return false;
+        }
+
+        AddOrbatRow(table, unit);
+        return true;
+    }
+
+    private static bool ContainsUnitId(DataTable table, string id)
+    {
+        return table.Rows
+            .Cast<DataRow>()
+            .Any(row => string.Equals(Convert.ToString(row["Id"]), id, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool TryFindDuplicateUnitId(DataTable table, out string duplicateId)
+    {
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var id in table.Rows.Cast<DataRow>().Select(row => Convert.ToString(row["Id"]) ?? string.Empty))
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                continue;
+
+            if (!seen.Add(id))
+            {
+                duplicateId = id;
+                return true;
+            }
+        }
+
+        duplicateId = string.Empty;
+        return false;
     }
 
     private void DeleteOrbatRows(string rootId)
