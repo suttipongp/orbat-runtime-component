@@ -15,6 +15,11 @@ partial class MainForm
     private Button _showBranchButton = null!;
     private Button _showParentButton = null!;
     private Button _showAllButton = null!;
+    private Button _copyFormatButton = null!;
+    private Button _pasteFormatButton = null!;
+    private Button _exportOrbatButton = null!;
+    private Button _importOrbatButton = null!;
+    private Button _resetOrbatButton = null!;
     private ContextMenuStrip _orbatContextMenu = null!;
     private Panel _orbatOptionsPanel = null!;
     private PropertyGrid _propertyGrid = null!;
@@ -45,6 +50,11 @@ partial class MainForm
         _showBranchButton = new Button();
         _showParentButton = new Button();
         _showAllButton = new Button();
+        _copyFormatButton = new Button();
+        _pasteFormatButton = new Button();
+        _exportOrbatButton = new Button();
+        _importOrbatButton = new Button();
+        _resetOrbatButton = new Button();
         _orbatContextMenu = new ContextMenuStrip(components);
         _orbatOptionsPanel = new Panel();
         _propertyGrid = new PropertyGrid();
@@ -83,9 +93,9 @@ partial class MainForm
         // _orbatChartView
         // 
         _orbatChartView.Dock = DockStyle.Fill;
-        _orbatChartView.Location = new Point(3, 45);
+        _orbatChartView.Location = new Point(3, 79);
         _orbatChartView.Name = "_orbatChartView";
-        _orbatChartView.Size = new Size(766, 686);
+        _orbatChartView.Size = new Size(766, 652);
         _orbatChartView.TabIndex = 1;
         // 
         // _showUniqueDesignationCheckBox
@@ -160,6 +170,56 @@ partial class MainForm
         _showAllButton.Text = "Show all";
         _showAllButton.UseVisualStyleBackColor = true;
         // 
+        // _copyFormatButton
+        // 
+        _copyFormatButton.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+        _copyFormatButton.Location = new Point(230, 40);
+        _copyFormatButton.Name = "_copyFormatButton";
+        _copyFormatButton.Size = new Size(86, 28);
+        _copyFormatButton.TabIndex = 7;
+        _copyFormatButton.Text = "Copy format";
+        _copyFormatButton.UseVisualStyleBackColor = true;
+        // 
+        // _pasteFormatButton
+        // 
+        _pasteFormatButton.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+        _pasteFormatButton.Location = new Point(322, 40);
+        _pasteFormatButton.Name = "_pasteFormatButton";
+        _pasteFormatButton.Size = new Size(86, 28);
+        _pasteFormatButton.TabIndex = 8;
+        _pasteFormatButton.Text = "Paste format";
+        _pasteFormatButton.UseVisualStyleBackColor = true;
+        // 
+        // _exportOrbatButton
+        // 
+        _exportOrbatButton.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+        _exportOrbatButton.Location = new Point(428, 40);
+        _exportOrbatButton.Name = "_exportOrbatButton";
+        _exportOrbatButton.Size = new Size(76, 28);
+        _exportOrbatButton.TabIndex = 9;
+        _exportOrbatButton.Text = "Export";
+        _exportOrbatButton.UseVisualStyleBackColor = true;
+        // 
+        // _importOrbatButton
+        // 
+        _importOrbatButton.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+        _importOrbatButton.Location = new Point(510, 40);
+        _importOrbatButton.Name = "_importOrbatButton";
+        _importOrbatButton.Size = new Size(76, 28);
+        _importOrbatButton.TabIndex = 10;
+        _importOrbatButton.Text = "Import";
+        _importOrbatButton.UseVisualStyleBackColor = true;
+        // 
+        // _resetOrbatButton
+        // 
+        _resetOrbatButton.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+        _resetOrbatButton.Location = new Point(592, 40);
+        _resetOrbatButton.Name = "_resetOrbatButton";
+        _resetOrbatButton.Size = new Size(86, 28);
+        _resetOrbatButton.TabIndex = 11;
+        _resetOrbatButton.Text = "Reset data";
+        _resetOrbatButton.UseVisualStyleBackColor = true;
+        // 
         // _orbatOptionsPanel
         // 
         _orbatOptionsPanel.Controls.Add(_showUniqueDesignationCheckBox);
@@ -169,11 +229,16 @@ partial class MainForm
         _orbatOptionsPanel.Controls.Add(_showBranchButton);
         _orbatOptionsPanel.Controls.Add(_showParentButton);
         _orbatOptionsPanel.Controls.Add(_showAllButton);
+        _orbatOptionsPanel.Controls.Add(_copyFormatButton);
+        _orbatOptionsPanel.Controls.Add(_pasteFormatButton);
+        _orbatOptionsPanel.Controls.Add(_exportOrbatButton);
+        _orbatOptionsPanel.Controls.Add(_importOrbatButton);
+        _orbatOptionsPanel.Controls.Add(_resetOrbatButton);
         _orbatOptionsPanel.Dock = DockStyle.Top;
         _orbatOptionsPanel.Location = new Point(3, 3);
         _orbatOptionsPanel.Name = "_orbatOptionsPanel";
         _orbatOptionsPanel.Padding = new Padding(10, 7, 10, 5);
-        _orbatOptionsPanel.Size = new Size(766, 42);
+        _orbatOptionsPanel.Size = new Size(766, 76);
         _orbatOptionsPanel.TabIndex = 0;
         // 
         // _propertyGrid

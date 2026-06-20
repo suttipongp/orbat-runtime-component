@@ -30,6 +30,11 @@ public sealed partial class MainForm : Form
         _showBranchButton.Click += (_, _) => ShowSelectedBranch();
         _showParentButton.Click += (_, _) => ShowParentBranch();
         _showAllButton.Click += (_, _) => ShowAllUnits();
+        _copyFormatButton.Click += (_, _) => CopySelectedUnitFormat();
+        _pasteFormatButton.Click += (_, _) => PasteUnitFormatToSelectedUnit();
+        _exportOrbatButton.Click += (_, _) => ExportOrbatData();
+        _importOrbatButton.Click += (_, _) => ImportOrbatData();
+        _resetOrbatButton.Click += (_, _) => ResetOrbatData();
         KeyDown += MainForm_KeyDown;
 
         _orbatContextMenu.Items.Add("Add unit under this unit", null, (_, _) => AddChildUnit());
@@ -357,6 +362,68 @@ public sealed partial class MainForm : Form
         row["ReinforcedReduced"] = format.ReinforcedReduced;
         row["Reinforced"] = format.ReinforcedReduced is nameof(OrbatReinforcedReduced.Reinforced) or nameof(OrbatReinforcedReduced.ReinforcedAndReduced);
         row["Reduced"] = format.ReinforcedReduced is nameof(OrbatReinforcedReduced.Reduced) or nameof(OrbatReinforcedReduced.ReinforcedAndReduced);
+    }
+
+    private void ExportOrbatData()
+    {
+        using var dialog = new SaveFileDialog
+        {
+            Title = "Export ORBAT Data",
+            Filter = "ORBAT XML (*.xml)|*.xml|All files (*.*)|*.*",
+            FileName = "orbat.xml",
+            AddExtension = true,
+            DefaultExt = "xml"
+        };
+
+        if (dialog.ShowDialog(this) != DialogResult.OK)
+            return;
+
+        GetOrbatTable().WriteXml(dialog.FileName, XmlWriteMode.WriteSchema);
+    }
+
+    private void ImportOrbatData()
+    {
+        using var dialog = new OpenFileDialog
+        {
+            Title = "Import ORBAT Data",
+            Filter = "ORBAT XML (*.xml)|*.xml|All files (*.*)|*.*",
+            CheckFileExists = true
+        };
+
+        if (dialog.ShowDialog(this) != DialogResult.OK)
+            return;
+
+        try
+        {
+            var table = new DataTable("Orbat");
+            table.ReadXml(dialog.FileName);
+            EnsureOrbatColumns(table);
+            _orbatTable = table;
+            _orbatViewRootId = null;
+            SaveOrbatTable();
+            ReloadOrbatTable();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Could not import ORBAT data.\r\n\r\n{ex.Message}", "Import ORBAT Data", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+    }
+
+    private void ResetOrbatData()
+    {
+        var confirm = MessageBox.Show(
+            this,
+            "Reset ORBAT data to the built-in sample data?",
+            "Reset ORBAT Data",
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Warning);
+        if (confirm != DialogResult.Yes)
+            return;
+
+        _orbatTable = CreateSampleOrbatTable();
+        _orbatViewRootId = null;
+        SaveOrbatTable();
+        ReloadOrbatTable();
     }
 
     private List<DataRow> GetSiblingRows(string? parentId)
