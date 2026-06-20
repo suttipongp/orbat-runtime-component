@@ -138,6 +138,9 @@ public sealed partial class MainForm : Form
         if (form.ShowDialog(this) != DialogResult.OK)
             return;
 
+        if (!ValidateParentChange(form.Unit.Id, form.Unit.ParentId))
+            return;
+
         AddOrbatRow(GetOrbatTable(), form.Unit);
         SaveOrbatTable();
         ReloadOrbatTable();
@@ -158,6 +161,9 @@ public sealed partial class MainForm : Form
 
         using var form = new OrbatUnitEditForm(CreateDraft(row), false);
         if (form.ShowDialog(this) != DialogResult.OK)
+            return;
+
+        if (!ValidateParentChange(form.Unit.Id, form.Unit.ParentId))
             return;
 
         UpdateOrbatRow(row, form.Unit);
@@ -480,6 +486,32 @@ public sealed partial class MainForm : Form
         }
 
         return ids;
+    }
+
+    private bool ValidateParentChange(string unitId, string? parentId)
+    {
+        if (string.IsNullOrWhiteSpace(parentId))
+            return true;
+
+        if (string.Equals(unitId, parentId, StringComparison.OrdinalIgnoreCase))
+        {
+            MessageBox.Show(this, "A unit cannot be its own parent.", "ORBAT Unit", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return false;
+        }
+
+        if (FindOrbatRow(parentId) == null)
+        {
+            MessageBox.Show(this, "Parent Id was not found.", "ORBAT Unit", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return false;
+        }
+
+        if (GetSubtreeIds(unitId).Contains(parentId))
+        {
+            MessageBox.Show(this, "A unit cannot be moved under one of its subordinate units.", "ORBAT Unit", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return false;
+        }
+
+        return true;
     }
 
     private bool IsCurrentViewWithin(string rootId)

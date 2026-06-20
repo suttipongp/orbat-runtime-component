@@ -57,7 +57,7 @@ internal sealed class OrbatUnitEditForm : Form
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
-        ClientSize = new Size(460, 640);
+        ClientSize = new Size(480, 680);
         Padding = new Padding(12);
 
         var root = new TableLayoutPanel
@@ -67,7 +67,7 @@ internal sealed class OrbatUnitEditForm : Form
             RowCount = 2
         };
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 48));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 64));
 
         var scrollPanel = new Panel
         {
@@ -88,7 +88,7 @@ internal sealed class OrbatUnitEditForm : Form
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
 
         AddTextRow(layout, "Id", _idTextBox, unit.Id, 0, true);
-        AddTextRow(layout, "Parent Id", _parentIdTextBox, unit.ParentId ?? string.Empty, 1, true);
+        AddTextRow(layout, "Parent Id", _parentIdTextBox, unit.ParentId ?? string.Empty, 1, false);
         AddTextRow(layout, "Name", _nameTextBox, unit.Name, 2, false);
         AddTextRow(layout, "Short name", _shortNameTextBox, unit.ShortName, 3, false);
         AddTextRow(layout, "Unique designation", _uniqueDesignationTextBox, unit.UniqueDesignation, 4, false);
@@ -213,6 +213,7 @@ internal sealed class OrbatUnitEditForm : Form
 
         _okButton.Text = "OK";
         _okButton.Width = 82;
+        _okButton.Height = 32;
         _okButton.DialogResult = DialogResult.OK;
         _okButton.Click += (_, args) =>
         {
@@ -225,6 +226,7 @@ internal sealed class OrbatUnitEditForm : Form
 
         _cancelButton.Text = "Cancel";
         _cancelButton.Width = 82;
+        _cancelButton.Height = 32;
         _cancelButton.DialogResult = DialogResult.Cancel;
 
         panel.Controls.Add(_okButton);
@@ -252,6 +254,13 @@ internal sealed class OrbatUnitEditForm : Form
         {
             MessageBox.Show(this, "Name is required.", "ORBAT Unit", MessageBoxButtons.OK, MessageBoxIcon.Information);
             _nameTextBox.Focus();
+            return false;
+        }
+
+        if (string.Equals(_idTextBox.Text.Trim(), _parentIdTextBox.Text.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            MessageBox.Show(this, "Parent Id cannot be the same as Id.", "ORBAT Unit", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            _parentIdTextBox.Focus();
             return false;
         }
 
