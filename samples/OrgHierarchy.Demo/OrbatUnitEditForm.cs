@@ -242,7 +242,7 @@ internal sealed class OrbatUnitEditForm : Form
             Affiliation = GetSelected(_affiliationComboBox, OrbatAffiliation.Friend),
             Echelon = GetSelected(_echelonComboBox, OrbatEchelon.Unspecified),
             UnitType = GetSelected(_unitTypeComboBox, OrbatUnitType.Unspecified),
-            Sidc = _sidcTextBox.Text.Trim(),
+            Sidc = GetOrCreateSidc(),
             SymbolText = _symbolTextTextBox.Text.Trim(),
             Headquarters = _headquartersCheckBox.Checked,
             TaskForce = _taskForceCheckBox.Checked,
@@ -253,6 +253,21 @@ internal sealed class OrbatUnitEditForm : Form
         };
 
         return true;
+    }
+
+    private string GetOrCreateSidc()
+    {
+        var sidc = _sidcTextBox.Text.Trim();
+        if (!string.IsNullOrWhiteSpace(sidc))
+            return sidc;
+
+        return OrbatSidcParser.Compose(
+            GetSelected(_affiliationComboBox, OrbatAffiliation.Friend),
+            GetSelected(_echelonComboBox, OrbatEchelon.Unspecified),
+            GetSelected(_unitTypeComboBox, OrbatUnitType.Unspecified),
+            _headquartersCheckBox.Checked,
+            _taskForceCheckBox.Checked,
+            _plannedAnticipatedCheckBox.Checked);
     }
 
     private void ApplySidc()

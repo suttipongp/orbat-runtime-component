@@ -94,7 +94,7 @@ public sealed partial class MainForm : Form
             Affiliation = parent.Affiliation,
             Echelon = GetChildEchelon(parent.Echelon),
             UnitType = OrbatUnitType.Infantry,
-            Sidc = string.Empty,
+            Sidc = OrbatSidcParser.Compose(parent.Affiliation, GetChildEchelon(parent.Echelon), OrbatUnitType.Infantry, false, false, false),
             SymbolText = string.Empty,
             Headquarters = false,
             TaskForce = false,
@@ -374,7 +374,7 @@ public sealed partial class MainForm : Form
 
     private static OrbatUnitDraft CreateDraft(DataRow row)
     {
-        return new OrbatUnitDraft
+        var draft = new OrbatUnitDraft
         {
             Id = Convert.ToString(row["Id"]) ?? string.Empty,
             ParentId = GetNullableString(row, "ParentId"),
@@ -393,6 +393,11 @@ public sealed partial class MainForm : Form
             ReinforcedReduced = ParseReinforcedReduced(row),
             SortOrder = Convert.ToInt32(row["SortOrder"])
         };
+
+        if (string.IsNullOrWhiteSpace(draft.Sidc))
+            draft.Sidc = OrbatSidcParser.Compose(draft.Affiliation, draft.Echelon, draft.UnitType, draft.Headquarters, draft.TaskForce, draft.PlannedAnticipated);
+
+        return draft;
     }
 
     private static void AddOrbatRow(DataTable table, OrbatUnitDraft unit)

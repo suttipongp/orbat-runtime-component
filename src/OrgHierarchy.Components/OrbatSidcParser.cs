@@ -2,6 +2,40 @@ namespace OrgHierarchy.Components;
 
 public static class OrbatSidcParser
 {
+    public static string Compose(OrbatUnitRecord unit)
+    {
+        if (unit == null)
+            throw new ArgumentNullException(nameof(unit));
+
+        return Compose(
+            unit.Affiliation,
+            unit.Echelon,
+            unit.UnitType,
+            unit.Headquarters,
+            unit.TaskForce,
+            unit.PlannedAnticipated);
+    }
+
+    public static string Compose(
+        OrbatAffiliation affiliation,
+        OrbatEchelon echelon,
+        OrbatUnitType unitType,
+        bool headquarters,
+        bool taskForce,
+        bool plannedAnticipated)
+    {
+        return string.Concat(
+            "10",
+            "0",
+            ComposeAffiliation(affiliation),
+            "10",
+            plannedAnticipated ? "1" : "0",
+            ComposeHeadquartersTaskForce(headquarters, taskForce),
+            ComposeEchelon(echelon),
+            ComposeEntity(unitType),
+            "0000");
+    }
+
     public static OrbatSidcParseResult Parse(string? sidc)
     {
         var result = new OrbatSidcParseResult();
@@ -61,6 +95,29 @@ public static class OrbatSidcParser
         };
     }
 
+    private static string ComposeAffiliation(OrbatAffiliation affiliation)
+    {
+        return affiliation switch
+        {
+            OrbatAffiliation.Unknown => "1",
+            OrbatAffiliation.Friend => "3",
+            OrbatAffiliation.Neutral => "4",
+            OrbatAffiliation.Suspect => "5",
+            OrbatAffiliation.Hostile => "6",
+            OrbatAffiliation.Civilian => "4",
+            _ => "0"
+        };
+    }
+
+    private static string ComposeHeadquartersTaskForce(bool headquarters, bool taskForce)
+    {
+        if (headquarters && taskForce)
+            return "6";
+        if (headquarters)
+            return "2";
+        return taskForce ? "4" : "0";
+    }
+
     private static OrbatEchelon? ParseEchelon(string echelon)
     {
         return echelon switch
@@ -80,6 +137,28 @@ public static class OrbatSidcParser
             "25" => OrbatEchelon.Region,
             "26" => OrbatEchelon.Command,
             _ => OrbatEchelon.Unspecified
+        };
+    }
+
+    private static string ComposeEchelon(OrbatEchelon echelon)
+    {
+        return echelon switch
+        {
+            OrbatEchelon.Team => "11",
+            OrbatEchelon.Squad => "12",
+            OrbatEchelon.Section => "13",
+            OrbatEchelon.Platoon => "14",
+            OrbatEchelon.Company => "15",
+            OrbatEchelon.Battalion => "16",
+            OrbatEchelon.Regiment => "17",
+            OrbatEchelon.Brigade => "18",
+            OrbatEchelon.Division => "21",
+            OrbatEchelon.Corps => "22",
+            OrbatEchelon.Army => "23",
+            OrbatEchelon.ArmyGroup => "24",
+            OrbatEchelon.Region => "25",
+            OrbatEchelon.Command => "26",
+            _ => "00"
         };
     }
 
@@ -108,6 +187,35 @@ public static class OrbatSidcParser
             "210100" => OrbatUnitType.Transportation,
             "220100" => OrbatUnitType.Intelligence,
             _ => OrbatUnitType.Unspecified
+        };
+    }
+
+    private static string ComposeEntity(OrbatUnitType unitType)
+    {
+        return unitType switch
+        {
+            OrbatUnitType.Headquarters => "110000",
+            OrbatUnitType.Infantry => "121100",
+            OrbatUnitType.MechanizedInfantry => "121102",
+            OrbatUnitType.Armor => "121200",
+            OrbatUnitType.Reconnaissance => "121300",
+            OrbatUnitType.Artillery => "130100",
+            OrbatUnitType.AirDefense => "130200",
+            OrbatUnitType.Aviation => "140100",
+            OrbatUnitType.Engineer => "150100",
+            OrbatUnitType.Signal => "160100",
+            OrbatUnitType.MilitaryPolice => "170100",
+            OrbatUnitType.Logistics => "180100",
+            OrbatUnitType.Medical => "190100",
+            OrbatUnitType.Maintenance => "200100",
+            OrbatUnitType.Transportation => "210100",
+            OrbatUnitType.Intelligence => "220100",
+            OrbatUnitType.SpecialOperations => "121300",
+            OrbatUnitType.Naval => "000000",
+            OrbatUnitType.Air => "000000",
+            OrbatUnitType.Cyber => "000000",
+            OrbatUnitType.PsychologicalOperations => "000000",
+            _ => "000000"
         };
     }
 }

@@ -44,6 +44,13 @@ public static class OrbatDataTableMapper
             var affiliationText = ReadString(row, affiliationColumn);
             var echelonText = ReadString(row, echelonColumn);
             var unitTypeText = ReadString(row, unitTypeColumn);
+            var affiliation = ReadEnum(affiliationText, sidcParts.Affiliation ?? OrbatAffiliation.Friend);
+            var echelon = ReadEnum(echelonText, sidcParts.Echelon ?? OrbatEchelon.Battalion);
+            var unitType = ReadUnitType(unitTypeText, sidcParts.UnitType ?? OrbatUnitType.Unspecified);
+            var headquarters = ReadBoolean(row, headquartersColumn) || sidcParts.Headquarters == true;
+            var taskForce = ReadBoolean(row, taskForceColumn) || sidcParts.TaskForce == true;
+            var plannedAnticipated = ReadBoolean(row, plannedAnticipatedColumn) || sidcParts.PlannedAnticipated == true;
+            sidc ??= OrbatSidcParser.Compose(affiliation, echelon, unitType, headquarters, taskForce, plannedAnticipated);
 
             records.Add(new OrbatUnitRecord
             {
@@ -52,14 +59,14 @@ public static class OrbatDataTableMapper
                 Name = ReadString(row, nameColumn),
                 ShortName = ReadOptionalString(row, shortNameColumn),
                 UniqueDesignation = ReadOptionalString(row, uniqueDesignationColumn),
-                Affiliation = ReadEnum(affiliationText, sidcParts.Affiliation ?? OrbatAffiliation.Friend),
-                Echelon = ReadEnum(echelonText, sidcParts.Echelon ?? OrbatEchelon.Battalion),
-                UnitType = ReadUnitType(unitTypeText, sidcParts.UnitType ?? OrbatUnitType.Unspecified),
+                Affiliation = affiliation,
+                Echelon = echelon,
+                UnitType = unitType,
                 Sidc = sidc,
                 SymbolText = ReadOptionalString(row, symbolTextColumn),
-                Headquarters = ReadBoolean(row, headquartersColumn) || sidcParts.Headquarters == true,
-                TaskForce = ReadBoolean(row, taskForceColumn) || sidcParts.TaskForce == true,
-                PlannedAnticipated = ReadBoolean(row, plannedAnticipatedColumn) || sidcParts.PlannedAnticipated == true,
+                Headquarters = headquarters,
+                TaskForce = taskForce,
+                PlannedAnticipated = plannedAnticipated,
                 StackCount = Math.Max(1, Math.Min(6, ReadInteger(row, stackCountColumn))),
                 ReinforcedReduced = reinforcedReduced,
                 Reinforced = reinforcedReduced == OrbatReinforcedReduced.Reinforced || reinforcedReduced == OrbatReinforcedReduced.ReinforcedAndReduced,

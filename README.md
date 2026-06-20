@@ -176,3 +176,6 @@ values for affiliation, echelon, selected unit types, headquarters, task force,
 and planned/anticipated status. Explicit table columns still take precedence for
 the enum values, while boolean flags are enabled when either the table column or
 SIDC indicates them.
+
+When `Sidc` is missing, the component creates a best-effort 20-digit SIDC from
+the existing ORBAT fields so older data can still expose a usable SIDC value.
