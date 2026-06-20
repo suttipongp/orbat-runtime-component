@@ -137,7 +137,7 @@ public sealed partial class MainForm : Form
             SortOrder = GetNextSortOrder(parent.Id)
         };
 
-        using var form = new OrbatUnitEditForm(draft, true, CreateParentOptions(draft.Id));
+        using var form = new OrbatUnitEditForm(draft, true, CreateParentOptions(draft.Id, draft.ParentId));
         if (form.ShowDialog(this) != DialogResult.OK)
             return;
 
@@ -163,7 +163,7 @@ public sealed partial class MainForm : Form
             return;
 
         var draft = CreateDraft(row);
-        using var form = new OrbatUnitEditForm(draft, false, CreateParentOptions(selected.Id));
+        using var form = new OrbatUnitEditForm(draft, false, CreateParentOptions(selected.Id, draft.ParentId));
         if (form.ShowDialog(this) != DialogResult.OK)
             return;
 
@@ -625,11 +625,12 @@ public sealed partial class MainForm : Form
         return depth;
     }
 
-    private IReadOnlyList<OrbatParentOption> CreateParentOptions(string currentUnitId)
+    private IReadOnlyList<OrbatParentOption> CreateParentOptions(string currentUnitId, string? currentParentId)
     {
         var excludedIds = string.IsNullOrWhiteSpace(currentUnitId)
             ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             : GetSubtreeIds(currentUnitId);
+        var visibleIds = GetCurrentVisibleOrbatIds();
 
         var options = new List<OrbatParentOption>
         {
@@ -637,6 +638,7 @@ public sealed partial class MainForm : Form
         };
 
         foreach (var row in GetOrbatTable().Rows.Cast<DataRow>()
+            .Where(row => visibleIds.Contains(Convert.ToString(row["Id"]) ?? string.Empty))
             .Where(row => !excludedIds.Contains(Convert.ToString(row["Id"]) ?? string.Empty))
             .OrderByDescending(row => GetEchelonRank(ParseEnum(row["Echelon"], OrbatEchelon.Unspecified)))
             .ThenBy(row => Convert.ToInt32(row["SortOrder"]))
@@ -648,7 +650,32 @@ public sealed partial class MainForm : Form
             options.Add(new OrbatParentOption(id, $"{echelon} - {name} ({id})", echelon));
         }
 
+        if (!string.IsNullOrWhiteSpace(currentParentId)
+            && !options.Any(option => string.Equals(option.Id, currentParentId, StringComparison.OrdinalIgnoreCase)))
+        {
+            var currentParent = FindOrbatRow(currentParentId);
+            if (currentParent != null)
+            {
+                var parentEchelon = ParseEnum(currentParent["Echelon"], OrbatEchelon.Unspecified);
+                var parentName = Convert.ToString(currentParent["Name"]) ?? currentParentId;
+                options.Insert(1, new OrbatParentOption(currentParentId, $"{parentEchelon} - {parentName} ({currentParentId}) [outside current view]", parentEchelon));
+            }
+        }
+
         return options;
+    }
+
+    private HashSet<string> GetCurrentVisibleOrbatIds()
+    {
+        if (!string.IsNullOrWhiteSpace(_orbatViewRootId))
+            return GetSubtreeIds(_orbatViewRootId);
+
+        return GetOrbatTable()
+            .Rows
+            .Cast<DataRow>()
+            .Select(row => Convert.ToString(row["Id"]) ?? string.Empty)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 
     private bool ValidateParentChange(OrbatUnitDraft unit)
