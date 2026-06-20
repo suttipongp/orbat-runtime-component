@@ -8,6 +8,7 @@ namespace OrgHierarchy.Demo;
 public sealed partial class MainForm : Form
 {
     private const string OrbatClipboardFormat = "OrgHierarchy.Demo.OrbatUnitFormat.v1";
+    private const string OrbatStructureClipboardFormat = "OrgHierarchy.Demo.OrbatSubtree.v1";
 
     private DataTable? _orbatTable;
     private string? _orbatViewRootId;
@@ -43,6 +44,8 @@ public sealed partial class MainForm : Form
         _orbatContextMenu.Items.Add(new ToolStripSeparator());
         _orbatContextMenu.Items.Add("Copy unit format", null, (_, _) => CopySelectedUnitFormat());
         _orbatContextMenu.Items.Add("Paste unit format", null, (_, _) => PasteUnitFormatToSelectedUnit());
+        _orbatContextMenu.Items.Add("Copy subordinate structure", null, (_, _) => CopySelectedUnitStructure());
+        _orbatContextMenu.Items.Add("Paste subordinate structure", null, (_, _) => PasteUnitStructureToSelectedUnit());
         _orbatContextMenu.Items.Add(new ToolStripSeparator());
         _orbatContextMenu.Items.Add("Move left", null, (_, _) => MoveSelectedUnitLeft());
         _orbatContextMenu.Items.Add("Move right", null, (_, _) => MoveSelectedUnitRight());
@@ -317,6 +320,92 @@ public sealed partial class MainForm : Form
         ReloadOrbatTable();
     }
 
+    private void CopySelectedUnitStructure()
+    {
+        var selected = _orbatChartView.SelectedUnit;
+        if (selected == null)
+        {
+            MessageBox.Show(this, "Please select a unit to copy its subordinate structure.", "Copy Subordinate Structure", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        var source = GetOrbatTable();
+        var subordinateIds = GetSubtreeIds(selected.Id);
+        subordinateIds.Remove(selected.Id);
+
+        if (subordinateIds.Count == 0)
+        {
+            MessageBox.Show(this, "This unit has no subordinate units to copy.", "Copy Subordinate Structure", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        var units = source.Rows
+            .Cast<DataRow>()
+            .Where(row => subordinateIds.Contains(Convert.ToString(row["Id"]) ?? string.Empty))
+            .OrderBy(GetRowDepth)
+            .ThenBy(row => Convert.ToInt32(row["SortOrder"]))
+            .ThenBy(row => Convert.ToString(row["Name"]), StringComparer.CurrentCultureIgnoreCase)
+            .Select(OrbatUnitTemplate.FromRow)
+            .ToList();
+
+        var structure = new OrbatSubtreeClipboard
+        {
+            SourceRootId = selected.Id,
+            Units = units
+        };
+
+        var json = JsonSerializer.Serialize(structure, new JsonSerializerOptions { WriteIndented = true });
+        var data = new DataObject();
+        data.SetData(OrbatStructureClipboardFormat, json);
+        data.SetText(json);
+        Clipboard.SetDataObject(data, true);
+    }
+
+    private void PasteUnitStructureToSelectedUnit()
+    {
+        var selected = _orbatChartView.SelectedUnit;
+        if (selected == null)
+        {
+            MessageBox.Show(this, "Please select a target parent unit first.", "Paste Subordinate Structure", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        if (!TryReadClipboardStructure(out var structure))
+        {
+            MessageBox.Show(this, "Clipboard does not contain an ORBAT subordinate structure.", "Paste Subordinate Structure", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        var targetParentRow = FindOrbatRow(selected.Id);
+        if (targetParentRow == null)
+            return;
+
+        var table = GetOrbatTable();
+        var idMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var insertedCount = 0;
+
+        foreach (var unit in structure.Units)
+        {
+            var newId = CreateNewUnitId();
+            idMap[unit.Id] = newId;
+
+            var parentId = !string.IsNullOrWhiteSpace(unit.ParentId) && idMap.TryGetValue(unit.ParentId, out var mappedParentId)
+                ? mappedParentId
+                : selected.Id;
+
+            var sortOrder = parentId == selected.Id || !idMap.ContainsValue(parentId)
+                ? GetNextSortOrder(parentId)
+                : unit.SortOrder;
+
+            AddOrbatRow(table, unit.ToDraft(newId, parentId, sortOrder));
+            insertedCount++;
+        }
+
+        SaveOrbatTable();
+        ReloadOrbatTable();
+        MessageBox.Show(this, $"Pasted {insertedCount} subordinate unit(s) under {selected.Name}.", "Paste Subordinate Structure", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
     private static bool TryReadClipboardFormat(out OrbatUnitFormat format)
     {
         format = new OrbatUnitFormat();
@@ -349,6 +438,37 @@ public sealed partial class MainForm : Form
         {
             format = OrbatUnitFormat.FromSidc(sidc.Sidc);
             return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryReadClipboardStructure(out OrbatSubtreeClipboard structure)
+    {
+        structure = new OrbatSubtreeClipboard();
+        string? text = null;
+
+        var data = Clipboard.GetDataObject();
+        if (data != null && data.GetDataPresent(OrbatStructureClipboardFormat))
+            text = Convert.ToString(data.GetData(OrbatStructureClipboardFormat));
+
+        if (string.IsNullOrWhiteSpace(text) && Clipboard.ContainsText())
+            text = Clipboard.GetText();
+
+        if (string.IsNullOrWhiteSpace(text))
+            return false;
+
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<OrbatSubtreeClipboard>(text);
+            if (parsed != null && parsed.IsUsable)
+            {
+                structure = parsed;
+                return true;
+            }
+        }
+        catch (JsonException)
+        {
         }
 
         return false;
@@ -486,6 +606,22 @@ public sealed partial class MainForm : Form
         }
 
         return ids;
+    }
+
+    private int GetRowDepth(DataRow row)
+    {
+        var depth = 0;
+        var parentId = GetNullableString(row, "ParentId");
+        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        while (!string.IsNullOrWhiteSpace(parentId) && visited.Add(parentId) && depth < 100)
+        {
+            depth++;
+            var parent = FindOrbatRow(parentId);
+            parentId = parent == null ? null : GetNullableString(parent, "ParentId");
+        }
+
+        return depth;
     }
 
     private IReadOnlyList<OrbatParentOption> CreateParentOptions(string currentUnitId)
@@ -1059,5 +1195,133 @@ internal sealed class OrbatUnitFormat
             TaskForce = parsed.TaskForce ?? false,
             PlannedAnticipated = parsed.PlannedAnticipated ?? false
         };
+    }
+}
+
+internal sealed class OrbatSubtreeClipboard
+{
+    public string SourceRootId { get; set; } = string.Empty;
+    public List<OrbatUnitTemplate> Units { get; set; } = new();
+
+    public bool IsUsable => Units.Count > 0 && Units.All(unit => !string.IsNullOrWhiteSpace(unit.Id));
+}
+
+internal sealed class OrbatUnitTemplate
+{
+    public string Id { get; set; } = string.Empty;
+    public string? ParentId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string ShortName { get; set; } = string.Empty;
+    public string UniqueDesignation { get; set; } = string.Empty;
+    public string Affiliation { get; set; } = nameof(OrbatAffiliation.Friend);
+    public string Echelon { get; set; } = nameof(OrbatEchelon.Unspecified);
+    public string UnitType { get; set; } = nameof(OrbatUnitType.Unspecified);
+    public string Sidc { get; set; } = string.Empty;
+    public string SymbolText { get; set; } = string.Empty;
+    public bool Headquarters { get; set; }
+    public bool TaskForce { get; set; }
+    public bool PlannedAnticipated { get; set; }
+    public int StackCount { get; set; } = 1;
+    public string ReinforcedReduced { get; set; } = nameof(OrbatReinforcedReduced.NotApplicable);
+    public int SortOrder { get; set; } = 10;
+
+    public static OrbatUnitTemplate FromRow(DataRow row)
+    {
+        return new OrbatUnitTemplate
+        {
+            Id = ReadString(row, "Id"),
+            ParentId = ReadNullableString(row, "ParentId"),
+            Name = ReadString(row, "Name"),
+            ShortName = ReadString(row, "ShortName"),
+            UniqueDesignation = ReadString(row, "UniqueDesignation"),
+            Affiliation = ReadString(row, "Affiliation", nameof(OrbatAffiliation.Friend)),
+            Echelon = ReadString(row, "Echelon", nameof(OrbatEchelon.Unspecified)),
+            UnitType = ReadString(row, "UnitType", nameof(OrbatUnitType.Unspecified)),
+            Sidc = ReadString(row, "Sidc"),
+            SymbolText = ReadString(row, "SymbolText"),
+            Headquarters = ReadBoolean(row, "Headquarters"),
+            TaskForce = ReadBoolean(row, "TaskForce"),
+            PlannedAnticipated = ReadBoolean(row, "PlannedAnticipated"),
+            StackCount = Math.Max(1, Math.Min(6, ReadInteger(row, "StackCount", 1))),
+            ReinforcedReduced = ReadString(row, "ReinforcedReduced", nameof(OrbatReinforcedReduced.NotApplicable)),
+            SortOrder = ReadInteger(row, "SortOrder", 10)
+        };
+    }
+
+    public OrbatUnitDraft ToDraft(string newId, string parentId, int sortOrder)
+    {
+        var draft = new OrbatUnitDraft
+        {
+            Id = newId,
+            ParentId = parentId,
+            Name = Name,
+            ShortName = ShortName,
+            UniqueDesignation = UniqueDesignation,
+            Affiliation = ParseEnum(Affiliation, OrbatAffiliation.Friend),
+            Echelon = ParseEnum(Echelon, OrbatEchelon.Unspecified),
+            UnitType = ParseUnitType(UnitType),
+            Sidc = Sidc,
+            SymbolText = SymbolText,
+            Headquarters = Headquarters,
+            TaskForce = TaskForce,
+            PlannedAnticipated = PlannedAnticipated,
+            StackCount = Math.Max(1, Math.Min(6, StackCount)),
+            ReinforcedReduced = ParseEnum(ReinforcedReduced, OrbatReinforcedReduced.NotApplicable),
+            SortOrder = sortOrder
+        };
+
+        if (string.IsNullOrWhiteSpace(draft.Sidc))
+            draft.Sidc = OrbatSidcParser.Compose(draft.Affiliation, draft.Echelon, draft.UnitType, draft.Headquarters, draft.TaskForce, draft.PlannedAnticipated);
+
+        return draft;
+    }
+
+    private static string? ReadNullableString(DataRow row, string columnName)
+    {
+        return !row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value
+            ? null
+            : Convert.ToString(row[columnName]);
+    }
+
+    private static string ReadString(DataRow row, string columnName, string fallback = "")
+    {
+        if (!row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value)
+            return fallback;
+
+        var text = Convert.ToString(row[columnName]);
+        return string.IsNullOrWhiteSpace(text) ? fallback : text;
+    }
+
+    private static bool ReadBoolean(DataRow row, string columnName)
+    {
+        if (!row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value)
+            return false;
+
+        return Convert.ToBoolean(row[columnName]);
+    }
+
+    private static int ReadInteger(DataRow row, string columnName, int fallback)
+    {
+        if (!row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value)
+            return fallback;
+
+        return int.TryParse(Convert.ToString(row[columnName]), out var value) ? value : fallback;
+    }
+
+    private static OrbatUnitType ParseUnitType(string value)
+    {
+        return value.Equals("Unknown", StringComparison.OrdinalIgnoreCase)
+            ? OrbatUnitType.Unspecified
+            : ParseEnum(value, OrbatUnitType.Unspecified);
+    }
+
+    private static TEnum ParseEnum<TEnum>(string value, TEnum fallback)
+        where TEnum : struct
+    {
+        if (Enum.TryParse(value, true, out TEnum parsed))
+            return parsed;
+
+        var normalized = value.Replace(" ", string.Empty).Replace("-", string.Empty).Replace("_", string.Empty);
+        return Enum.TryParse(normalized, true, out parsed) ? parsed : fallback;
     }
 }
