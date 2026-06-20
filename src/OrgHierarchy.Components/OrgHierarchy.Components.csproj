@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net472;net8.0-windows;net9.0-windows;net10.0-windows</TargetFrameworks>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>OrgHierarchy.Components</AssemblyName>
+    <RootNamespace>OrgHierarchy.Components</RootNamespace>
+    <PackageId>OrgHierarchy.Components</PackageId>
+    <Version>1.2.0</Version>
+    <Authors>Sutti</Authors>
+    <Company>Sutti</Company>
+    <Description>Windows Forms runtime components for displaying organization hierarchy and ORBAT military unit charts from database-shaped DataTables.</Description>
+    <PackageTags>winforms;visual-studio;component;hierarchy;organization;personnel;treeview;orbat;military</PackageTags>
+    <PackageProjectUrl>https://localhost/org-hierarchy-components</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <NoWarn>$(NoWarn);8632</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

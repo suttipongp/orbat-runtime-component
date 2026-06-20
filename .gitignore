@@ -1,0 +1,14 @@
+.vs/
+.vscode/
+bin/
+obj/
+artifacts/
+c4isr-workbench/
+
+*.user
+*.suo
+*.log
+*.tmp
+
+TestResults/
+coverage/
