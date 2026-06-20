@@ -22,10 +22,27 @@ internal sealed class OrbatUnitDraft
     public int SortOrder { get; set; }
 }
 
+internal sealed class OrbatParentOption
+{
+    public string? Id { get; }
+    public string DisplayText { get; }
+
+    public OrbatParentOption(string? id, string displayText)
+    {
+        Id = id;
+        DisplayText = displayText;
+    }
+
+    public override string ToString()
+    {
+        return DisplayText;
+    }
+}
+
 internal sealed class OrbatUnitEditForm : Form
 {
     private readonly TextBox _idTextBox = new();
-    private readonly TextBox _parentIdTextBox = new();
+    private readonly ComboBox _parentComboBox = new();
     private readonly TextBox _nameTextBox = new();
     private readonly TextBox _shortNameTextBox = new();
     private readonly TextBox _uniqueDesignationTextBox = new();
@@ -48,7 +65,7 @@ internal sealed class OrbatUnitEditForm : Form
     private bool _applyingValues;
     private bool _fieldsChangedAfterSidc;
 
-    public OrbatUnitEditForm(OrbatUnitDraft unit, bool isNew)
+    public OrbatUnitEditForm(OrbatUnitDraft unit, bool isNew, IEnumerable<OrbatParentOption>? parentOptions = null)
     {
         Unit = unit;
 
@@ -88,7 +105,7 @@ internal sealed class OrbatUnitEditForm : Form
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
 
         AddTextRow(layout, "Id", _idTextBox, unit.Id, 0, true);
-        AddTextRow(layout, "Parent Id", _parentIdTextBox, unit.ParentId ?? string.Empty, 1, false);
+        AddParentRow(layout, unit.ParentId, parentOptions, 1);
         AddTextRow(layout, "Name", _nameTextBox, unit.Name, 2, false);
         AddTextRow(layout, "Short name", _shortNameTextBox, unit.ShortName, 3, false);
         AddTextRow(layout, "Unique designation", _uniqueDesignationTextBox, unit.UniqueDesignation, 4, false);
@@ -125,6 +142,21 @@ internal sealed class OrbatUnitEditForm : Form
         textBox.ReadOnly = readOnly;
         textBox.Text = value;
         layout.Controls.Add(textBox, 1, row);
+    }
+
+    private void AddParentRow(TableLayoutPanel layout, string? parentId, IEnumerable<OrbatParentOption>? parentOptions, int row)
+    {
+        AddLabel(layout, "Parent unit", row);
+        _parentComboBox.Dock = DockStyle.Fill;
+        _parentComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+
+        var options = (parentOptions ?? new[] { new OrbatParentOption(null, "(Root / no parent)") }).ToList();
+        if (options.All(option => option.Id != null))
+            options.Insert(0, new OrbatParentOption(null, "(Root / no parent)"));
+
+        _parentComboBox.Items.AddRange(options.Cast<object>().ToArray());
+        _parentComboBox.SelectedItem = options.FirstOrDefault(option => string.Equals(option.Id, parentId, StringComparison.OrdinalIgnoreCase)) ?? options[0];
+        layout.Controls.Add(_parentComboBox, 1, row);
     }
 
     private void AddSidcRow(TableLayoutPanel layout, string value, int row)
@@ -257,10 +289,11 @@ internal sealed class OrbatUnitEditForm : Form
             return false;
         }
 
-        if (string.Equals(_idTextBox.Text.Trim(), _parentIdTextBox.Text.Trim(), StringComparison.OrdinalIgnoreCase))
+        var selectedParent = GetSelectedParentId();
+        if (string.Equals(_idTextBox.Text.Trim(), selectedParent, StringComparison.OrdinalIgnoreCase))
         {
             MessageBox.Show(this, "Parent Id cannot be the same as Id.", "ORBAT Unit", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            _parentIdTextBox.Focus();
+            _parentComboBox.Focus();
             return false;
         }
 
@@ -286,7 +319,7 @@ internal sealed class OrbatUnitEditForm : Form
         Unit = new OrbatUnitDraft
         {
             Id = _idTextBox.Text.Trim(),
-            ParentId = string.IsNullOrWhiteSpace(_parentIdTextBox.Text) ? null : _parentIdTextBox.Text.Trim(),
+            ParentId = selectedParent,
             Name = _nameTextBox.Text.Trim(),
             ShortName = string.IsNullOrWhiteSpace(_shortNameTextBox.Text) ? _nameTextBox.Text.Trim() : _shortNameTextBox.Text.Trim(),
             UniqueDesignation = _uniqueDesignationTextBox.Text.Trim(),
@@ -304,6 +337,11 @@ internal sealed class OrbatUnitEditForm : Form
         };
 
         return true;
+    }
+
+    private string? GetSelectedParentId()
+    {
+        return _parentComboBox.SelectedItem is OrbatParentOption option ? option.Id : null;
     }
 
     private string GetSidcForSave(

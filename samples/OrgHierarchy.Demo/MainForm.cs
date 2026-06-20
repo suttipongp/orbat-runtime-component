@@ -134,7 +134,7 @@ public sealed partial class MainForm : Form
             SortOrder = GetNextSortOrder(parent.Id)
         };
 
-        using var form = new OrbatUnitEditForm(draft, true);
+        using var form = new OrbatUnitEditForm(draft, true, CreateParentOptions(draft.Id));
         if (form.ShowDialog(this) != DialogResult.OK)
             return;
 
@@ -159,7 +159,7 @@ public sealed partial class MainForm : Form
         if (row == null)
             return;
 
-        using var form = new OrbatUnitEditForm(CreateDraft(row), false);
+        using var form = new OrbatUnitEditForm(CreateDraft(row), false, CreateParentOptions(selected.Id));
         if (form.ShowDialog(this) != DialogResult.OK)
             return;
 
@@ -488,6 +488,30 @@ public sealed partial class MainForm : Form
         return ids;
     }
 
+    private IReadOnlyList<OrbatParentOption> CreateParentOptions(string currentUnitId)
+    {
+        var excludedIds = string.IsNullOrWhiteSpace(currentUnitId)
+            ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            : GetSubtreeIds(currentUnitId);
+
+        var options = new List<OrbatParentOption>
+        {
+            new(null, "(Root / no parent)")
+        };
+
+        foreach (var row in GetOrbatTable().Rows.Cast<DataRow>()
+            .Where(row => !excludedIds.Contains(Convert.ToString(row["Id"]) ?? string.Empty))
+            .OrderBy(row => Convert.ToInt32(row["SortOrder"]))
+            .ThenBy(row => Convert.ToString(row["Name"]), StringComparer.CurrentCultureIgnoreCase))
+        {
+            var id = Convert.ToString(row["Id"]) ?? string.Empty;
+            var name = Convert.ToString(row["Name"]) ?? id;
+            options.Add(new OrbatParentOption(id, $"{name} ({id})"));
+        }
+
+        return options;
+    }
+
     private bool ValidateParentChange(string unitId, string? parentId)
     {
         if (string.IsNullOrWhiteSpace(parentId))
@@ -647,6 +671,7 @@ public sealed partial class MainForm : Form
 
     private static void UpdateOrbatRow(DataRow row, OrbatUnitDraft unit)
     {
+        row["ParentId"] = string.IsNullOrWhiteSpace(unit.ParentId) ? DBNull.Value : unit.ParentId;
         row["Name"] = unit.Name;
         row["ShortName"] = unit.ShortName;
         row["UniqueDesignation"] = unit.UniqueDesignation;
