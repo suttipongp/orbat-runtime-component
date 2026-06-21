@@ -355,6 +355,9 @@ internal sealed class SymbolDesignerCanvas : Control
         if (Distance(start, end) < 0.012f && Tool != SymbolDesignerTool.Dot && Tool != SymbolDesignerTool.Text)
             return null;
 
+        if (Tool == SymbolDesignerTool.Arc && !HasRenderableArea(start, end))
+            return null;
+
         return Tool switch
         {
             SymbolDesignerTool.Line => SymbolDrawCommand.Line(start, end),
@@ -401,6 +404,12 @@ internal sealed class SymbolDesignerCanvas : Control
         var dx = first.X - second.X;
         var dy = first.Y - second.Y;
         return MathF.Sqrt(dx * dx + dy * dy);
+    }
+
+    private static bool HasRenderableArea(PointF start, PointF end)
+    {
+        const float minimumExtent = 0.001f;
+        return Math.Abs(end.X - start.X) > minimumExtent && Math.Abs(end.Y - start.Y) > minimumExtent;
     }
 }
 
@@ -529,7 +538,9 @@ internal sealed record SymbolDrawCommand(
                     graphics.DrawString(Text, font, brush, new RectangleF(location.X - 34f, location.Y - 14f, 68f, 28f), format);
                 break;
             case SymbolDrawCommandKind.Arc:
-                graphics.DrawArc(pen, ToRectangle(frame), 200f, 140f);
+                var arcBounds = ToRectangle(frame);
+                if (arcBounds.Width > 0f && arcBounds.Height > 0f)
+                    graphics.DrawArc(pen, arcBounds, 200f, 140f);
                 break;
             case SymbolDrawCommandKind.Bezier:
                 graphics.DrawBezier(pen, ToAbsolute(frame, Start), ToAbsolute(frame, Control1), ToAbsolute(frame, Control2), ToAbsolute(frame, End));
