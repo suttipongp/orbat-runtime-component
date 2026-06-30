@@ -29,8 +29,10 @@ public sealed class SymbolDesignerForm : Form
     private readonly NumericUpDown _control2XInput = CreateCoordinateInput();
     private readonly NumericUpDown _control2YInput = CreateCoordinateInput();
     private readonly NumericUpDown _radiusInput = CreateCoordinateInput();
+    private readonly NumericUpDown _fontSizeInput = CreateFontSizeInput();
     private readonly TextBox _textInput = new();
     private readonly TextBox _drawTextInput = new() { Text = "TXT", Width = 80 };
+    private readonly NumericUpDown _drawTextSizeInput = CreateFontSizeInput();
     private bool _updatingSelectionControls;
 
     public SymbolDesignerForm()
@@ -92,6 +94,7 @@ public sealed class SymbolDesignerForm : Form
             ApplyFillOptionToSelection();
         };
         _drawTextInput.TextChanged += (_, _) => _canvas.DrawText = _drawTextInput.Text;
+        _drawTextSizeInput.ValueChanged += (_, _) => _canvas.DrawFontSize = (float)_drawTextSizeInput.Value;
 
         var loadButton = CreateButton("Load reference", LoadReferenceImage);
         var loadClipboardButton = CreateButton("Load clipboard", LoadReferenceFromClipboard);
@@ -131,6 +134,8 @@ public sealed class SymbolDesignerForm : Form
         toolbar.Controls.Add(_gridDivisionsInput);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Text", Margin = new Padding(8, 6, 4, 0) });
         toolbar.Controls.Add(_drawTextInput);
+        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Size", Margin = new Padding(8, 6, 4, 0) });
+        toolbar.Controls.Add(_drawTextSizeInput);
         toolbar.Controls.Add(undoButton);
         toolbar.Controls.Add(deleteButton);
         toolbar.Controls.Add(clearButton);
@@ -153,6 +158,7 @@ public sealed class SymbolDesignerForm : Form
         _canvas.SnapEnabled = _snapCheckBox.Checked;
         _canvas.FillClosedShapes = _fillCheckBox.Checked;
         _canvas.DrawText = _drawTextInput.Text;
+        _canvas.DrawFontSize = (float)_drawTextSizeInput.Value;
         _canvas.CommandsChanged += (_, _) =>
         {
             RefreshOutput();
@@ -236,6 +242,19 @@ public sealed class SymbolDesignerForm : Form
         };
     }
 
+    private static NumericUpDown CreateFontSizeInput()
+    {
+        return new NumericUpDown
+        {
+            DecimalPlaces = 1,
+            Increment = 1m,
+            Minimum = 4m,
+            Maximum = 72m,
+            Value = 12m,
+            Width = 60
+        };
+    }
+
     private Control CreateCommandsPanel()
     {
         var split = new SplitContainer
@@ -255,7 +274,7 @@ public sealed class SymbolDesignerForm : Form
         {
             Dock = DockStyle.Fill,
             ColumnCount = 4,
-            RowCount = 6,
+            RowCount = 7,
             Padding = new Padding(0, 8, 0, 0)
         };
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70));
@@ -266,9 +285,10 @@ public sealed class SymbolDesignerForm : Form
         AddCoordinateRow(panel, 1, "End X", _endXInput, "End Y", _endYInput);
         AddCoordinateRow(panel, 2, "C1 X", _control1XInput, "C1 Y", _control1YInput);
         AddCoordinateRow(panel, 3, "C2 X", _control2XInput, "C2 Y", _control2YInput);
-        AddCoordinateRow(panel, 4, "Radius", _radiusInput, "Text", _textInput);
-        panel.Controls.Add(new Label { AutoSize = true, Text = "Select a command, then drag it on the canvas or edit values here.", ForeColor = SystemColors.GrayText }, 0, 5);
-        panel.SetColumnSpan(panel.GetControlFromPosition(0, 5)!, 4);
+        AddCoordinateRow(panel, 4, "Radius", _radiusInput, "Font size", _fontSizeInput);
+        AddTextRow(panel, 5, "Text", _textInput);
+        panel.Controls.Add(new Label { AutoSize = true, Text = "Select a command, then drag it on the canvas or edit values here.", ForeColor = SystemColors.GrayText }, 0, 6);
+        panel.SetColumnSpan(panel.GetControlFromPosition(0, 6)!, 4);
         return panel;
     }
 
@@ -281,12 +301,20 @@ public sealed class SymbolDesignerForm : Form
         panel.Controls.Add(secondControl, 3, row);
     }
 
+    private static void AddTextRow(TableLayoutPanel panel, int row, string label, Control control)
+    {
+        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));
+        panel.Controls.Add(new Label { AutoSize = true, Text = label, Margin = new Padding(0, 6, 4, 0) }, 0, row);
+        panel.Controls.Add(control, 1, row);
+        panel.SetColumnSpan(control, 3);
+    }
+
     private void WireSelectionInputs()
     {
         foreach (var input in new[]
         {
             _startXInput, _startYInput, _endXInput, _endYInput,
-            _control1XInput, _control1YInput, _control2XInput, _control2YInput, _radiusInput
+            _control1XInput, _control1YInput, _control2XInput, _control2YInput, _radiusInput, _fontSizeInput
         })
         {
             input.ValueChanged += (_, _) => ApplySelectionControls();
@@ -467,7 +495,7 @@ public sealed class SymbolDesignerForm : Form
             foreach (Control control in new Control[]
             {
                 _startXInput, _startYInput, _endXInput, _endYInput,
-                _control1XInput, _control1YInput, _control2XInput, _control2YInput, _radiusInput, _textInput
+                _control1XInput, _control1YInput, _control2XInput, _control2YInput, _radiusInput, _fontSizeInput, _textInput
             })
             {
                 control.Enabled = enabled;
@@ -489,6 +517,7 @@ public sealed class SymbolDesignerForm : Form
             _control2XInput.Value = ToDecimal(command.Control2.X);
             _control2YInput.Value = ToDecimal(command.Control2.Y);
             _radiusInput.Value = ToDecimal(command.Radius);
+            _fontSizeInput.Value = ToFontSizeDecimal(command.FontSize);
             _textInput.Text = command.Text;
             _fillCheckBox.Enabled = command.CanFill;
             _fillCheckBox.Checked = command.CanFill && command.Filled;
@@ -529,6 +558,7 @@ public sealed class SymbolDesignerForm : Form
         command.Control1 = new SymbolPoint((float)_control1XInput.Value, (float)_control1YInput.Value);
         command.Control2 = new SymbolPoint((float)_control2XInput.Value, (float)_control2YInput.Value);
         command.Radius = Math.Clamp((float)_radiusInput.Value, 0f, 1f);
+        command.FontSize = Math.Clamp((float)_fontSizeInput.Value, 4f, 72f);
         command.Text = _textInput.Text;
         _canvas.NotifyCommandEdited();
     }
@@ -545,6 +575,8 @@ public sealed class SymbolDesignerForm : Form
     }
 
     private static decimal ToDecimal(float value) => Math.Min(2m, Math.Max(-1m, (decimal)value));
+
+    private static decimal ToFontSizeDecimal(float value) => Math.Min(72m, Math.Max(4m, (decimal)value));
 }
 
 internal enum SymbolDesignerTool
@@ -598,6 +630,7 @@ internal sealed class SymbolDesignerCanvas : Control
     public bool SnapEnabled { get; set; } = true;
     public bool FillClosedShapes { get; set; }
     public string DrawText { get; set; } = "TXT";
+    public float DrawFontSize { get; set; } = 12f;
     public int GridDivisions { get; set; } = 10;
     public int SelectedIndex { get; private set; } = -1;
     public SymbolDrawCommand? SelectedCommand => SelectedIndex >= 0 && SelectedIndex < _commands.Count ? _commands[SelectedIndex] : null;
@@ -1007,7 +1040,7 @@ internal sealed class SymbolDesignerCanvas : Control
             SymbolDesignerTool.Circle => SymbolDrawCommand.Circle(start, end, GetFrameBounds(), FillClosedShapes),
             SymbolDesignerTool.Capsule => SymbolDrawCommand.Capsule(start, end, FillClosedShapes),
             SymbolDesignerTool.Dot => SymbolDrawCommand.Dot(end, 0.08f),
-            SymbolDesignerTool.Text => SymbolDrawCommand.TextCommand(end, string.IsNullOrWhiteSpace(DrawText) ? "TXT" : DrawText),
+            SymbolDesignerTool.Text => SymbolDrawCommand.TextCommand(end, string.IsNullOrWhiteSpace(DrawText) ? "TXT" : DrawText, DrawFontSize),
             SymbolDesignerTool.Arc => null,
             SymbolDesignerTool.BezierArc => SymbolDrawCommand.BezierArc(start, end),
             _ => null
@@ -1285,6 +1318,7 @@ internal sealed class SymbolDrawCommand
     public SymbolPoint Control1 { get; set; }
     public SymbolPoint Control2 { get; set; }
     public float Radius { get; set; }
+    public float FontSize { get; set; } = 12f;
     public string Text { get; set; } = string.Empty;
     public bool Filled { get; set; }
     [JsonIgnore]
@@ -1313,8 +1347,8 @@ internal sealed class SymbolDrawCommand
     public static SymbolDrawCommand Dot(PointF center, float radius) =>
         new() { Kind = SymbolDrawCommandKind.Dot, Start = new SymbolPoint(center), End = new SymbolPoint(center), Radius = radius };
 
-    public static SymbolDrawCommand TextCommand(PointF location, string text) =>
-        new() { Kind = SymbolDrawCommandKind.Text, Start = new SymbolPoint(location), End = new SymbolPoint(location), Text = text };
+    public static SymbolDrawCommand TextCommand(PointF location, string text, float fontSize = 12f) =>
+        new() { Kind = SymbolDrawCommandKind.Text, Start = new SymbolPoint(location), End = new SymbolPoint(location), Text = text, FontSize = fontSize };
 
     public static SymbolDrawCommand Arc(PointF start, PointF end) =>
         new() { Kind = SymbolDrawCommandKind.Arc, Start = new SymbolPoint(start), End = new SymbolPoint(end) };
@@ -1368,6 +1402,7 @@ internal sealed class SymbolDrawCommand
             Control1 = Control1,
             Control2 = Control2,
             Radius = Radius,
+            FontSize = FontSize,
             Text = Text,
             Filled = Filled
         };
@@ -1462,7 +1497,7 @@ internal sealed class SymbolDrawCommand
             SymbolDrawCommandKind.Bezier => HitTestBezier(mousePoint, frame, threshold),
             SymbolDrawCommandKind.Circle => Distance(mousePoint, ToAbsolute(frame, Start)) <= Radius * Math.Min(frame.Width, frame.Height) + threshold,
             SymbolDrawCommandKind.Dot => Distance(mousePoint, ToAbsolute(frame, Start)) <= Radius * Math.Min(frame.Width, frame.Height) + threshold,
-            SymbolDrawCommandKind.Text => Distance(mousePoint, ToAbsolute(frame, Start)) <= 24f,
+            SymbolDrawCommandKind.Text => Distance(mousePoint, ToAbsolute(frame, Start)) <= Math.Max(24f, FontSize * 2f),
             _ => ToRectangle(frame).Contains(mousePoint) || DistanceToRect(mousePoint, ToRectangle(frame)) <= threshold
         };
     }
@@ -1500,9 +1535,14 @@ internal sealed class SymbolDrawCommand
                 break;
             case SymbolDrawCommandKind.Text:
                 var location = ToAbsolute(frame, Start);
-                using (var font = new Font(SystemFonts.DefaultFont.FontFamily, 12f, FontStyle.Bold))
+                var fontSize = Math.Clamp(FontSize, 4f, 72f);
+                using (var font = new Font(SystemFonts.DefaultFont.FontFamily, fontSize, FontStyle.Bold))
                 using (var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
-                    graphics.DrawString(Text, font, brush, new RectangleF(location.X - 34f, location.Y - 14f, 68f, 28f), format);
+                {
+                    var textWidth = Math.Max(68f, Math.Max(1, Text.Length) * fontSize);
+                    var textHeight = fontSize * 2.4f;
+                    graphics.DrawString(Text, font, brush, new RectangleF(location.X - textWidth / 2f, location.Y - textHeight / 2f, textWidth, textHeight), format);
+                }
                 break;
             case SymbolDrawCommandKind.Arc:
                 var arcBounds = ToRectangle(frame);
@@ -1520,7 +1560,7 @@ internal sealed class SymbolDrawCommand
         return Kind switch
         {
             SymbolDrawCommandKind.Dot => $"{Kind} at {FormatPoint(Start)}",
-            SymbolDrawCommandKind.Text => $"{Kind} \"{Text}\" at {FormatPoint(Start)}",
+            SymbolDrawCommandKind.Text => $"{Kind} \"{Text}\" {Format(FontSize)}pt at {FormatPoint(Start)}",
             _ => $"{Kind} {FormatPoint(Start)} to {FormatPoint(End)}"
         };
     }
@@ -1548,7 +1588,7 @@ internal sealed class SymbolDrawCommand
             SymbolDrawCommandKind.Dot =>
                 $"{graphics}.FillEllipse({brush}, {PointCode(bounds, Start)}.X - {RadiusCode(bounds)}, {PointCode(bounds, Start)}.Y - {RadiusCode(bounds)}, {RadiusCode(bounds)} * 2f, {RadiusCode(bounds)} * 2f);",
             SymbolDrawCommandKind.Text =>
-                $"{{\r\n    var textLocation = {PointCode(bounds, Start)};\r\n    {graphics}.DrawString(\"{EscapeCSharpString(Text)}\", font, {brush}, new RectangleF(textLocation.X - 34f, textLocation.Y - 14f, 68f, 28f), centerFormat);\r\n}}",
+                $"{{\r\n    var textLocation = {PointCode(bounds, Start)};\r\n    var textSize = {Format(FontSize)}f;\r\n    var textWidth = Math.Max(68f, Math.Max(1, \"{EscapeCSharpString(Text)}\".Length) * textSize);\r\n    var textHeight = textSize * 2.4f;\r\n    using var textFont = new Font(font.FontFamily, textSize, FontStyle.Bold);\r\n    {graphics}.DrawString(\"{EscapeCSharpString(Text)}\", textFont, {brush}, new RectangleF(textLocation.X - textWidth / 2f, textLocation.Y - textHeight / 2f, textWidth, textHeight), centerFormat);\r\n}}",
             SymbolDrawCommandKind.Arc =>
                 $"{graphics}.DrawArc({pen}, {RectCode(bounds)}, 200f, 140f);",
             SymbolDrawCommandKind.Bezier =>
