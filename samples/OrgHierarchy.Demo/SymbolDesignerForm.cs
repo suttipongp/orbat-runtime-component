@@ -13,6 +13,7 @@ public sealed class SymbolDesignerForm : Form
     private readonly ComboBox _unitTypeComboBox = new();
     private readonly TrackBar _referenceOpacityTrackBar = new();
     private readonly CheckBox _showGridCheckBox = new() { Text = "Grid", Checked = true, AutoSize = true };
+    private readonly CheckBox _showIconGuideCheckBox = new() { Text = "Icon guide", Checked = true, AutoSize = true };
     private readonly CheckBox _snapCheckBox = new() { Text = "Snap", Checked = true, AutoSize = true };
     private readonly CheckBox _fillCheckBox = new() { Text = "Fill closed", AutoSize = true };
     private readonly NumericUpDown _gridDivisionsInput = new();
@@ -78,6 +79,11 @@ public sealed class SymbolDesignerForm : Form
             _canvas.ShowGrid = _showGridCheckBox.Checked;
             _canvas.Invalidate();
         };
+        _showIconGuideCheckBox.CheckedChanged += (_, _) =>
+        {
+            _canvas.ShowIconGuide = _showIconGuideCheckBox.Checked;
+            _canvas.Invalidate();
+        };
         _snapCheckBox.CheckedChanged += (_, _) => _canvas.SnapEnabled = _snapCheckBox.Checked;
         _fillCheckBox.CheckedChanged += (_, _) =>
         {
@@ -116,6 +122,7 @@ public sealed class SymbolDesignerForm : Form
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Reference", Margin = new Padding(14, 6, 4, 0) });
         toolbar.Controls.Add(_referenceOpacityTrackBar);
         toolbar.Controls.Add(_showGridCheckBox);
+        toolbar.Controls.Add(_showIconGuideCheckBox);
         toolbar.Controls.Add(_snapCheckBox);
         toolbar.Controls.Add(_fillCheckBox);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Grid", Margin = new Padding(8, 6, 4, 0) });
@@ -138,6 +145,7 @@ public sealed class SymbolDesignerForm : Form
         _canvas.ReferenceOpacity = _referenceOpacityTrackBar.Value / 100f;
         _canvas.GridDivisions = (int)_gridDivisionsInput.Value;
         _canvas.ShowGrid = _showGridCheckBox.Checked;
+        _canvas.ShowIconGuide = _showIconGuideCheckBox.Checked;
         _canvas.SnapEnabled = _snapCheckBox.Checked;
         _canvas.FillClosedShapes = _fillCheckBox.Checked;
         _canvas.CommandsChanged += (_, _) =>
@@ -550,6 +558,7 @@ internal enum SymbolDesignerTool
 internal sealed class SymbolDesignerCanvas : Control
 {
     private const float SnapThreshold = 0.025f;
+    private const float StandardFrameAspectRatio = 1.5f;
     private readonly List<SymbolDrawCommand> _commands = new();
     private Bitmap? _referenceImage;
     private PointF? _dragStart;
@@ -579,6 +588,7 @@ internal sealed class SymbolDesignerCanvas : Control
     }
     public float ReferenceOpacity { get; set; } = 0.35f;
     public bool ShowGrid { get; set; } = true;
+    public bool ShowIconGuide { get; set; } = true;
     public bool SnapEnabled { get; set; } = true;
     public bool FillClosedShapes { get; set; }
     public int GridDivisions { get; set; } = 10;
@@ -774,6 +784,8 @@ internal sealed class SymbolDesignerCanvas : Control
         DrawReference(e.Graphics, frame);
         if (ShowGrid)
             DrawGrid(e.Graphics, frame);
+        if (ShowIconGuide)
+            DrawIconGuide(e.Graphics, frame);
         DrawFrame(e.Graphics, frame);
 
         for (var index = 0; index < _commands.Count; index++)
@@ -952,6 +964,16 @@ internal sealed class SymbolDesignerCanvas : Control
         }
     }
 
+    private static void DrawIconGuide(Graphics graphics, RectangleF frame)
+    {
+        var guide = GetIconGuideBounds(frame);
+        var points = GetIconGuidePoints();
+        using var guidePen = new Pen(Color.FromArgb(150, 70, 135, 210), 1f);
+        graphics.DrawPolygon(guidePen, points.Select(point => ToAbsolute(frame, point)).ToArray());
+        graphics.DrawLine(guidePen, guide.Left, guide.Top + guide.Height / 2f, guide.Right, guide.Top + guide.Height / 2f);
+        graphics.DrawLine(guidePen, guide.Left + guide.Width / 2f, guide.Top, guide.Left + guide.Width / 2f, guide.Bottom);
+    }
+
     private static void DrawFrame(Graphics graphics, RectangleF frame)
     {
         using var framePen = new Pen(Color.Black, 2f);
@@ -1029,6 +1051,10 @@ internal sealed class SymbolDesignerCanvas : Control
         yield return new PointF(0f, 1f);
         yield return new PointF(1f, 1f);
 
+        foreach (var point in GetIconGuidePoints())
+            yield return point;
+        yield return new PointF(0.5f, 0.5f);
+
         var divisions = Math.Max(1, GridDivisions);
         for (var x = 0; x <= divisions; x++)
         {
@@ -1063,12 +1089,12 @@ internal sealed class SymbolDesignerCanvas : Control
     {
         var maxWidth = ClientSize.Width - 80;
         var maxHeight = ClientSize.Height - 100;
-        var width = Math.Min(maxWidth, maxHeight * 1.6f);
-        var height = width / 1.6f;
+        var width = Math.Min(maxWidth, maxHeight * StandardFrameAspectRatio);
+        var height = width / StandardFrameAspectRatio;
         if (height > maxHeight)
         {
             height = maxHeight;
-            width = height * 1.6f;
+            width = height * StandardFrameAspectRatio;
         }
 
         return new RectangleF(
@@ -1080,6 +1106,41 @@ internal sealed class SymbolDesignerCanvas : Control
 
     private static PointF ToAbsolute(RectangleF frame, PointF point) =>
         new(frame.Left + frame.Width * point.X, frame.Top + frame.Height * point.Y);
+
+    private static RectangleF GetIconGuideBounds(RectangleF frame)
+    {
+        var size = frame.Height * 0.82f;
+        return new RectangleF(
+            frame.Left + (frame.Width - size) / 2f,
+            frame.Top + (frame.Height - size) / 2f,
+            size,
+            size);
+    }
+
+    private static PointF[] GetIconGuidePoints()
+    {
+        const float left = 0.2267f;
+        const float right = 0.7733f;
+        const float top = 0.09f;
+        const float bottom = 0.91f;
+        const float shoulderLeft = 0.3633f;
+        const float shoulderRight = 0.6367f;
+        const float shoulderTop = 0.2267f;
+        const float shoulderBottom = 0.7733f;
+
+        return new[]
+        {
+            new PointF(shoulderLeft, top),
+            new PointF(shoulderRight, top),
+            new PointF(right, shoulderTop),
+            new PointF(right, shoulderBottom),
+            new PointF(shoulderRight, bottom),
+            new PointF(shoulderLeft, bottom),
+            new PointF(left, shoulderBottom),
+            new PointF(left, shoulderTop)
+        };
+    }
+
 
     private static float Distance(Point first, PointF second)
     {
@@ -1123,6 +1184,7 @@ internal sealed class SymbolDesignerCanvas : Control
 
 internal sealed class SymbolPreviewControl : Control
 {
+    private const float StandardFrameAspectRatio = 1.5f;
     private IReadOnlyList<SymbolDrawCommand> _commands = Array.Empty<SymbolDrawCommand>();
 
     public SymbolPreviewControl()
@@ -1144,7 +1206,7 @@ internal sealed class SymbolPreviewControl : Control
         e.Graphics.Clear(Color.White);
 
         var width = Math.Min(ClientSize.Width - 60, 280);
-        var height = width / 1.6f;
+        var height = width / StandardFrameAspectRatio;
         var frame = new RectangleF((ClientSize.Width - width) / 2f, 80, width, height);
 
         using var pen = new Pen(Color.Black, 2f);

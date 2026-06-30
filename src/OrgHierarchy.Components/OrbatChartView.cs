@@ -115,8 +115,8 @@ public sealed class OrbatChartView : UserControl
     public string SortColumn { get; set; } = "SortOrder";
 
     [Category("Layout")]
-    [DefaultValue(110)]
-    public int SymbolWidth { get; set; } = 110;
+    [DefaultValue(114)]
+    public int SymbolWidth { get; set; } = 114;
 
     [Category("Layout")]
     [DefaultValue(76)]
