@@ -484,12 +484,28 @@ internal sealed class SymbolDesignerCanvas : Control
     private PointF? _dragStart;
     private PointF? _dragCurrent;
     private PointF? _lastDragPoint;
+    private PointF? _arcStart;
+    private PointF? _arcPeak;
     private DragTarget _dragTarget = DragTarget.None;
+    private SymbolDesignerTool _tool = SymbolDesignerTool.Line;
 
     public event EventHandler? CommandsChanged;
     public event EventHandler? SelectionChanged;
 
-    public SymbolDesignerTool Tool { get; set; } = SymbolDesignerTool.Line;
+    public SymbolDesignerTool Tool
+    {
+        get => _tool;
+        set
+        {
+            _tool = value;
+            _arcStart = null;
+            _arcPeak = null;
+            _dragStart = null;
+            _dragCurrent = null;
+            Cursor = value == SymbolDesignerTool.SelectMove ? Cursors.Default : Cursors.Cross;
+            Invalidate();
+        }
+    }
     public float ReferenceOpacity { get; set; } = 0.35f;
     public bool ShowGrid { get; set; } = true;
     public bool SnapEnabled { get; set; } = true;
@@ -596,6 +612,12 @@ internal sealed class SymbolDesignerCanvas : Control
             return;
 
         var symbolPoint = ToSymbolPoint(e.Location, true);
+        if (Tool == SymbolDesignerTool.Arc)
+        {
+            HandleArcClick(symbolPoint);
+            return;
+        }
+
         if (Tool == SymbolDesignerTool.SelectMove)
         {
             BeginEditDrag(e.Location, symbolPoint);
@@ -610,11 +632,24 @@ internal sealed class SymbolDesignerCanvas : Control
     protected override void OnMouseMove(MouseEventArgs e)
     {
         base.OnMouseMove(e);
-        var symbolPoint = ToSymbolPoint(e.Location, true);
+        var symbolPoint = ToSymbolPoint(e.Location, _dragTarget != DragTarget.Move);
 
         if (_dragTarget != DragTarget.None && SelectedCommand != null && _lastDragPoint.HasValue)
         {
             EditSelectedCommand(symbolPoint);
+            return;
+        }
+
+        if (Tool == SymbolDesignerTool.SelectMove)
+        {
+            UpdateHoverCursor(e.Location);
+            return;
+        }
+
+        if (Tool == SymbolDesignerTool.Arc && (_arcStart.HasValue || _arcPeak.HasValue))
+        {
+            _dragCurrent = symbolPoint;
+            Invalidate();
             return;
         }
 
@@ -629,6 +664,9 @@ internal sealed class SymbolDesignerCanvas : Control
     {
         base.OnMouseUp(e);
         if (e.Button != MouseButtons.Left)
+            return;
+
+        if (Tool == SymbolDesignerTool.Arc)
             return;
 
         if (_dragTarget != DragTarget.None)
@@ -678,7 +716,32 @@ internal sealed class SymbolDesignerCanvas : Control
             CreateCommand(_dragStart.Value, _dragCurrent.Value)?.Draw(e.Graphics, frame, previewPen, Brushes.Goldenrod);
         }
 
+        DrawArcPreview(e.Graphics, frame);
+
         DrawSelectionHandles(e.Graphics, frame);
+    }
+
+    private void HandleArcClick(PointF symbolPoint)
+    {
+        if (!_arcStart.HasValue)
+        {
+            _arcStart = symbolPoint;
+            _dragCurrent = symbolPoint;
+        }
+        else if (!_arcPeak.HasValue)
+        {
+            _arcPeak = symbolPoint;
+            _dragCurrent = symbolPoint;
+        }
+        else
+        {
+            AddCommand(SymbolDrawCommand.ThreePointArc(_arcStart.Value, _arcPeak.Value, symbolPoint));
+            _arcStart = null;
+            _arcPeak = null;
+            _dragCurrent = null;
+        }
+
+        Invalidate();
     }
 
     private void BeginEditDrag(Point mousePoint, PointF symbolPoint)
@@ -698,7 +761,8 @@ internal sealed class SymbolDesignerCanvas : Control
         if (index >= 0)
         {
             _dragTarget = DragTarget.Move;
-            _lastDragPoint = symbolPoint;
+            _lastDragPoint = ToSymbolPoint(mousePoint, false);
+            Cursor = Cursors.SizeAll;
         }
     }
 
@@ -728,7 +792,7 @@ internal sealed class SymbolDesignerCanvas : Control
 
     private (int Index, DragTarget Target) HitTestHandle(Point mousePoint, RectangleF frame)
     {
-        const float handleRadius = 7f;
+        const float handleRadius = 10f;
         for (var index = _commands.Count - 1; index >= 0; index--)
         {
             foreach (var handle in _commands[index].GetHandles())
@@ -746,11 +810,24 @@ internal sealed class SymbolDesignerCanvas : Control
     {
         for (var index = _commands.Count - 1; index >= 0; index--)
         {
-            if (_commands[index].HitTest(mousePoint, frame, 8f))
+            if (_commands[index].HitTest(mousePoint, frame, 12f))
                 return index;
         }
 
         return -1;
+    }
+
+    private void UpdateHoverCursor(Point mousePoint)
+    {
+        var frame = GetFrameBounds();
+        var handle = HitTestHandle(mousePoint, frame);
+        if (handle.Target != DragTarget.None)
+        {
+            Cursor = Cursors.Hand;
+            return;
+        }
+
+        Cursor = HitTestCommand(mousePoint, frame) >= 0 ? Cursors.SizeAll : Cursors.Default;
     }
 
     private void DrawSelectionHandles(Graphics graphics, RectangleF frame)
@@ -825,10 +902,25 @@ internal sealed class SymbolDesignerCanvas : Control
             SymbolDesignerTool.Capsule => SymbolDrawCommand.Capsule(start, end),
             SymbolDesignerTool.Dot => SymbolDrawCommand.Dot(end, 0.08f),
             SymbolDesignerTool.Text => SymbolDrawCommand.TextCommand(end, "TXT"),
-            SymbolDesignerTool.Arc => SymbolDrawCommand.Arc(start, end),
+            SymbolDesignerTool.Arc => null,
             SymbolDesignerTool.BezierArc => SymbolDrawCommand.BezierArc(start, end),
             _ => null
         };
+    }
+
+    private void DrawArcPreview(Graphics graphics, RectangleF frame)
+    {
+        if (!_arcStart.HasValue || !_dragCurrent.HasValue)
+            return;
+
+        SymbolDrawCommand command;
+        if (_arcPeak.HasValue)
+            command = SymbolDrawCommand.ThreePointArc(_arcStart.Value, _arcPeak.Value, _dragCurrent.Value);
+        else
+            command = SymbolDrawCommand.Line(_arcStart.Value, _dragCurrent.Value);
+
+        using var previewPen = new Pen(Color.FromArgb(190, Color.Goldenrod), 1.5f) { DashStyle = DashStyle.Dash };
+        command.Draw(graphics, frame, previewPen, Brushes.Goldenrod);
     }
 
     private PointF ToSymbolPoint(Point point, bool applySnap)
@@ -1038,6 +1130,22 @@ internal sealed class SymbolDrawCommand
     public static SymbolDrawCommand Arc(PointF start, PointF end) =>
         new() { Kind = SymbolDrawCommandKind.Arc, Start = new SymbolPoint(start), End = new SymbolPoint(end) };
 
+    public static SymbolDrawCommand ThreePointArc(PointF start, PointF peak, PointF end)
+    {
+        return new SymbolDrawCommand
+        {
+            Kind = SymbolDrawCommandKind.Bezier,
+            Start = new SymbolPoint(start),
+            End = new SymbolPoint(end),
+            Control1 = new SymbolPoint(
+                start.X + (peak.X - start.X) * 0.67f,
+                start.Y + (peak.Y - start.Y) * 0.67f),
+            Control2 = new SymbolPoint(
+                end.X + (peak.X - end.X) * 0.67f,
+                end.Y + (peak.Y - end.Y) * 0.67f)
+        };
+    }
+
     public static SymbolDrawCommand BezierArc(PointF start, PointF end)
     {
         var rise = Math.Abs(end.Y - start.Y) * 0.45f;
@@ -1100,6 +1208,11 @@ internal sealed class SymbolDrawCommand
             case DragTarget.Control2:
                 Control2 = point;
                 break;
+            case DragTarget.Peak:
+                var updated = ThreePointArc(Start, point, End);
+                Control1 = updated.Control1;
+                Control2 = updated.Control2;
+                break;
         }
     }
 
@@ -1110,6 +1223,7 @@ internal sealed class SymbolDrawCommand
             yield return new SymbolHandle(DragTarget.End, End);
         if (Kind == SymbolDrawCommandKind.Bezier)
         {
+            yield return new SymbolHandle(DragTarget.Peak, new SymbolPoint(EvaluateBezier(0.5f)));
             yield return new SymbolHandle(DragTarget.Control1, Control1);
             yield return new SymbolHandle(DragTarget.Control2, Control2);
         }
@@ -1153,7 +1267,7 @@ internal sealed class SymbolDrawCommand
         return Kind switch
         {
             SymbolDrawCommandKind.Line => DistanceToSegment(mousePoint, ToAbsolute(frame, Start), ToAbsolute(frame, End)) <= threshold,
-            SymbolDrawCommandKind.Bezier => DistanceToSegment(mousePoint, ToAbsolute(frame, Start), ToAbsolute(frame, End)) <= threshold,
+            SymbolDrawCommandKind.Bezier => HitTestBezier(mousePoint, frame, threshold),
             SymbolDrawCommandKind.Dot => Distance(mousePoint, ToAbsolute(frame, Start)) <= Radius * Math.Min(frame.Width, frame.Height) + threshold,
             SymbolDrawCommandKind.Text => Distance(mousePoint, ToAbsolute(frame, Start)) <= 24f,
             _ => ToRectangle(frame).Contains(mousePoint) || DistanceToRect(mousePoint, ToRectangle(frame)) <= threshold
@@ -1304,6 +1418,35 @@ internal sealed class SymbolDrawCommand
         var dy = Math.Max(Math.Max(rect.Top - point.Y, 0), point.Y - rect.Bottom);
         return MathF.Sqrt(dx * dx + dy * dy);
     }
+
+    private bool HitTestBezier(Point mousePoint, RectangleF frame, float threshold)
+    {
+        var previous = ToAbsolute(frame, Start);
+        for (var step = 1; step <= 24; step++)
+        {
+            var t = step / 24f;
+            var current = ToAbsolute(frame, EvaluateBezier(t));
+            if (DistanceToSegment(mousePoint, previous, current) <= threshold)
+                return true;
+            previous = current;
+        }
+
+        return false;
+    }
+
+    private PointF EvaluateBezier(float t)
+    {
+        var u = 1f - t;
+        var x = u * u * u * Start.X
+            + 3f * u * u * t * Control1.X
+            + 3f * u * t * t * Control2.X
+            + t * t * t * End.X;
+        var y = u * u * u * Start.Y
+            + 3f * u * u * t * Control1.Y
+            + 3f * u * t * t * Control2.Y
+            + t * t * t * End.Y;
+        return new PointF(x, y);
+    }
 }
 
 internal readonly record struct SymbolHandle(DragTarget Target, SymbolPoint Point);
@@ -1329,7 +1472,8 @@ internal enum DragTarget
     Start,
     End,
     Control1,
-    Control2
+    Control2,
+    Peak
 }
 
 internal enum SymbolDrawCommandKind
