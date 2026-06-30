@@ -88,7 +88,8 @@ public sealed class SymbolDesignerForm : Form
         var toolbar = new FlowLayoutPanel
         {
             Dock = DockStyle.Top,
-            Height = 78,
+            AutoScroll = true,
+            Height = 116,
             Padding = new Padding(8, 8, 8, 4),
             WrapContents = true
         };
