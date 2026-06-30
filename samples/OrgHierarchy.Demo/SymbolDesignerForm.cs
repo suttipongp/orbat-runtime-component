@@ -15,7 +15,7 @@ public sealed class SymbolDesignerForm : Form
     private readonly CheckBox _showGridCheckBox = new() { Text = "Grid", Checked = true, AutoSize = true };
     private readonly CheckBox _snapCheckBox = new() { Text = "Snap", Checked = true, AutoSize = true };
     private readonly NumericUpDown _gridDivisionsInput = new();
-    private readonly Label _statusLabel = new() { AutoSize = true, ForeColor = SystemColors.GrayText, Margin = new Padding(8, 6, 0, 0) };
+    private readonly Label _statusLabel = new() { Dock = DockStyle.Fill, ForeColor = SystemColors.GrayText, TextAlign = ContentAlignment.MiddleLeft };
     private readonly ListBox _commandListBox = new();
     private readonly TextBox _codeTextBox = new();
     private readonly NumericUpDown _startXInput = CreateCoordinateInput();
@@ -118,7 +118,14 @@ public sealed class SymbolDesignerForm : Form
         toolbar.Controls.Add(clearButton);
         toolbar.Controls.Add(airDefenseButton);
         toolbar.Controls.Add(copyCodeButton);
-        toolbar.Controls.Add(_statusLabel);
+
+        var statusPanel = new Panel
+        {
+            Dock = DockStyle.Top,
+            Height = 28,
+            Padding = new Padding(10, 0, 10, 4)
+        };
+        statusPanel.Controls.Add(_statusLabel);
 
         _canvas.Dock = DockStyle.Fill;
         _canvas.ReferenceOpacity = _referenceOpacityTrackBar.Value / 100f;
@@ -174,6 +181,7 @@ public sealed class SymbolDesignerForm : Form
         split.Panel2.Controls.Add(rightTabs);
 
         Controls.Add(split);
+        Controls.Add(statusPanel);
         Controls.Add(toolbar);
 
         RefreshOutput();
