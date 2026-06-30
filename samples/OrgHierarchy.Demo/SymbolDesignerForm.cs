@@ -134,7 +134,7 @@ public sealed class SymbolDesignerForm : Form
         toolbar.Controls.Add(_gridDivisionsInput);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Text", Margin = new Padding(8, 6, 4, 0) });
         toolbar.Controls.Add(_drawTextInput);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Size", Margin = new Padding(8, 6, 4, 0) });
+        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Size %", Margin = new Padding(8, 6, 4, 0) });
         toolbar.Controls.Add(_drawTextSizeInput);
         toolbar.Controls.Add(undoButton);
         toolbar.Controls.Add(deleteButton);
@@ -285,7 +285,7 @@ public sealed class SymbolDesignerForm : Form
         AddCoordinateRow(panel, 1, "End X", _endXInput, "End Y", _endYInput);
         AddCoordinateRow(panel, 2, "C1 X", _control1XInput, "C1 Y", _control1YInput);
         AddCoordinateRow(panel, 3, "C2 X", _control2XInput, "C2 Y", _control2YInput);
-        AddCoordinateRow(panel, 4, "Radius", _radiusInput, "Font size", _fontSizeInput);
+        AddCoordinateRow(panel, 4, "Radius", _radiusInput, "Text %", _fontSizeInput);
         AddTextRow(panel, 5, "Text", _textInput);
         panel.Controls.Add(new Label { AutoSize = true, Text = "Select a command, then drag it on the canvas or edit values here.", ForeColor = SystemColors.GrayText }, 0, 6);
         panel.SetColumnSpan(panel.GetControlFromPosition(0, 6)!, 4);
@@ -1497,7 +1497,7 @@ internal sealed class SymbolDrawCommand
             SymbolDrawCommandKind.Bezier => HitTestBezier(mousePoint, frame, threshold),
             SymbolDrawCommandKind.Circle => Distance(mousePoint, ToAbsolute(frame, Start)) <= Radius * Math.Min(frame.Width, frame.Height) + threshold,
             SymbolDrawCommandKind.Dot => Distance(mousePoint, ToAbsolute(frame, Start)) <= Radius * Math.Min(frame.Width, frame.Height) + threshold,
-            SymbolDrawCommandKind.Text => Distance(mousePoint, ToAbsolute(frame, Start)) <= Math.Max(24f, FontSize * 2f),
+            SymbolDrawCommandKind.Text => Distance(mousePoint, ToAbsolute(frame, Start)) <= Math.Max(24f, GetScaledFontSize(frame) * 1.5f),
             _ => ToRectangle(frame).Contains(mousePoint) || DistanceToRect(mousePoint, ToRectangle(frame)) <= threshold
         };
     }
@@ -1535,11 +1535,11 @@ internal sealed class SymbolDrawCommand
                 break;
             case SymbolDrawCommandKind.Text:
                 var location = ToAbsolute(frame, Start);
-                var fontSize = Math.Clamp(FontSize, 4f, 72f);
+                var fontSize = GetScaledFontSize(frame);
                 using (var font = new Font(SystemFonts.DefaultFont.FontFamily, fontSize, FontStyle.Bold))
                 using (var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
                 {
-                    var textWidth = Math.Max(68f, Math.Max(1, Text.Length) * fontSize);
+                    var textWidth = Math.Max(frame.Width * 0.35f, Math.Max(1, Text.Length) * fontSize);
                     var textHeight = fontSize * 2.4f;
                     graphics.DrawString(Text, font, brush, new RectangleF(location.X - textWidth / 2f, location.Y - textHeight / 2f, textWidth, textHeight), format);
                 }
@@ -1560,7 +1560,7 @@ internal sealed class SymbolDrawCommand
         return Kind switch
         {
             SymbolDrawCommandKind.Dot => $"{Kind} at {FormatPoint(Start)}",
-            SymbolDrawCommandKind.Text => $"{Kind} \"{Text}\" {Format(FontSize)}pt at {FormatPoint(Start)}",
+            SymbolDrawCommandKind.Text => $"{Kind} \"{Text}\" {Format(FontSize)}% at {FormatPoint(Start)}",
             _ => $"{Kind} {FormatPoint(Start)} to {FormatPoint(End)}"
         };
     }
@@ -1588,7 +1588,7 @@ internal sealed class SymbolDrawCommand
             SymbolDrawCommandKind.Dot =>
                 $"{graphics}.FillEllipse({brush}, {PointCode(bounds, Start)}.X - {RadiusCode(bounds)}, {PointCode(bounds, Start)}.Y - {RadiusCode(bounds)}, {RadiusCode(bounds)} * 2f, {RadiusCode(bounds)} * 2f);",
             SymbolDrawCommandKind.Text =>
-                $"{{\r\n    var textLocation = {PointCode(bounds, Start)};\r\n    var textSize = {Format(FontSize)}f;\r\n    var textWidth = Math.Max(68f, Math.Max(1, \"{EscapeCSharpString(Text)}\".Length) * textSize);\r\n    var textHeight = textSize * 2.4f;\r\n    using var textFont = new Font(font.FontFamily, textSize, FontStyle.Bold);\r\n    {graphics}.DrawString(\"{EscapeCSharpString(Text)}\", textFont, {brush}, new RectangleF(textLocation.X - textWidth / 2f, textLocation.Y - textHeight / 2f, textWidth, textHeight), centerFormat);\r\n}}",
+                $"{{\r\n    var textLocation = {PointCode(bounds, Start)};\r\n    var textSize = {bounds}.Height * {Format(FontSize / 100f)}f;\r\n    var textWidth = Math.Max({bounds}.Width * 0.35f, Math.Max(1, \"{EscapeCSharpString(Text)}\".Length) * textSize);\r\n    var textHeight = textSize * 2.4f;\r\n    using var textFont = new Font(font.FontFamily, textSize, FontStyle.Bold);\r\n    {graphics}.DrawString(\"{EscapeCSharpString(Text)}\", textFont, {brush}, new RectangleF(textLocation.X - textWidth / 2f, textLocation.Y - textHeight / 2f, textWidth, textHeight), centerFormat);\r\n}}",
             SymbolDrawCommandKind.Arc =>
                 $"{graphics}.DrawArc({pen}, {RectCode(bounds)}, 200f, 140f);",
             SymbolDrawCommandKind.Bezier =>
@@ -1656,6 +1656,9 @@ internal sealed class SymbolDrawCommand
     }
 
     private string RadiusCode(string bounds) => $"Math.Min({bounds}.Width, {bounds}.Height) * {Format(Radius)}f";
+
+    private float GetScaledFontSize(RectangleF frame) =>
+        Math.Clamp(FontSize, 4f, 72f) / 100f * frame.Height;
 
     private string CircleRectCode(string bounds)
     {
