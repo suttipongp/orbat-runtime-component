@@ -1109,7 +1109,7 @@ internal sealed class SymbolDesignerCanvas : Control
 
     private static RectangleF GetIconGuideBounds(RectangleF frame)
     {
-        var size = frame.Height * 0.82f;
+        var size = frame.Height;
         return new RectangleF(
             frame.Left + (frame.Width - size) / 2f,
             frame.Top + (frame.Height - size) / 2f,
@@ -1119,25 +1119,22 @@ internal sealed class SymbolDesignerCanvas : Control
 
     private static PointF[] GetIconGuidePoints()
     {
-        const float left = 0.2267f;
-        const float right = 0.7733f;
-        const float top = 0.09f;
-        const float bottom = 0.91f;
-        const float shoulderLeft = 0.3633f;
-        const float shoulderRight = 0.6367f;
-        const float shoulderTop = 0.2267f;
-        const float shoulderBottom = 0.7733f;
+        const float left = 1f / 6f;
+        const float right = 5f / 6f;
+        const float center = 0.5f;
+        const float diagonalXOffset = 0.2357f;
+        const float diagonalYOffset = 0.3536f;
 
         return new[]
         {
-            new PointF(shoulderLeft, top),
-            new PointF(shoulderRight, top),
-            new PointF(right, shoulderTop),
-            new PointF(right, shoulderBottom),
-            new PointF(shoulderRight, bottom),
-            new PointF(shoulderLeft, bottom),
-            new PointF(left, shoulderBottom),
-            new PointF(left, shoulderTop)
+            new PointF(center, 0f),
+            new PointF(center + diagonalXOffset, center - diagonalYOffset),
+            new PointF(right, center),
+            new PointF(center + diagonalXOffset, center + diagonalYOffset),
+            new PointF(center, 1f),
+            new PointF(center - diagonalXOffset, center + diagonalYOffset),
+            new PointF(left, center),
+            new PointF(center - diagonalXOffset, center - diagonalYOffset)
         };
     }
 
