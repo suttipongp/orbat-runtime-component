@@ -15,6 +15,7 @@ public sealed class SymbolDesignerForm : Form
     private readonly CheckBox _showGridCheckBox = new() { Text = "Grid", Checked = true, AutoSize = true };
     private readonly CheckBox _snapCheckBox = new() { Text = "Snap", Checked = true, AutoSize = true };
     private readonly NumericUpDown _gridDivisionsInput = new();
+    private readonly Label _statusLabel = new() { AutoSize = true, ForeColor = SystemColors.GrayText, Margin = new Padding(8, 6, 0, 0) };
     private readonly ListBox _commandListBox = new();
     private readonly TextBox _codeTextBox = new();
     private readonly NumericUpDown _startXInput = CreateCoordinateInput();
@@ -39,7 +40,11 @@ public sealed class SymbolDesignerForm : Form
         _toolComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         _toolComboBox.Items.AddRange(Enum.GetNames<SymbolDesignerTool>().Cast<object>().ToArray());
         _toolComboBox.SelectedItem = SymbolDesignerTool.Line.ToString();
-        _toolComboBox.SelectedIndexChanged += (_, _) => _canvas.Tool = GetSelectedTool();
+        _toolComboBox.SelectedIndexChanged += (_, _) =>
+        {
+            _canvas.Tool = GetSelectedTool();
+            UpdateToolStatus();
+        };
 
         _unitTypeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         _unitTypeComboBox.Items.AddRange(Enum.GetNames<Components.OrbatUnitType>().Cast<object>().ToArray());
@@ -113,13 +118,19 @@ public sealed class SymbolDesignerForm : Form
         toolbar.Controls.Add(clearButton);
         toolbar.Controls.Add(airDefenseButton);
         toolbar.Controls.Add(copyCodeButton);
+        toolbar.Controls.Add(_statusLabel);
 
         _canvas.Dock = DockStyle.Fill;
         _canvas.ReferenceOpacity = _referenceOpacityTrackBar.Value / 100f;
         _canvas.GridDivisions = (int)_gridDivisionsInput.Value;
         _canvas.ShowGrid = _showGridCheckBox.Checked;
         _canvas.SnapEnabled = _snapCheckBox.Checked;
-        _canvas.CommandsChanged += (_, _) => RefreshOutput();
+        _canvas.CommandsChanged += (_, _) =>
+        {
+            RefreshOutput();
+            if (_canvas.SelectedIndex >= 0 && GetSelectedTool() != SymbolDesignerTool.SelectMove)
+                SelectTool(SymbolDesignerTool.SelectMove);
+        };
         _canvas.SelectionChanged += (_, _) => RefreshSelectionControls();
 
         _preview.Dock = DockStyle.Fill;
@@ -131,6 +142,8 @@ public sealed class SymbolDesignerForm : Form
         {
             if (_commandListBox.SelectedIndex != _canvas.SelectedIndex)
                 _canvas.SelectCommand(_commandListBox.SelectedIndex);
+            if (_commandListBox.SelectedIndex >= 0)
+                SelectTool(SymbolDesignerTool.SelectMove);
         };
 
         WireSelectionInputs();
@@ -165,6 +178,7 @@ public sealed class SymbolDesignerForm : Form
 
         RefreshOutput();
         RefreshSelectionControls();
+        UpdateToolStatus();
     }
 
     private static Button CreateButton(string text, Action action)
@@ -257,6 +271,26 @@ public sealed class SymbolDesignerForm : Form
         return Enum.TryParse(Convert.ToString(_toolComboBox.SelectedItem), out SymbolDesignerTool tool)
             ? tool
             : SymbolDesignerTool.Line;
+    }
+
+    private void SelectTool(SymbolDesignerTool tool)
+    {
+        var value = tool.ToString();
+        if (!Equals(_toolComboBox.SelectedItem, value))
+            _toolComboBox.SelectedItem = value;
+        else
+            _canvas.Tool = tool;
+        UpdateToolStatus();
+    }
+
+    private void UpdateToolStatus()
+    {
+        _statusLabel.Text = GetSelectedTool() switch
+        {
+            SymbolDesignerTool.SelectMove => "SelectMove: drag a line to move it, or drag a handle to edit an endpoint.",
+            SymbolDesignerTool.Arc => "Arc: click start, click highest point, click end.",
+            _ => "Draw: drag on the canvas. New shapes are selected for editing."
+        };
     }
 
     private void LoadReferenceImage()
