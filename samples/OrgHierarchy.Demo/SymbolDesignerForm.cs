@@ -1537,11 +1537,10 @@ internal sealed class SymbolDrawCommand
                 var location = ToAbsolute(frame, Start);
                 var fontSize = GetScaledFontSize(frame);
                 using (var font = new Font(SystemFonts.DefaultFont.FontFamily, fontSize, FontStyle.Bold))
-                using (var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
+                using (var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap })
                 {
-                    var textWidth = Math.Max(frame.Width * 0.35f, Math.Max(1, Text.Length) * fontSize);
-                    var textHeight = fontSize * 2.4f;
-                    graphics.DrawString(Text, font, brush, new RectangleF(location.X - textWidth / 2f, location.Y - textHeight / 2f, textWidth, textHeight), format);
+                    var textBounds = GetTextBounds(frame, location, fontSize);
+                    graphics.DrawString(Text, font, brush, textBounds, format);
                 }
                 break;
             case SymbolDrawCommandKind.Arc:
@@ -1588,7 +1587,7 @@ internal sealed class SymbolDrawCommand
             SymbolDrawCommandKind.Dot =>
                 $"{graphics}.FillEllipse({brush}, {PointCode(bounds, Start)}.X - {RadiusCode(bounds)}, {PointCode(bounds, Start)}.Y - {RadiusCode(bounds)}, {RadiusCode(bounds)} * 2f, {RadiusCode(bounds)} * 2f);",
             SymbolDrawCommandKind.Text =>
-                $"{{\r\n    var textLocation = {PointCode(bounds, Start)};\r\n    var textSize = {bounds}.Height * {Format(FontSize / 100f)}f;\r\n    var textWidth = Math.Max({bounds}.Width * 0.35f, Math.Max(1, \"{EscapeCSharpString(Text)}\".Length) * textSize);\r\n    var textHeight = textSize * 2.4f;\r\n    using var textFont = new Font(font.FontFamily, textSize, FontStyle.Bold);\r\n    {graphics}.DrawString(\"{EscapeCSharpString(Text)}\", textFont, {brush}, new RectangleF(textLocation.X - textWidth / 2f, textLocation.Y - textHeight / 2f, textWidth, textHeight), centerFormat);\r\n}}",
+                $"{{\r\n    var textValue = \"{EscapeCSharpString(Text)}\";\r\n    var textLocation = {PointCode(bounds, Start)};\r\n    var textSize = {bounds}.Height * {Format(FontSize / 100f)}f;\r\n    var textWidth = Math.Min({bounds}.Width, Math.Max({bounds}.Width * 0.45f, Math.Max(1, textValue.Length) * textSize * 1.15f));\r\n    var textHeight = textSize * 1.6f;\r\n    using var textFont = new Font(font.FontFamily, textSize, FontStyle.Bold);\r\n    using var textFormat = new StringFormat {{ Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap }};\r\n    {graphics}.DrawString(textValue, textFont, {brush}, new RectangleF(textLocation.X - textWidth / 2f, textLocation.Y - textHeight / 2f, textWidth, textHeight), textFormat);\r\n}}",
             SymbolDrawCommandKind.Arc =>
                 $"{graphics}.DrawArc({pen}, {RectCode(bounds)}, 200f, 140f);",
             SymbolDrawCommandKind.Bezier =>
@@ -1659,6 +1658,15 @@ internal sealed class SymbolDrawCommand
 
     private float GetScaledFontSize(RectangleF frame) =>
         Math.Clamp(FontSize, 4f, 72f) / 100f * frame.Height;
+
+    private RectangleF GetTextBounds(RectangleF frame, PointF location, float fontSize)
+    {
+        var textWidth = Math.Min(
+            frame.Width,
+            Math.Max(frame.Width * 0.45f, Math.Max(1, Text.Length) * fontSize * 1.15f));
+        var textHeight = fontSize * 1.6f;
+        return new RectangleF(location.X - textWidth / 2f, location.Y - textHeight / 2f, textWidth, textHeight);
+    }
 
     private string CircleRectCode(string bounds)
     {
