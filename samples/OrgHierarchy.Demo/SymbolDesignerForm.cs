@@ -30,6 +30,7 @@ public sealed class SymbolDesignerForm : Form
     private readonly NumericUpDown _control2YInput = CreateCoordinateInput();
     private readonly NumericUpDown _radiusInput = CreateCoordinateInput();
     private readonly TextBox _textInput = new();
+    private readonly TextBox _drawTextInput = new() { Text = "TXT", Width = 80 };
     private bool _updatingSelectionControls;
 
     public SymbolDesignerForm()
@@ -90,6 +91,7 @@ public sealed class SymbolDesignerForm : Form
             _canvas.FillClosedShapes = _fillCheckBox.Checked;
             ApplyFillOptionToSelection();
         };
+        _drawTextInput.TextChanged += (_, _) => _canvas.DrawText = _drawTextInput.Text;
 
         var loadButton = CreateButton("Load reference", LoadReferenceImage);
         var loadClipboardButton = CreateButton("Load clipboard", LoadReferenceFromClipboard);
@@ -127,6 +129,8 @@ public sealed class SymbolDesignerForm : Form
         toolbar.Controls.Add(_fillCheckBox);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Grid", Margin = new Padding(8, 6, 4, 0) });
         toolbar.Controls.Add(_gridDivisionsInput);
+        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Text", Margin = new Padding(8, 6, 4, 0) });
+        toolbar.Controls.Add(_drawTextInput);
         toolbar.Controls.Add(undoButton);
         toolbar.Controls.Add(deleteButton);
         toolbar.Controls.Add(clearButton);
@@ -148,6 +152,7 @@ public sealed class SymbolDesignerForm : Form
         _canvas.ShowIconGuide = _showIconGuideCheckBox.Checked;
         _canvas.SnapEnabled = _snapCheckBox.Checked;
         _canvas.FillClosedShapes = _fillCheckBox.Checked;
+        _canvas.DrawText = _drawTextInput.Text;
         _canvas.CommandsChanged += (_, _) =>
         {
             RefreshOutput();
@@ -314,6 +319,7 @@ public sealed class SymbolDesignerForm : Form
             SymbolDesignerTool.SelectMove => "SelectMove: drag a line to move it, or drag a handle to edit an endpoint.",
             SymbolDesignerTool.Arc => "Arc: click start, click highest point, click end.",
             SymbolDesignerTool.Circle => "Circle: drag from the center outward. Use Fill closed for a solid circle.",
+            SymbolDesignerTool.Text => "Text: enter text in the toolbar, then click the canvas to place it.",
             _ => "Draw: drag on the canvas. Use Fill closed for closed shapes."
         };
     }
@@ -591,6 +597,7 @@ internal sealed class SymbolDesignerCanvas : Control
     public bool ShowIconGuide { get; set; } = true;
     public bool SnapEnabled { get; set; } = true;
     public bool FillClosedShapes { get; set; }
+    public string DrawText { get; set; } = "TXT";
     public int GridDivisions { get; set; } = 10;
     public int SelectedIndex { get; private set; } = -1;
     public SymbolDrawCommand? SelectedCommand => SelectedIndex >= 0 && SelectedIndex < _commands.Count ? _commands[SelectedIndex] : null;
@@ -953,14 +960,18 @@ internal sealed class SymbolDesignerCanvas : Control
     {
         using var minorPen = new Pen(Color.FromArgb(205, 218, 226), 1f);
         using var majorPen = new Pen(Color.FromArgb(145, 164, 178), 1f);
-        var divisions = Math.Max(1, GridDivisions);
-        for (var index = 1; index < divisions; index++)
+        foreach (var x in GetVerticalGridCoordinates())
         {
-            var x = frame.Left + frame.Width * index / divisions;
-            var y = frame.Top + frame.Height * index / divisions;
-            var pen = index == divisions / 2 ? majorPen : minorPen;
-            graphics.DrawLine(pen, x, frame.Top, x, frame.Bottom);
-            graphics.DrawLine(pen, frame.Left, y, frame.Right, y);
+            var absoluteX = frame.Left + frame.Width * x;
+            var pen = IsCenterGridLine(x) ? majorPen : minorPen;
+            graphics.DrawLine(pen, absoluteX, frame.Top, absoluteX, frame.Bottom);
+        }
+
+        foreach (var y in GetHorizontalGridCoordinates())
+        {
+            var absoluteY = frame.Top + frame.Height * y;
+            var pen = IsCenterGridLine(y) ? majorPen : minorPen;
+            graphics.DrawLine(pen, frame.Left, absoluteY, frame.Right, absoluteY);
         }
     }
 
@@ -996,7 +1007,7 @@ internal sealed class SymbolDesignerCanvas : Control
             SymbolDesignerTool.Circle => SymbolDrawCommand.Circle(start, end, GetFrameBounds(), FillClosedShapes),
             SymbolDesignerTool.Capsule => SymbolDrawCommand.Capsule(start, end, FillClosedShapes),
             SymbolDesignerTool.Dot => SymbolDrawCommand.Dot(end, 0.08f),
-            SymbolDesignerTool.Text => SymbolDrawCommand.TextCommand(end, "TXT"),
+            SymbolDesignerTool.Text => SymbolDrawCommand.TextCommand(end, string.IsNullOrWhiteSpace(DrawText) ? "TXT" : DrawText),
             SymbolDesignerTool.Arc => null,
             SymbolDesignerTool.BezierArc => SymbolDrawCommand.BezierArc(start, end),
             _ => null
@@ -1055,11 +1066,10 @@ internal sealed class SymbolDesignerCanvas : Control
             yield return point;
         yield return new PointF(0.5f, 0.5f);
 
-        var divisions = Math.Max(1, GridDivisions);
-        for (var x = 0; x <= divisions; x++)
+        foreach (var x in GetVerticalGridCoordinates())
         {
-            for (var y = 0; y <= divisions; y++)
-                yield return new PointF((float)x / divisions, (float)y / divisions);
+            foreach (var y in GetHorizontalGridCoordinates())
+                yield return new PointF(x, y);
         }
 
         foreach (var command in _commands)
@@ -1116,6 +1126,42 @@ internal sealed class SymbolDesignerCanvas : Control
             size,
             size);
     }
+
+    private IEnumerable<float> GetHorizontalGridCoordinates()
+    {
+        var divisions = Math.Max(1, GridDivisions);
+        var step = 1f / divisions;
+        return GetCenteredGridCoordinates(step);
+    }
+
+    private IEnumerable<float> GetVerticalGridCoordinates()
+    {
+        var divisions = Math.Max(1, GridDivisions);
+        var horizontalStepInFrame = 1f / divisions / StandardFrameAspectRatio;
+        return GetCenteredGridCoordinates(horizontalStepInFrame);
+    }
+
+    private static IEnumerable<float> GetCenteredGridCoordinates(float step)
+    {
+        const float center = 0.5f;
+        const float tolerance = 0.0001f;
+        var values = new List<float> { center };
+
+        for (var offset = step; offset < center - tolerance; offset += step)
+        {
+            var left = center - offset;
+            var right = center + offset;
+            if (left >= step - tolerance)
+                values.Add(left);
+            if (1f - right >= step - tolerance)
+                values.Add(right);
+        }
+
+        values.Sort();
+        return values;
+    }
+
+    private static bool IsCenterGridLine(float value) => Math.Abs(value - 0.5f) < 0.0001f;
 
     private static PointF[] GetIconGuidePoints()
     {
@@ -1502,7 +1548,7 @@ internal sealed class SymbolDrawCommand
             SymbolDrawCommandKind.Dot =>
                 $"{graphics}.FillEllipse({brush}, {PointCode(bounds, Start)}.X - {RadiusCode(bounds)}, {PointCode(bounds, Start)}.Y - {RadiusCode(bounds)}, {RadiusCode(bounds)} * 2f, {RadiusCode(bounds)} * 2f);",
             SymbolDrawCommandKind.Text =>
-                $"{graphics}.DrawString(\"{Text}\", font, {brush}, {icon}, centerFormat);",
+                $"{{\r\n    var textLocation = {PointCode(bounds, Start)};\r\n    {graphics}.DrawString(\"{EscapeCSharpString(Text)}\", font, {brush}, new RectangleF(textLocation.X - 34f, textLocation.Y - 14f, 68f, 28f), centerFormat);\r\n}}",
             SymbolDrawCommandKind.Arc =>
                 $"{graphics}.DrawArc({pen}, {RectCode(bounds)}, 200f, 140f);",
             SymbolDrawCommandKind.Bezier =>
@@ -1599,6 +1645,9 @@ internal sealed class SymbolDrawCommand
     private static string FormatPoint(SymbolPoint point) => $"({Format(point.X)}, {Format(point.Y)})";
 
     private static string Format(float value) => value.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+
+    private static string EscapeCSharpString(string value) =>
+        value.Replace("\\", "\\\\").Replace("\"", "\\\"");
 
     private static float Distance(Point first, PointF second)
     {
