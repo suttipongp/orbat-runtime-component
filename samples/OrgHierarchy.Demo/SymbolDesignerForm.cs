@@ -14,6 +14,7 @@ public sealed class SymbolDesignerForm : Form
     private readonly TrackBar _referenceOpacityTrackBar = new();
     private readonly CheckBox _showGridCheckBox = new() { Text = "Grid", Checked = true, AutoSize = true };
     private readonly CheckBox _snapCheckBox = new() { Text = "Snap", Checked = true, AutoSize = true };
+    private readonly CheckBox _fillCheckBox = new() { Text = "Fill closed", AutoSize = true };
     private readonly NumericUpDown _gridDivisionsInput = new();
     private readonly Label _statusLabel = new() { Dock = DockStyle.Fill, ForeColor = SystemColors.GrayText, TextAlign = ContentAlignment.MiddleLeft };
     private readonly ListBox _commandListBox = new();
@@ -78,6 +79,11 @@ public sealed class SymbolDesignerForm : Form
             _canvas.Invalidate();
         };
         _snapCheckBox.CheckedChanged += (_, _) => _canvas.SnapEnabled = _snapCheckBox.Checked;
+        _fillCheckBox.CheckedChanged += (_, _) =>
+        {
+            _canvas.FillClosedShapes = _fillCheckBox.Checked;
+            ApplyFillOptionToSelection();
+        };
 
         var loadButton = CreateButton("Load reference", LoadReferenceImage);
         var loadClipboardButton = CreateButton("Load clipboard", LoadReferenceFromClipboard);
@@ -111,6 +117,7 @@ public sealed class SymbolDesignerForm : Form
         toolbar.Controls.Add(_referenceOpacityTrackBar);
         toolbar.Controls.Add(_showGridCheckBox);
         toolbar.Controls.Add(_snapCheckBox);
+        toolbar.Controls.Add(_fillCheckBox);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Grid", Margin = new Padding(8, 6, 4, 0) });
         toolbar.Controls.Add(_gridDivisionsInput);
         toolbar.Controls.Add(undoButton);
@@ -132,6 +139,7 @@ public sealed class SymbolDesignerForm : Form
         _canvas.GridDivisions = (int)_gridDivisionsInput.Value;
         _canvas.ShowGrid = _showGridCheckBox.Checked;
         _canvas.SnapEnabled = _snapCheckBox.Checked;
+        _canvas.FillClosedShapes = _fillCheckBox.Checked;
         _canvas.CommandsChanged += (_, _) =>
         {
             RefreshOutput();
@@ -297,7 +305,8 @@ public sealed class SymbolDesignerForm : Form
         {
             SymbolDesignerTool.SelectMove => "SelectMove: drag a line to move it, or drag a handle to edit an endpoint.",
             SymbolDesignerTool.Arc => "Arc: click start, click highest point, click end.",
-            _ => "Draw: drag on the canvas. New shapes are selected for editing."
+            SymbolDesignerTool.Circle => "Circle: drag from the center outward. Use Fill closed for a solid circle.",
+            _ => "Draw: drag on the canvas. Use Fill closed for closed shapes."
         };
     }
 
@@ -451,7 +460,11 @@ public sealed class SymbolDesignerForm : Form
             }
 
             if (command == null)
+            {
+                _fillCheckBox.Enabled = false;
+                _fillCheckBox.Checked = false;
                 return;
+            }
 
             _startXInput.Value = ToDecimal(command.Start.X);
             _startYInput.Value = ToDecimal(command.Start.Y);
@@ -463,6 +476,8 @@ public sealed class SymbolDesignerForm : Form
             _control2YInput.Value = ToDecimal(command.Control2.Y);
             _radiusInput.Value = ToDecimal(command.Radius);
             _textInput.Text = command.Text;
+            _fillCheckBox.Enabled = command.CanFill;
+            _fillCheckBox.Checked = command.CanFill && command.Filled;
 
             if (_commandListBox.SelectedIndex != _canvas.SelectedIndex)
                 _commandListBox.SelectedIndex = _canvas.SelectedIndex;
@@ -471,6 +486,19 @@ public sealed class SymbolDesignerForm : Form
         {
             _updatingSelectionControls = false;
         }
+    }
+
+    private void ApplyFillOptionToSelection()
+    {
+        if (_updatingSelectionControls)
+            return;
+
+        var command = _canvas.SelectedCommand;
+        if (command == null || !command.CanFill)
+            return;
+
+        command.Filled = _fillCheckBox.Checked;
+        _canvas.NotifyCommandEdited();
     }
 
     private void ApplySelectionControls()
@@ -511,6 +539,7 @@ internal enum SymbolDesignerTool
     Line,
     Rectangle,
     Ellipse,
+    Circle,
     Capsule,
     Dot,
     Text,
@@ -551,6 +580,7 @@ internal sealed class SymbolDesignerCanvas : Control
     public float ReferenceOpacity { get; set; } = 0.35f;
     public bool ShowGrid { get; set; } = true;
     public bool SnapEnabled { get; set; } = true;
+    public bool FillClosedShapes { get; set; }
     public int GridDivisions { get; set; } = 10;
     public int SelectedIndex { get; private set; } = -1;
     public SymbolDrawCommand? SelectedCommand => SelectedIndex >= 0 && SelectedIndex < _commands.Count ? _commands[SelectedIndex] : null;
@@ -939,9 +969,10 @@ internal sealed class SymbolDesignerCanvas : Control
         return Tool switch
         {
             SymbolDesignerTool.Line => SymbolDrawCommand.Line(start, end),
-            SymbolDesignerTool.Rectangle => SymbolDrawCommand.Rectangle(start, end),
-            SymbolDesignerTool.Ellipse => SymbolDrawCommand.Ellipse(start, end),
-            SymbolDesignerTool.Capsule => SymbolDrawCommand.Capsule(start, end),
+            SymbolDesignerTool.Rectangle => SymbolDrawCommand.Rectangle(start, end, FillClosedShapes),
+            SymbolDesignerTool.Ellipse => SymbolDrawCommand.Ellipse(start, end, FillClosedShapes),
+            SymbolDesignerTool.Circle => SymbolDrawCommand.Circle(start, end, GetFrameBounds(), FillClosedShapes),
+            SymbolDesignerTool.Capsule => SymbolDrawCommand.Capsule(start, end, FillClosedShapes),
             SymbolDesignerTool.Dot => SymbolDrawCommand.Dot(end, 0.08f),
             SymbolDesignerTool.Text => SymbolDrawCommand.TextCommand(end, "TXT"),
             SymbolDesignerTool.Arc => null,
@@ -1150,18 +1181,29 @@ internal sealed class SymbolDrawCommand
     public SymbolPoint Control2 { get; set; }
     public float Radius { get; set; }
     public string Text { get; set; } = string.Empty;
+    public bool Filled { get; set; }
+    [JsonIgnore]
+    public bool CanFill => Kind is SymbolDrawCommandKind.Rectangle or SymbolDrawCommandKind.Ellipse or SymbolDrawCommandKind.Circle or SymbolDrawCommandKind.Capsule;
 
     public static SymbolDrawCommand Line(PointF start, PointF end) =>
         new() { Kind = SymbolDrawCommandKind.Line, Start = new SymbolPoint(start), End = new SymbolPoint(end) };
 
-    public static SymbolDrawCommand Rectangle(PointF start, PointF end) =>
-        new() { Kind = SymbolDrawCommandKind.Rectangle, Start = new SymbolPoint(start), End = new SymbolPoint(end) };
+    public static SymbolDrawCommand Rectangle(PointF start, PointF end, bool filled = false) =>
+        new() { Kind = SymbolDrawCommandKind.Rectangle, Start = new SymbolPoint(start), End = new SymbolPoint(end), Filled = filled };
 
-    public static SymbolDrawCommand Ellipse(PointF start, PointF end) =>
-        new() { Kind = SymbolDrawCommandKind.Ellipse, Start = new SymbolPoint(start), End = new SymbolPoint(end) };
+    public static SymbolDrawCommand Ellipse(PointF start, PointF end, bool filled = false) =>
+        new() { Kind = SymbolDrawCommandKind.Ellipse, Start = new SymbolPoint(start), End = new SymbolPoint(end), Filled = filled };
 
-    public static SymbolDrawCommand Capsule(PointF start, PointF end) =>
-        new() { Kind = SymbolDrawCommandKind.Capsule, Start = new SymbolPoint(start), End = new SymbolPoint(end) };
+    public static SymbolDrawCommand Circle(PointF start, PointF end, RectangleF frame, bool filled = false)
+    {
+        var center = ToAbsolute(frame, start);
+        var edge = ToAbsolute(frame, end);
+        var radius = Distance(center, edge) / Math.Min(frame.Width, frame.Height);
+        return new() { Kind = SymbolDrawCommandKind.Circle, Start = new SymbolPoint(start), End = new SymbolPoint(end), Radius = radius, Filled = filled };
+    }
+
+    public static SymbolDrawCommand Capsule(PointF start, PointF end, bool filled = false) =>
+        new() { Kind = SymbolDrawCommandKind.Capsule, Start = new SymbolPoint(start), End = new SymbolPoint(end), Filled = filled };
 
     public static SymbolDrawCommand Dot(PointF center, float radius) =>
         new() { Kind = SymbolDrawCommandKind.Dot, Start = new SymbolPoint(center), End = new SymbolPoint(center), Radius = radius };
@@ -1221,7 +1263,8 @@ internal sealed class SymbolDrawCommand
             Control1 = Control1,
             Control2 = Control2,
             Radius = Radius,
-            Text = Text
+            Text = Text,
+            Filled = Filled
         };
 
     public void Move(SymbolPoint delta)
@@ -1243,6 +1286,8 @@ internal sealed class SymbolDrawCommand
                 break;
             case DragTarget.End:
                 End = point;
+                if (Kind == SymbolDrawCommandKind.Circle)
+                    Radius = Distance(Start, End);
                 break;
             case DragTarget.Control1:
                 Control1 = point;
@@ -1310,6 +1355,7 @@ internal sealed class SymbolDrawCommand
         {
             SymbolDrawCommandKind.Line => DistanceToSegment(mousePoint, ToAbsolute(frame, Start), ToAbsolute(frame, End)) <= threshold,
             SymbolDrawCommandKind.Bezier => HitTestBezier(mousePoint, frame, threshold),
+            SymbolDrawCommandKind.Circle => Distance(mousePoint, ToAbsolute(frame, Start)) <= Radius * Math.Min(frame.Width, frame.Height) + threshold,
             SymbolDrawCommandKind.Dot => Distance(mousePoint, ToAbsolute(frame, Start)) <= Radius * Math.Min(frame.Width, frame.Height) + threshold,
             SymbolDrawCommandKind.Text => Distance(mousePoint, ToAbsolute(frame, Start)) <= 24f,
             _ => ToRectangle(frame).Contains(mousePoint) || DistanceToRect(mousePoint, ToRectangle(frame)) <= threshold
@@ -1324,13 +1370,23 @@ internal sealed class SymbolDrawCommand
                 graphics.DrawLine(pen, ToAbsolute(frame, Start), ToAbsolute(frame, End));
                 break;
             case SymbolDrawCommandKind.Rectangle:
+                if (Filled)
+                    graphics.FillRectangle(brush, ToRectangle(frame));
                 graphics.DrawRectangle(pen, System.Drawing.Rectangle.Round(ToRectangle(frame)));
                 break;
             case SymbolDrawCommandKind.Ellipse:
+                if (Filled)
+                    graphics.FillEllipse(brush, ToRectangle(frame));
                 graphics.DrawEllipse(pen, ToRectangle(frame));
                 break;
+            case SymbolDrawCommandKind.Circle:
+                var circle = ToCircleRectangle(frame);
+                if (Filled)
+                    graphics.FillEllipse(brush, circle);
+                graphics.DrawEllipse(pen, circle);
+                break;
             case SymbolDrawCommandKind.Capsule:
-                DrawCapsule(graphics, pen, ToRectangle(frame));
+                DrawCapsule(graphics, pen, brush, ToRectangle(frame), Filled);
                 break;
             case SymbolDrawCommandKind.Dot:
                 var center = ToAbsolute(frame, Start);
@@ -1371,11 +1427,19 @@ internal sealed class SymbolDrawCommand
             SymbolDrawCommandKind.Line =>
                 $"{graphics}.DrawLine({pen}, {PointCode(bounds, Start)}, {PointCode(bounds, End)});",
             SymbolDrawCommandKind.Rectangle =>
-                $"{graphics}.DrawRectangle({pen}, Rectangle.Round({RectCode(bounds)}));",
+                Filled
+                    ? $"{graphics}.FillRectangle({brush}, {RectCode(bounds)});\r\n{graphics}.DrawRectangle({pen}, Rectangle.Round({RectCode(bounds)}));"
+                    : $"{graphics}.DrawRectangle({pen}, Rectangle.Round({RectCode(bounds)}));",
             SymbolDrawCommandKind.Ellipse =>
-                $"{graphics}.DrawEllipse({pen}, {RectCode(bounds)});",
+                Filled
+                    ? $"{graphics}.FillEllipse({brush}, {RectCode(bounds)});\r\n{graphics}.DrawEllipse({pen}, {RectCode(bounds)});"
+                    : $"{graphics}.DrawEllipse({pen}, {RectCode(bounds)});",
+            SymbolDrawCommandKind.Circle =>
+                Filled
+                    ? $"{{\r\n    var circleBounds = {CircleRectCode(bounds)};\r\n    {graphics}.FillEllipse({brush}, circleBounds);\r\n    {graphics}.DrawEllipse({pen}, circleBounds);\r\n}}"
+                    : $"{graphics}.DrawEllipse({pen}, {CircleRectCode(bounds)});",
             SymbolDrawCommandKind.Capsule =>
-                $"DrawCapsule({graphics}, {pen}, {RectCode(bounds)});",
+                CapsuleCode(graphics, pen, brush, bounds),
             SymbolDrawCommandKind.Dot =>
                 $"{graphics}.FillEllipse({brush}, {PointCode(bounds, Start)}.X - {RadiusCode(bounds)}, {PointCode(bounds, Start)}.Y - {RadiusCode(bounds)}, {RadiusCode(bounds)} * 2f, {RadiusCode(bounds)} * 2f);",
             SymbolDrawCommandKind.Text =>
@@ -1388,13 +1452,23 @@ internal sealed class SymbolDrawCommand
         };
     }
 
-    private static void DrawCapsule(Graphics graphics, Pen pen, RectangleF rect)
+    private static void DrawCapsule(Graphics graphics, Pen pen, Brush brush, RectangleF rect, bool filled)
     {
-        var radius = rect.Height / 2f;
+        var height = Math.Min(rect.Height, rect.Width);
+        var capsule = new RectangleF(
+            rect.Left,
+            rect.Top + (rect.Height - height) / 2f,
+            rect.Width,
+            height);
+        var radius = capsule.Height / 2f;
         using var path = new GraphicsPath();
-        path.AddArc(rect.Left, rect.Top, radius * 2f, rect.Height, 90, 180);
-        path.AddArc(rect.Right - radius * 2f, rect.Top, radius * 2f, rect.Height, 270, 180);
+        path.AddArc(capsule.Left, capsule.Top, radius * 2f, radius * 2f, 90, 180);
+        path.AddLine(capsule.Left + radius, capsule.Top, capsule.Right - radius, capsule.Top);
+        path.AddArc(capsule.Right - radius * 2f, capsule.Top, radius * 2f, radius * 2f, 270, 180);
+        path.AddLine(capsule.Right - radius, capsule.Bottom, capsule.Left + radius, capsule.Bottom);
         path.CloseFigure();
+        if (filled)
+            graphics.FillPath(brush, path);
         graphics.DrawPath(pen, path);
     }
 
@@ -1405,6 +1479,13 @@ internal sealed class SymbolDrawCommand
         var left = Math.Min(first.X, second.X);
         var top = Math.Min(first.Y, second.Y);
         return new RectangleF(left, top, Math.Abs(second.X - first.X), Math.Abs(second.Y - first.Y));
+    }
+
+    private RectangleF ToCircleRectangle(RectangleF frame)
+    {
+        var center = ToAbsolute(frame, Start);
+        var radius = Radius * Math.Min(frame.Width, frame.Height);
+        return new RectangleF(center.X - radius, center.Y - radius, radius * 2f, radius * 2f);
     }
 
     private RectangleF GetNormalizedRect()
@@ -1431,11 +1512,43 @@ internal sealed class SymbolDrawCommand
 
     private string RadiusCode(string bounds) => $"Math.Min({bounds}.Width, {bounds}.Height) * {Format(Radius)}f";
 
+    private string CircleRectCode(string bounds)
+    {
+        var radius = RadiusCode(bounds);
+        return $"new RectangleF({PointCode(bounds, Start)}.X - {radius}, {PointCode(bounds, Start)}.Y - {radius}, {radius} * 2f, {radius} * 2f)";
+    }
+
+    private string CapsuleCode(string graphics, string pen, string brush, string bounds)
+    {
+        var fillLine = Filled ? $"    {graphics}.FillPath({brush}, capsulePath);\r\n" : string.Empty;
+        return "{\r\n"
+            + $"    var capsuleBounds = {RectCode(bounds)};\r\n"
+            + "    var capsuleHeight = Math.Min(capsuleBounds.Height, capsuleBounds.Width);\r\n"
+            + "    capsuleBounds = new RectangleF(capsuleBounds.Left, capsuleBounds.Top + (capsuleBounds.Height - capsuleHeight) / 2f, capsuleBounds.Width, capsuleHeight);\r\n"
+            + "    var capsuleRadius = capsuleBounds.Height / 2f;\r\n"
+            + "    using var capsulePath = new GraphicsPath();\r\n"
+            + "    capsulePath.AddArc(capsuleBounds.Left, capsuleBounds.Top, capsuleRadius * 2f, capsuleRadius * 2f, 90, 180);\r\n"
+            + "    capsulePath.AddLine(capsuleBounds.Left + capsuleRadius, capsuleBounds.Top, capsuleBounds.Right - capsuleRadius, capsuleBounds.Top);\r\n"
+            + "    capsulePath.AddArc(capsuleBounds.Right - capsuleRadius * 2f, capsuleBounds.Top, capsuleRadius * 2f, capsuleRadius * 2f, 270, 180);\r\n"
+            + "    capsulePath.AddLine(capsuleBounds.Right - capsuleRadius, capsuleBounds.Bottom, capsuleBounds.Left + capsuleRadius, capsuleBounds.Bottom);\r\n"
+            + "    capsulePath.CloseFigure();\r\n"
+            + fillLine
+            + $"    {graphics}.DrawPath({pen}, capsulePath);\r\n"
+            + "}";
+    }
+
     private static string FormatPoint(SymbolPoint point) => $"({Format(point.X)}, {Format(point.Y)})";
 
     private static string Format(float value) => value.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
 
     private static float Distance(Point first, PointF second)
+    {
+        var dx = first.X - second.X;
+        var dy = first.Y - second.Y;
+        return MathF.Sqrt(dx * dx + dy * dy);
+    }
+
+    private static float Distance(PointF first, PointF second)
     {
         var dx = first.X - second.X;
         var dy = first.Y - second.Y;
@@ -1523,6 +1636,7 @@ internal enum SymbolDrawCommandKind
     Line,
     Rectangle,
     Ellipse,
+    Circle,
     Capsule,
     Dot,
     Text,
