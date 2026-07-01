@@ -582,8 +582,7 @@ public sealed class SymbolDesignerForm : Form
 
             if (command == null)
             {
-                _fillCheckBox.Enabled = false;
-                _fillCheckBox.Checked = false;
+                _fillCheckBox.Enabled = true;
                 return;
             }
 
@@ -598,8 +597,9 @@ public sealed class SymbolDesignerForm : Form
             _radiusInput.Value = ToDecimal(command.Radius);
             _fontSizeInput.Value = ToFontSizeDecimal(command.FontSize);
             _textInput.Text = command.Text;
-            _fillCheckBox.Enabled = command.CanFill;
-            _fillCheckBox.Checked = command.CanFill && command.Filled;
+            _fillCheckBox.Enabled = true;
+            if (command.CanFill)
+                _fillCheckBox.Checked = command.Filled;
 
             if (_commandListBox.SelectedIndex != _canvas.SelectedIndex)
                 _commandListBox.SelectedIndex = _canvas.SelectedIndex;
