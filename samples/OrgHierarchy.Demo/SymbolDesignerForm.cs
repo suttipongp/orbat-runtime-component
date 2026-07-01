@@ -527,7 +527,7 @@ public sealed class SymbolDesignerForm : Form
     private void CloseLinePath()
     {
         if (!_canvas.TryCloseLinePath(_fillCheckBox.Checked))
-            MessageBox.Show(this, "Draw at least three connected lines before closing a path.", "Symbol Designer", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, "Draw at least two connected line or curve segments before closing a path.", "Symbol Designer", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     private void DeleteSelectedCommand()
@@ -783,18 +783,18 @@ internal sealed class SymbolDesignerCanvas : Control
 
     public bool TryCloseLinePath(bool filled)
     {
-        var lineCommands = _commands
-            .Where(command => command.Kind == SymbolDrawCommandKind.Line)
+        var pathCommands = _commands
+            .Where(command => command.Kind is SymbolDrawCommandKind.Line or SymbolDrawCommandKind.Bezier)
             .Select(command => command.Clone())
             .ToList();
-        if (lineCommands.Count < 3)
+        if (pathCommands.Count < 2)
             return false;
 
-        var points = BuildConnectedPath(lineCommands);
+        var points = BuildConnectedPath(pathCommands);
         if (points.Count < 3)
             return false;
 
-        _commands.RemoveAll(command => command.Kind == SymbolDrawCommandKind.Line);
+        _commands.RemoveAll(command => command.Kind is SymbolDrawCommandKind.Line or SymbolDrawCommandKind.Bezier);
         _commands.Add(SymbolDrawCommand.Path(points, filled));
         SelectedIndex = _commands.Count - 1;
         CommandsChanged?.Invoke(this, EventArgs.Empty);
@@ -860,29 +860,65 @@ internal sealed class SymbolDesignerCanvas : Control
         ClearCommands();
     }
 
-    private static List<SymbolPoint> BuildConnectedPath(List<SymbolDrawCommand> lines)
+    private static List<SymbolPoint> BuildConnectedPath(List<SymbolDrawCommand> segments)
     {
         const float joinTolerance = 0.025f;
-        var first = lines[0];
-        lines.RemoveAt(0);
-        var points = new List<SymbolPoint> { first.Start, first.End };
+        var first = segments[0];
+        segments.RemoveAt(0);
+        var points = new List<SymbolPoint>();
+        AddPathSegmentPoints(points, first, reverse: false, includeStart: true);
 
-        while (lines.Count > 0)
+        while (segments.Count > 0)
         {
             var last = points[^1];
-            var matchIndex = lines.FindIndex(line => Distance(last, line.Start) <= joinTolerance || Distance(last, line.End) <= joinTolerance);
+            var matchIndex = segments.FindIndex(segment => Distance(last, segment.Start) <= joinTolerance || Distance(last, segment.End) <= joinTolerance);
             if (matchIndex < 0)
                 break;
 
-            var match = lines[matchIndex];
-            lines.RemoveAt(matchIndex);
-            points.Add(Distance(last, match.Start) <= Distance(last, match.End) ? match.End : match.Start);
+            var match = segments[matchIndex];
+            segments.RemoveAt(matchIndex);
+            var reverse = Distance(last, match.End) < Distance(last, match.Start);
+            AddPathSegmentPoints(points, match, reverse, includeStart: false);
         }
 
         if (Distance(points[0], points[^1]) <= joinTolerance)
             points[^1] = points[0];
 
         return points;
+    }
+
+    private static void AddPathSegmentPoints(List<SymbolPoint> points, SymbolDrawCommand command, bool reverse, bool includeStart)
+    {
+        const int curveSteps = 32;
+        if (command.Kind == SymbolDrawCommandKind.Line)
+        {
+            if (includeStart)
+                points.Add(reverse ? command.End : command.Start);
+            points.Add(reverse ? command.Start : command.End);
+            return;
+        }
+
+        for (var index = includeStart ? 0 : 1; index <= curveSteps; index++)
+        {
+            var t = index / (float)curveSteps;
+            if (reverse)
+                t = 1f - t;
+            points.Add(new SymbolPoint(EvaluateBezier(command, t)));
+        }
+    }
+
+    private static PointF EvaluateBezier(SymbolDrawCommand command, float t)
+    {
+        var u = 1f - t;
+        var x = u * u * u * command.Start.X
+            + 3f * u * u * t * command.Control1.X
+            + 3f * u * t * t * command.Control2.X
+            + t * t * t * command.End.X;
+        var y = u * u * u * command.Start.Y
+            + 3f * u * u * t * command.Control1.Y
+            + 3f * u * t * t * command.Control2.Y
+            + t * t * t * command.End.Y;
+        return new PointF(x, y);
     }
 
     protected override void OnMouseDown(MouseEventArgs e)
