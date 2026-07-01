@@ -922,7 +922,7 @@ internal sealed class SymbolDesignerCanvas : Control
             DrawGrid(e.Graphics, frame);
         if (ShowIconGuide)
             DrawIconGuide(e.Graphics, frame);
-        SymbolFrameRenderer.DrawFrame(e.Graphics, frame, FrameShape, FrameStatus);
+        SymbolFrameRenderer.DrawFrame(e.Graphics, frame, FrameShape, FrameStatus, fillFrame: false, IconGuideShape);
 
         for (var index = 0; index < _commands.Count; index++)
         {
@@ -1316,24 +1316,22 @@ internal sealed class SymbolDesignerCanvas : Control
         const float left = 1f / 6f;
         const float right = 5f / 6f;
         const float center = 0.5f;
-        const float flatLeft = 1f / 3f;
-        const float flatRight = 2f / 3f;
-        const float upperShoulder = 0.25f;
-        const float lowerShoulder = 0.75f;
+        const float flatXOffset = 0.1381f;
+        const float flatYShoulder = 0.2929f;
         const float diagonalXOffset = 0.2357f;
         const float diagonalYOffset = 0.3536f;
 
         return shape == IconGuideShape.FlatTopBottom
             ? new[]
             {
-                new PointF(flatLeft, 0f),
-                new PointF(flatRight, 0f),
-                new PointF(right, upperShoulder),
-                new PointF(right, lowerShoulder),
-                new PointF(flatRight, 1f),
-                new PointF(flatLeft, 1f),
-                new PointF(left, lowerShoulder),
-                new PointF(left, upperShoulder)
+                new PointF(center - flatXOffset, 0f),
+                new PointF(center + flatXOffset, 0f),
+                new PointF(right, flatYShoulder),
+                new PointF(right, 1f - flatYShoulder),
+                new PointF(center + flatXOffset, 1f),
+                new PointF(center - flatXOffset, 1f),
+                new PointF(left, 1f - flatYShoulder),
+                new PointF(left, flatYShoulder)
             }
             : new[]
         {
@@ -1426,7 +1424,7 @@ internal sealed class SymbolPreviewControl : Control
         var frame = new RectangleF((ClientSize.Width - width) / 2f, 80, width, height);
 
         using var pen = new Pen(Color.Black, 2f);
-        SymbolFrameRenderer.DrawFrame(e.Graphics, frame, _frameShape, _frameStatus);
+        SymbolFrameRenderer.DrawFrame(e.Graphics, frame, _frameShape, _frameStatus, fillFrame: true, IconGuideShape.FlatTopBottom);
         foreach (var command in _commands)
             command.Draw(e.Graphics, frame, pen, Brushes.Black);
 
@@ -1452,16 +1450,23 @@ internal sealed class SymbolLibraryDefinition
 
 internal static class SymbolFrameRenderer
 {
-    public static void DrawFrame(Graphics graphics, RectangleF frame, SymbolFrameShape shape, SymbolFrameStatus status)
+    public static void DrawFrame(Graphics graphics, RectangleF frame, SymbolFrameShape shape, SymbolFrameStatus status, bool fillFrame, IconGuideShape guideShape)
     {
-        var palette = GetPalette(shape);
-        using var fill = new SolidBrush(palette.Fill);
+        if (shape == SymbolFrameShape.Unknown)
+            return;
+
         using var pen = new Pen(Color.Black, 2f);
-        if (status == SymbolFrameStatus.PlannedAnticipated || shape == SymbolFrameShape.Unknown)
+        if (status == SymbolFrameStatus.PlannedAnticipated)
             pen.DashStyle = DashStyle.Dash;
 
-        using var path = CreatePath(frame, shape);
-        graphics.FillPath(fill, path);
+        using var path = CreatePath(frame, shape, guideShape);
+        if (fillFrame)
+        {
+            var palette = GetPalette(shape);
+            using var fill = new SolidBrush(palette.Fill);
+            graphics.FillPath(fill, path);
+        }
+
         graphics.DrawPath(pen, path);
     }
 
@@ -1476,22 +1481,16 @@ internal static class SymbolFrameRenderer
         };
     }
 
-    private static GraphicsPath CreatePath(RectangleF frame, SymbolFrameShape shape)
+    private static GraphicsPath CreatePath(RectangleF frame, SymbolFrameShape shape, IconGuideShape guideShape)
     {
         var path = new GraphicsPath();
         switch (shape)
         {
             case SymbolFrameShape.FriendlyEquipment:
-                path.AddEllipse(frame);
+                path.AddEllipse(GetGuideCircumcircleBounds(frame, guideShape));
                 break;
             case SymbolFrameShape.Hostile:
-                path.AddPolygon(new[]
-                {
-                    new PointF(frame.Left + frame.Width / 2f, frame.Top),
-                    new PointF(frame.Right, frame.Top + frame.Height / 2f),
-                    new PointF(frame.Left + frame.Width / 2f, frame.Bottom),
-                    new PointF(frame.Left, frame.Top + frame.Height / 2f)
-                });
+                path.AddPolygon(GetHostileDiamondPoints(frame, guideShape));
                 break;
             case SymbolFrameShape.Neutral:
                 var side = Math.Min(frame.Width, frame.Height);
@@ -1501,9 +1500,6 @@ internal static class SymbolFrameRenderer
                     side,
                     side));
                 break;
-            case SymbolFrameShape.Unknown:
-                AddUnknownCloud(path, frame);
-                break;
             default:
                 path.AddRectangle(frame);
                 break;
@@ -1512,13 +1508,100 @@ internal static class SymbolFrameRenderer
         return path;
     }
 
-    private static void AddUnknownCloud(GraphicsPath path, RectangleF frame)
+    private static RectangleF GetGuideCircumcircleBounds(RectangleF frame, IconGuideShape guideShape)
     {
-        var lobe = Math.Min(frame.Width, frame.Height) * 0.42f;
-        path.AddEllipse(frame.Left + frame.Width * 0.29f, frame.Top, lobe, lobe);
-        path.AddEllipse(frame.Right - lobe, frame.Top + frame.Height * 0.29f, lobe, lobe);
-        path.AddEllipse(frame.Left + frame.Width * 0.29f, frame.Bottom - lobe, lobe, lobe);
-        path.AddEllipse(frame.Left, frame.Top + frame.Height * 0.29f, lobe, lobe);
+        var center = new PointF(frame.Left + frame.Width / 2f, frame.Top + frame.Height / 2f);
+        var radius = GetIconGuidePoints(guideShape)
+            .Select(point => ToAbsolute(frame, point))
+            .Select(point => Distance(center, point))
+            .Max();
+        return new RectangleF(center.X - radius, center.Y - radius, radius * 2f, radius * 2f);
+    }
+
+    private static PointF[] GetHostileDiamondPoints(RectangleF frame, IconGuideShape guideShape)
+    {
+        var guidePoints = GetIconGuidePoints(guideShape).Select(point => ToAbsolute(frame, point)).ToArray();
+        if (guideShape == IconGuideShape.FlatTopBottom)
+        {
+            return new[]
+            {
+                GetLineIntersection(guidePoints[7], guidePoints[0], guidePoints[1], guidePoints[2]),
+                GetLineIntersection(guidePoints[1], guidePoints[2], guidePoints[3], guidePoints[4]),
+                GetLineIntersection(guidePoints[3], guidePoints[4], guidePoints[5], guidePoints[6]),
+                GetLineIntersection(guidePoints[5], guidePoints[6], guidePoints[7], guidePoints[0])
+            };
+        }
+
+        var center = new PointF(frame.Left + frame.Width / 2f, frame.Top + frame.Height / 2f);
+        return new[]
+        {
+            guidePoints.OrderBy(point => point.Y).ThenBy(point => Math.Abs(point.X - center.X)).First(),
+            guidePoints.OrderByDescending(point => point.X).ThenBy(point => Math.Abs(point.Y - center.Y)).First(),
+            guidePoints.OrderByDescending(point => point.Y).ThenBy(point => Math.Abs(point.X - center.X)).First(),
+            guidePoints.OrderBy(point => point.X).ThenBy(point => Math.Abs(point.Y - center.Y)).First()
+        };
+    }
+
+    private static PointF ToAbsolute(RectangleF frame, PointF point) =>
+        new(frame.Left + frame.Width * point.X, frame.Top + frame.Height * point.Y);
+
+    private static PointF GetLineIntersection(PointF firstStart, PointF firstEnd, PointF secondStart, PointF secondEnd)
+    {
+        var a1 = firstEnd.Y - firstStart.Y;
+        var b1 = firstStart.X - firstEnd.X;
+        var c1 = a1 * firstStart.X + b1 * firstStart.Y;
+        var a2 = secondEnd.Y - secondStart.Y;
+        var b2 = secondStart.X - secondEnd.X;
+        var c2 = a2 * secondStart.X + b2 * secondStart.Y;
+        var determinant = a1 * b2 - a2 * b1;
+        if (Math.Abs(determinant) < 0.0001f)
+            return firstEnd;
+
+        return new PointF(
+            (b2 * c1 - b1 * c2) / determinant,
+            (a1 * c2 - a2 * c1) / determinant);
+    }
+
+    private static float Distance(PointF first, PointF second)
+    {
+        var dx = first.X - second.X;
+        var dy = first.Y - second.Y;
+        return MathF.Sqrt(dx * dx + dy * dy);
+    }
+
+    private static PointF[] GetIconGuidePoints(IconGuideShape shape)
+    {
+        const float left = 1f / 6f;
+        const float right = 5f / 6f;
+        const float center = 0.5f;
+        const float flatXOffset = 0.1381f;
+        const float flatYShoulder = 0.2929f;
+        const float diagonalXOffset = 0.2357f;
+        const float diagonalYOffset = 0.3536f;
+
+        return shape == IconGuideShape.FlatTopBottom
+            ? new[]
+            {
+                new PointF(center - flatXOffset, 0f),
+                new PointF(center + flatXOffset, 0f),
+                new PointF(right, flatYShoulder),
+                new PointF(right, 1f - flatYShoulder),
+                new PointF(center + flatXOffset, 1f),
+                new PointF(center - flatXOffset, 1f),
+                new PointF(left, 1f - flatYShoulder),
+                new PointF(left, flatYShoulder)
+            }
+            : new[]
+            {
+                new PointF(center, 0f),
+                new PointF(center + diagonalXOffset, center - diagonalYOffset),
+                new PointF(right, center),
+                new PointF(center + diagonalXOffset, center + diagonalYOffset),
+                new PointF(center, 1f),
+                new PointF(center - diagonalXOffset, center + diagonalYOffset),
+                new PointF(left, center),
+                new PointF(center - diagonalXOffset, center - diagonalYOffset)
+            };
     }
 }
 
