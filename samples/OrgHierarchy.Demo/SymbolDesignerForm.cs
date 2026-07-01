@@ -688,7 +688,7 @@ internal enum IconGuideShape
 internal sealed class SymbolDesignerCanvas : Control
 {
     private const float SnapThreshold = 0.025f;
-    private const float StandardFrameAspectRatio = 1.5f;
+    private const float StandardFrameAspectRatio = 1f;
     private readonly List<SymbolDrawCommand> _commands = new();
     private Bitmap? _referenceImage;
     private PointF? _dragStart;
