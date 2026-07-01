@@ -138,6 +138,7 @@ public sealed class SymbolDesignerForm : Form
         var undoButton = CreateButton("Undo", () => _canvas.Undo());
         var deleteButton = CreateButton("Delete", DeleteSelectedCommand);
         var clearButton = CreateButton("Clear", () => _canvas.ClearCanvas());
+        var closePathButton = CreateButton("Close path", CloseLinePath);
         var airDefenseButton = CreateButton("Air defense arc", AddAirDefenseArc);
         var copyCodeButton = CreateButton("Copy C# code", CopyCode);
 
@@ -179,6 +180,7 @@ public sealed class SymbolDesignerForm : Form
         toolbar.Controls.Add(undoButton);
         toolbar.Controls.Add(deleteButton);
         toolbar.Controls.Add(clearButton);
+        toolbar.Controls.Add(closePathButton);
         toolbar.Controls.Add(airDefenseButton);
         toolbar.Controls.Add(copyCodeButton);
 
@@ -522,6 +524,12 @@ public sealed class SymbolDesignerForm : Form
         _canvas.AddCommand(SymbolDrawCommand.AirDefenseArc());
     }
 
+    private void CloseLinePath()
+    {
+        if (!_canvas.TryCloseLinePath(_fillCheckBox.Checked))
+            MessageBox.Show(this, "Draw at least three connected lines before closing a path.", "Symbol Designer", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
     private void DeleteSelectedCommand()
     {
         _canvas.DeleteSelected();
@@ -773,6 +781,28 @@ internal sealed class SymbolDesignerCanvas : Control
         Invalidate();
     }
 
+    public bool TryCloseLinePath(bool filled)
+    {
+        var lineCommands = _commands
+            .Where(command => command.Kind == SymbolDrawCommandKind.Line)
+            .Select(command => command.Clone())
+            .ToList();
+        if (lineCommands.Count < 3)
+            return false;
+
+        var points = BuildConnectedPath(lineCommands);
+        if (points.Count < 3)
+            return false;
+
+        _commands.RemoveAll(command => command.Kind == SymbolDrawCommandKind.Line);
+        _commands.Add(SymbolDrawCommand.Path(points, filled));
+        SelectedIndex = _commands.Count - 1;
+        CommandsChanged?.Invoke(this, EventArgs.Empty);
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+        Invalidate();
+        return true;
+    }
+
     public void SelectCommand(int index)
     {
         var normalized = index >= 0 && index < _commands.Count ? index : -1;
@@ -828,6 +858,31 @@ internal sealed class SymbolDesignerCanvas : Control
         _referenceImage?.Dispose();
         _referenceImage = null;
         ClearCommands();
+    }
+
+    private static List<SymbolPoint> BuildConnectedPath(List<SymbolDrawCommand> lines)
+    {
+        const float joinTolerance = 0.025f;
+        var first = lines[0];
+        lines.RemoveAt(0);
+        var points = new List<SymbolPoint> { first.Start, first.End };
+
+        while (lines.Count > 0)
+        {
+            var last = points[^1];
+            var matchIndex = lines.FindIndex(line => Distance(last, line.Start) <= joinTolerance || Distance(last, line.End) <= joinTolerance);
+            if (matchIndex < 0)
+                break;
+
+            var match = lines[matchIndex];
+            lines.RemoveAt(matchIndex);
+            points.Add(Distance(last, match.Start) <= Distance(last, match.End) ? match.End : match.Start);
+        }
+
+        if (Distance(points[0], points[^1]) <= joinTolerance)
+            points[^1] = points[0];
+
+        return points;
     }
 
     protected override void OnMouseDown(MouseEventArgs e)
@@ -1662,8 +1717,9 @@ internal sealed class SymbolDrawCommand
     public float FontSize { get; set; } = 12f;
     public string Text { get; set; } = string.Empty;
     public bool Filled { get; set; }
+    public List<SymbolPoint> Points { get; set; } = new();
     [JsonIgnore]
-    public bool CanFill => Kind is SymbolDrawCommandKind.Rectangle or SymbolDrawCommandKind.Ellipse or SymbolDrawCommandKind.Circle or SymbolDrawCommandKind.Capsule;
+    public bool CanFill => Kind is SymbolDrawCommandKind.Rectangle or SymbolDrawCommandKind.Ellipse or SymbolDrawCommandKind.Circle or SymbolDrawCommandKind.Capsule or SymbolDrawCommandKind.Path;
 
     public static SymbolDrawCommand Line(PointF start, PointF end) =>
         new() { Kind = SymbolDrawCommandKind.Line, Start = new SymbolPoint(start), End = new SymbolPoint(end) };
@@ -1684,6 +1740,19 @@ internal sealed class SymbolDrawCommand
 
     public static SymbolDrawCommand Capsule(PointF start, PointF end, bool filled = false) =>
         new() { Kind = SymbolDrawCommandKind.Capsule, Start = new SymbolPoint(start), End = new SymbolPoint(end), Filled = filled };
+
+    public static SymbolDrawCommand Path(IEnumerable<SymbolPoint> points, bool filled = false)
+    {
+        var pointList = points.ToList();
+        return new()
+        {
+            Kind = SymbolDrawCommandKind.Path,
+            Start = pointList.Count > 0 ? pointList[0] : default,
+            End = pointList.Count > 0 ? pointList[^1] : default,
+            Points = pointList,
+            Filled = filled
+        };
+    }
 
     public static SymbolDrawCommand Dot(PointF center, float radius) =>
         new() { Kind = SymbolDrawCommandKind.Dot, Start = new SymbolPoint(center), End = new SymbolPoint(center), Radius = radius };
@@ -1745,7 +1814,8 @@ internal sealed class SymbolDrawCommand
             Radius = Radius,
             FontSize = FontSize,
             Text = Text,
-            Filled = Filled
+            Filled = Filled,
+            Points = Points.Select(point => point).ToList()
         };
 
     public void Move(SymbolPoint delta)
@@ -1754,6 +1824,8 @@ internal sealed class SymbolDrawCommand
         End = End.Offset(delta);
         Control1 = Control1.Offset(delta);
         Control2 = Control2.Offset(delta);
+        if (Points.Count > 0)
+            Points = Points.Select(point => point.Offset(delta)).ToList();
     }
 
     public void SetPoint(DragTarget target, SymbolPoint point)
@@ -1810,6 +1882,15 @@ internal sealed class SymbolDrawCommand
 
     public IEnumerable<SymbolSegment> GetSegments()
     {
+        if (Kind == SymbolDrawCommandKind.Path)
+        {
+            for (var index = 0; index < Points.Count - 1; index++)
+                yield return new SymbolSegment(Points[index], Points[index + 1]);
+            if (Points.Count > 2 && Distance(Points[0], Points[^1]) > 0.0001f)
+                yield return new SymbolSegment(Points[^1], Points[0]);
+            yield break;
+        }
+
         if (Kind is SymbolDrawCommandKind.Line or SymbolDrawCommandKind.Rectangle or SymbolDrawCommandKind.Capsule)
         {
             if (Kind == SymbolDrawCommandKind.Line)
@@ -1839,6 +1920,7 @@ internal sealed class SymbolDrawCommand
             SymbolDrawCommandKind.Circle => Distance(mousePoint, ToAbsolute(frame, Start)) <= Radius * Math.Min(frame.Width, frame.Height) + threshold,
             SymbolDrawCommandKind.Dot => Distance(mousePoint, ToAbsolute(frame, Start)) <= Radius * Math.Min(frame.Width, frame.Height) + threshold,
             SymbolDrawCommandKind.Text => Distance(mousePoint, ToAbsolute(frame, Start)) <= Math.Max(24f, GetScaledFontSize(frame) * 1.5f),
+            SymbolDrawCommandKind.Path => HitTestPath(mousePoint, frame, threshold),
             _ => ToRectangle(frame).Contains(mousePoint) || DistanceToRect(mousePoint, ToRectangle(frame)) <= threshold
         };
     }
@@ -1868,6 +1950,14 @@ internal sealed class SymbolDrawCommand
                 break;
             case SymbolDrawCommandKind.Capsule:
                 DrawCapsule(graphics, pen, brush, ToRectangle(frame), Filled);
+                break;
+            case SymbolDrawCommandKind.Path:
+                using (var path = CreateGraphicsPath(frame))
+                {
+                    if (Filled)
+                        graphics.FillPath(brush, path);
+                    graphics.DrawPath(pen, path);
+                }
                 break;
             case SymbolDrawCommandKind.Dot:
                 var center = ToAbsolute(frame, Start);
@@ -1901,6 +1991,7 @@ internal sealed class SymbolDrawCommand
         {
             SymbolDrawCommandKind.Dot => $"{Kind} at {FormatPoint(Start)}",
             SymbolDrawCommandKind.Text => $"{Kind} \"{Text}\" {Format(FontSize)}% at {FormatPoint(Start)}",
+            SymbolDrawCommandKind.Path => $"{Kind} {Points.Count} points" + (Filled ? " filled" : string.Empty),
             _ => $"{Kind} {FormatPoint(Start)} to {FormatPoint(End)}"
         };
     }
@@ -1925,6 +2016,8 @@ internal sealed class SymbolDrawCommand
                     : $"{graphics}.DrawEllipse({pen}, {CircleRectCode(bounds)});",
             SymbolDrawCommandKind.Capsule =>
                 CapsuleCode(graphics, pen, brush, bounds),
+            SymbolDrawCommandKind.Path =>
+                PathCode(graphics, pen, brush, bounds),
             SymbolDrawCommandKind.Dot =>
                 $"{graphics}.FillEllipse({brush}, {PointCode(bounds, Start)}.X - {RadiusCode(bounds)}, {PointCode(bounds, Start)}.Y - {RadiusCode(bounds)}, {RadiusCode(bounds)} * 2f, {RadiusCode(bounds)} * 2f);",
             SymbolDrawCommandKind.Text =>
@@ -1955,6 +2048,33 @@ internal sealed class SymbolDrawCommand
         if (filled)
             graphics.FillPath(brush, path);
         graphics.DrawPath(pen, path);
+    }
+
+    private GraphicsPath CreateGraphicsPath(RectangleF frame)
+    {
+        var path = new GraphicsPath();
+        if (Points.Count == 0)
+            return path;
+
+        var absolutePoints = Points.Select(point => ToAbsolute(frame, point)).ToArray();
+        if (absolutePoints.Length == 1)
+            path.AddLine(absolutePoints[0], absolutePoints[0]);
+        else
+            path.AddLines(absolutePoints);
+        path.CloseFigure();
+        return path;
+    }
+
+    private bool HitTestPath(Point mousePoint, RectangleF frame, float threshold)
+    {
+        using var path = CreateGraphicsPath(frame);
+        using var hitPen = new Pen(Color.Black, threshold * 2f);
+        if (path.IsOutlineVisible(mousePoint, hitPen) || path.IsVisible(mousePoint))
+            return true;
+
+        var segments = GetSegments().ToArray();
+        return segments.Any(segment =>
+            DistanceToSegment(mousePoint, ToAbsolute(frame, segment.Start), ToAbsolute(frame, segment.End)) <= threshold);
     }
 
     private RectangleF ToRectangle(RectangleF frame)
@@ -1996,6 +2116,27 @@ internal sealed class SymbolDrawCommand
     }
 
     private string RadiusCode(string bounds) => $"Math.Min({bounds}.Width, {bounds}.Height) * {Format(Radius)}f";
+
+    private string PathCode(string graphics, string pen, string brush, string bounds)
+    {
+        if (Points.Count == 0)
+            return string.Empty;
+
+        var pointLines = string.Join(
+            ",\r\n        ",
+            Points.Select(point => PointCode(bounds, point)));
+        var fillLine = Filled ? $"    {graphics}.FillPath({brush}, closedPath);\r\n" : string.Empty;
+        return "{\r\n"
+            + "    using var closedPath = new GraphicsPath();\r\n"
+            + "    closedPath.AddLines(new[]\r\n"
+            + "    {\r\n"
+            + $"        {pointLines}\r\n"
+            + "    });\r\n"
+            + "    closedPath.CloseFigure();\r\n"
+            + fillLine
+            + $"    {graphics}.DrawPath({pen}, closedPath);\r\n"
+            + "}";
+    }
 
     private float GetScaledFontSize(RectangleF frame) =>
         Math.Clamp(FontSize, 4f, 72f) / 100f * frame.Height;
@@ -2141,7 +2282,8 @@ internal enum SymbolDrawCommandKind
     Dot,
     Text,
     Arc,
-    Bezier
+    Bezier,
+    Path
 }
 
 internal static class BuiltInSymbolLibrary
