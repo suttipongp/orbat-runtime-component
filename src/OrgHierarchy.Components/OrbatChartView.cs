@@ -959,17 +959,17 @@ public sealed class OrbatChartView : UserControl
             case OrbatAffiliation.Unspecified:
                 return new OrbatPalette(Color.White, Color.Black);
             case OrbatAffiliation.Hostile:
-                return new OrbatPalette(Color.FromArgb(255, 48, 49), Color.FromArgb(180, 0, 0));
+                return new OrbatPalette(Color.FromArgb(255, 128, 128), Color.Black);
             case OrbatAffiliation.Neutral:
-                return new OrbatPalette(Color.FromArgb(0, 226, 110), Color.FromArgb(0, 120, 45));
+                return new OrbatPalette(Color.FromArgb(170, 255, 170), Color.Black);
             case OrbatAffiliation.Unknown:
-                return new OrbatPalette(Color.FromArgb(255, 235, 0), Color.FromArgb(150, 135, 0));
+                return new OrbatPalette(Color.FromArgb(255, 255, 128), Color.Black);
             case OrbatAffiliation.Suspect:
-                return new OrbatPalette(Color.FromArgb(255, 217, 107), Color.FromArgb(175, 115, 0));
+                return new OrbatPalette(Color.FromArgb(255, 255, 128), Color.Black);
             case OrbatAffiliation.Civilian:
                 return new OrbatPalette(Color.FromArgb(206, 123, 206), Color.FromArgb(120, 0, 120));
             default:
-                return new OrbatPalette(Color.FromArgb(0, 168, 220), Color.FromArgb(0, 90, 125));
+                return new OrbatPalette(Color.FromArgb(128, 224, 255), Color.Black);
         }
     }
 

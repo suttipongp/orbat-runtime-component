@@ -11,6 +11,8 @@ public sealed class SymbolDesignerForm : Form
     private readonly SymbolPreviewControl _preview = new();
     private readonly ComboBox _toolComboBox = new();
     private readonly ComboBox _unitTypeComboBox = new();
+    private readonly ComboBox _frameShapeComboBox = new();
+    private readonly ComboBox _frameStatusComboBox = new();
     private readonly TrackBar _referenceOpacityTrackBar = new();
     private readonly CheckBox _showGridCheckBox = new() { Text = "Grid", Checked = true, AutoSize = true };
     private readonly CheckBox _showIconGuideCheckBox = new() { Text = "Icon guide", Checked = true, AutoSize = true };
@@ -56,6 +58,28 @@ public sealed class SymbolDesignerForm : Form
         _unitTypeComboBox.Items.AddRange(Enum.GetNames<Components.OrbatUnitType>().Cast<object>().ToArray());
         _unitTypeComboBox.SelectedItem = Components.OrbatUnitType.Unspecified.ToString();
         _unitTypeComboBox.SelectedIndexChanged += (_, _) => RefreshOutput();
+
+        _frameShapeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        _frameShapeComboBox.Width = 152;
+        _frameShapeComboBox.Items.AddRange(Enum.GetNames<SymbolFrameShape>().Cast<object>().ToArray());
+        _frameShapeComboBox.SelectedItem = SymbolFrameShape.FriendlyUnit.ToString();
+        _frameShapeComboBox.SelectedIndexChanged += (_, _) =>
+        {
+            _canvas.FrameShape = GetSelectedFrameShape();
+            RefreshOutput();
+            _canvas.Invalidate();
+        };
+
+        _frameStatusComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        _frameStatusComboBox.Width = 92;
+        _frameStatusComboBox.Items.AddRange(Enum.GetNames<SymbolFrameStatus>().Cast<object>().ToArray());
+        _frameStatusComboBox.SelectedItem = SymbolFrameStatus.Present.ToString();
+        _frameStatusComboBox.SelectedIndexChanged += (_, _) =>
+        {
+            _canvas.FrameStatus = GetSelectedFrameStatus();
+            RefreshOutput();
+            _canvas.Invalidate();
+        };
 
         _referenceOpacityTrackBar.Minimum = 0;
         _referenceOpacityTrackBar.Maximum = 100;
@@ -127,6 +151,10 @@ public sealed class SymbolDesignerForm : Form
         };
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Unit type", Margin = new Padding(0, 6, 4, 0) });
         toolbar.Controls.Add(_unitTypeComboBox);
+        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Frame", Margin = new Padding(14, 6, 4, 0) });
+        toolbar.Controls.Add(_frameShapeComboBox);
+        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Status", Margin = new Padding(8, 6, 4, 0) });
+        toolbar.Controls.Add(_frameStatusComboBox);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Tool", Margin = new Padding(14, 6, 4, 0) });
         toolbar.Controls.Add(_toolComboBox);
         toolbar.Controls.Add(loadButton);
@@ -163,6 +191,8 @@ public sealed class SymbolDesignerForm : Form
         statusPanel.Controls.Add(_statusLabel);
 
         _canvas.Dock = DockStyle.Fill;
+        _canvas.FrameShape = GetSelectedFrameShape();
+        _canvas.FrameStatus = GetSelectedFrameStatus();
         _canvas.ReferenceOpacity = _referenceOpacityTrackBar.Value / 100f;
         _canvas.GridDivisions = (int)_gridDivisionsInput.Value;
         _canvas.ShowGrid = _showGridCheckBox.Checked;
@@ -343,6 +373,20 @@ public sealed class SymbolDesignerForm : Form
             : SymbolDesignerTool.Line;
     }
 
+    private SymbolFrameShape GetSelectedFrameShape()
+    {
+        return Enum.TryParse(Convert.ToString(_frameShapeComboBox.SelectedItem), out SymbolFrameShape shape)
+            ? shape
+            : SymbolFrameShape.FriendlyUnit;
+    }
+
+    private SymbolFrameStatus GetSelectedFrameStatus()
+    {
+        return Enum.TryParse(Convert.ToString(_frameStatusComboBox.SelectedItem), out SymbolFrameStatus status)
+            ? status
+            : SymbolFrameStatus.Present;
+    }
+
     private IconGuideShape GetSelectedIconGuideShape()
     {
         return Enum.TryParse(Convert.ToString(_iconGuideShapeComboBox.SelectedItem), out IconGuideShape shape)
@@ -436,6 +480,8 @@ public sealed class SymbolDesignerForm : Form
         {
             Name = Convert.ToString(_unitTypeComboBox.SelectedItem) ?? "Unspecified",
             UnitType = Convert.ToString(_unitTypeComboBox.SelectedItem) ?? "Unspecified",
+            FrameShape = GetSelectedFrameShape(),
+            FrameStatus = GetSelectedFrameStatus(),
             Version = 1,
             Commands = _canvas.Commands.Select(command => command.Clone()).ToList()
         };
@@ -464,6 +510,10 @@ public sealed class SymbolDesignerForm : Form
 
         if (Enum.TryParse(definition.UnitType, out Components.OrbatUnitType unitType))
             _unitTypeComboBox.SelectedItem = unitType.ToString();
+        _frameShapeComboBox.SelectedItem = definition.FrameShape.ToString();
+        _frameStatusComboBox.SelectedItem = definition.FrameStatus.ToString();
+        _canvas.FrameShape = definition.FrameShape;
+        _canvas.FrameStatus = definition.FrameStatus;
         _canvas.SetCommands(definition.Commands);
     }
 
@@ -485,6 +535,7 @@ public sealed class SymbolDesignerForm : Form
     private void RefreshOutput()
     {
         var commands = _canvas.Commands.ToArray();
+        _preview.SetFrame(GetSelectedFrameShape(), GetSelectedFrameStatus());
         _preview.SetCommands(commands);
         _commandListBox.BeginUpdate();
         try
@@ -613,6 +664,21 @@ internal enum SymbolDesignerTool
     BezierArc
 }
 
+internal enum SymbolFrameShape
+{
+    FriendlyUnit,
+    FriendlyEquipment,
+    Hostile,
+    Neutral,
+    Unknown
+}
+
+internal enum SymbolFrameStatus
+{
+    Present,
+    PlannedAnticipated
+}
+
 internal enum IconGuideShape
 {
     FlatTopBottom,
@@ -635,6 +701,9 @@ internal sealed class SymbolDesignerCanvas : Control
 
     public event EventHandler? CommandsChanged;
     public event EventHandler? SelectionChanged;
+
+    public SymbolFrameShape FrameShape { get; set; } = SymbolFrameShape.FriendlyUnit;
+    public SymbolFrameStatus FrameStatus { get; set; } = SymbolFrameStatus.Present;
 
     public SymbolDesignerTool Tool
     {
@@ -853,7 +922,7 @@ internal sealed class SymbolDesignerCanvas : Control
             DrawGrid(e.Graphics, frame);
         if (ShowIconGuide)
             DrawIconGuide(e.Graphics, frame);
-        DrawFrame(e.Graphics, frame);
+        SymbolFrameRenderer.DrawFrame(e.Graphics, frame, FrameShape, FrameStatus);
 
         for (var index = 0; index < _commands.Count; index++)
         {
@@ -1068,12 +1137,6 @@ internal sealed class SymbolDesignerCanvas : Control
         }
 
         graphics.Restore(state);
-    }
-
-    private static void DrawFrame(Graphics graphics, RectangleF frame)
-    {
-        using var framePen = new Pen(Color.Black, 2f);
-        graphics.DrawRectangle(framePen, Rectangle.Round(frame));
     }
 
     private SymbolDrawCommand? CreateCommand(PointF start, PointF end)
@@ -1330,6 +1393,8 @@ internal sealed class SymbolPreviewControl : Control
 {
     private const float StandardFrameAspectRatio = 1.5f;
     private IReadOnlyList<SymbolDrawCommand> _commands = Array.Empty<SymbolDrawCommand>();
+    private SymbolFrameShape _frameShape = SymbolFrameShape.FriendlyUnit;
+    private SymbolFrameStatus _frameStatus = SymbolFrameStatus.Present;
 
     public SymbolPreviewControl()
     {
@@ -1340,6 +1405,13 @@ internal sealed class SymbolPreviewControl : Control
     public void SetCommands(IReadOnlyList<SymbolDrawCommand> commands)
     {
         _commands = commands;
+        Invalidate();
+    }
+
+    public void SetFrame(SymbolFrameShape frameShape, SymbolFrameStatus frameStatus)
+    {
+        _frameShape = frameShape;
+        _frameStatus = frameStatus;
         Invalidate();
     }
 
@@ -1354,9 +1426,7 @@ internal sealed class SymbolPreviewControl : Control
         var frame = new RectangleF((ClientSize.Width - width) / 2f, 80, width, height);
 
         using var pen = new Pen(Color.Black, 2f);
-        using var fill = new SolidBrush(Color.FromArgb(126, 211, 236));
-        e.Graphics.FillRectangle(fill, frame);
-        e.Graphics.DrawRectangle(pen, Rectangle.Round(frame));
+        SymbolFrameRenderer.DrawFrame(e.Graphics, frame, _frameShape, _frameStatus);
         foreach (var command in _commands)
             command.Draw(e.Graphics, frame, pen, Brushes.Black);
 
@@ -1375,8 +1445,84 @@ internal sealed class SymbolLibraryDefinition
     public int Version { get; set; } = 1;
     public string Name { get; set; } = string.Empty;
     public string UnitType { get; set; } = string.Empty;
+    public SymbolFrameShape FrameShape { get; set; } = SymbolFrameShape.FriendlyUnit;
+    public SymbolFrameStatus FrameStatus { get; set; } = SymbolFrameStatus.Present;
     public List<SymbolDrawCommand> Commands { get; set; } = new();
 }
+
+internal static class SymbolFrameRenderer
+{
+    public static void DrawFrame(Graphics graphics, RectangleF frame, SymbolFrameShape shape, SymbolFrameStatus status)
+    {
+        var palette = GetPalette(shape);
+        using var fill = new SolidBrush(palette.Fill);
+        using var pen = new Pen(Color.Black, 2f);
+        if (status == SymbolFrameStatus.PlannedAnticipated || shape == SymbolFrameShape.Unknown)
+            pen.DashStyle = DashStyle.Dash;
+
+        using var path = CreatePath(frame, shape);
+        graphics.FillPath(fill, path);
+        graphics.DrawPath(pen, path);
+    }
+
+    public static SymbolPalette GetPalette(SymbolFrameShape shape)
+    {
+        return shape switch
+        {
+            SymbolFrameShape.Hostile => new SymbolPalette(Color.FromArgb(255, 128, 128), Color.FromArgb(255, 0, 0)),
+            SymbolFrameShape.Neutral => new SymbolPalette(Color.FromArgb(170, 255, 170), Color.FromArgb(0, 255, 0)),
+            SymbolFrameShape.Unknown => new SymbolPalette(Color.FromArgb(255, 255, 128), Color.FromArgb(255, 255, 0)),
+            _ => new SymbolPalette(Color.FromArgb(128, 224, 255), Color.FromArgb(0, 255, 255))
+        };
+    }
+
+    private static GraphicsPath CreatePath(RectangleF frame, SymbolFrameShape shape)
+    {
+        var path = new GraphicsPath();
+        switch (shape)
+        {
+            case SymbolFrameShape.FriendlyEquipment:
+                path.AddEllipse(frame);
+                break;
+            case SymbolFrameShape.Hostile:
+                path.AddPolygon(new[]
+                {
+                    new PointF(frame.Left + frame.Width / 2f, frame.Top),
+                    new PointF(frame.Right, frame.Top + frame.Height / 2f),
+                    new PointF(frame.Left + frame.Width / 2f, frame.Bottom),
+                    new PointF(frame.Left, frame.Top + frame.Height / 2f)
+                });
+                break;
+            case SymbolFrameShape.Neutral:
+                var side = Math.Min(frame.Width, frame.Height);
+                path.AddRectangle(new RectangleF(
+                    frame.Left + (frame.Width - side) / 2f,
+                    frame.Top + (frame.Height - side) / 2f,
+                    side,
+                    side));
+                break;
+            case SymbolFrameShape.Unknown:
+                AddUnknownCloud(path, frame);
+                break;
+            default:
+                path.AddRectangle(frame);
+                break;
+        }
+
+        return path;
+    }
+
+    private static void AddUnknownCloud(GraphicsPath path, RectangleF frame)
+    {
+        var lobe = Math.Min(frame.Width, frame.Height) * 0.42f;
+        path.AddEllipse(frame.Left + frame.Width * 0.29f, frame.Top, lobe, lobe);
+        path.AddEllipse(frame.Right - lobe, frame.Top + frame.Height * 0.29f, lobe, lobe);
+        path.AddEllipse(frame.Left + frame.Width * 0.29f, frame.Bottom - lobe, lobe, lobe);
+        path.AddEllipse(frame.Left, frame.Top + frame.Height * 0.29f, lobe, lobe);
+    }
+}
+
+internal readonly record struct SymbolPalette(Color Fill, Color Symbol);
 
 internal sealed class SymbolDrawCommand
 {
