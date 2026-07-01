@@ -137,7 +137,7 @@ public sealed class SymbolDesignerForm : Form
         var loadLibraryButton = CreateButton("Load library", LoadLibrary);
         var undoButton = CreateButton("Undo", () => _canvas.Undo());
         var deleteButton = CreateButton("Delete", DeleteSelectedCommand);
-        var clearButton = CreateButton("Clear", () => _canvas.ClearCommands());
+        var clearButton = CreateButton("Clear", () => _canvas.ClearCanvas());
         var airDefenseButton = CreateButton("Air defense arc", AddAirDefenseArc);
         var copyCodeButton = CreateButton("Copy C# code", CopyCode);
 
@@ -821,6 +821,13 @@ internal sealed class SymbolDesignerCanvas : Control
         CommandsChanged?.Invoke(this, EventArgs.Empty);
         SelectionChanged?.Invoke(this, EventArgs.Empty);
         Invalidate();
+    }
+
+    public void ClearCanvas()
+    {
+        _referenceImage?.Dispose();
+        _referenceImage = null;
+        ClearCommands();
     }
 
     protected override void OnMouseDown(MouseEventArgs e)
