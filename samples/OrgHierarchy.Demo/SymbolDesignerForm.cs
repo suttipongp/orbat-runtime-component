@@ -1109,7 +1109,7 @@ internal sealed class SymbolDesignerCanvas : Control
     {
         var guide = GetIconGuideBounds(frame);
         var points = GetIconGuidePoints(IconGuideShape);
-        using var guidePen = new Pen(Color.FromArgb(190, 40, 100, 200), 1.4f);
+        using var guidePen = new Pen(Color.FromArgb(220, 24, 82, 180), 1.4f);
         var absolutePoints = points.Select(point => ToAbsolute(frame, point)).ToArray();
         DrawIconGuideGrid(graphics, frame, absolutePoints);
         graphics.DrawPolygon(guidePen, absolutePoints);
