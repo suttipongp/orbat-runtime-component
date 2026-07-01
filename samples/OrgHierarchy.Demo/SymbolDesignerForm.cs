@@ -1302,6 +1302,16 @@ internal sealed class SymbolDesignerCanvas : Control
             }
         }
 
+        foreach (var candidate in GetLineSnapCandidates(point))
+        {
+            var distance = Distance(point, candidate);
+            if (distance < bestDistance)
+            {
+                best = candidate;
+                bestDistance = distance;
+            }
+        }
+
         return best;
     }
 
@@ -1330,6 +1340,38 @@ internal sealed class SymbolDesignerCanvas : Control
 
         foreach (var intersection in GetLineIntersections())
             yield return intersection;
+    }
+
+    private IEnumerable<PointF> GetLineSnapCandidates(PointF point)
+    {
+        foreach (var command in _commands)
+        {
+            foreach (var segment in command.GetSegments())
+                yield return ClosestPointOnSegment(point, segment.Start, segment.End);
+
+            if (command.Kind == SymbolDrawCommandKind.Bezier)
+            {
+                var previous = (PointF)command.Start;
+                for (var step = 1; step <= 32; step++)
+                {
+                    var current = EvaluateBezier(command, step / 32f);
+                    yield return ClosestPointOnSegment(point, previous, current);
+                    previous = current;
+                }
+            }
+        }
+    }
+
+    private static PointF ClosestPointOnSegment(PointF point, PointF start, PointF end)
+    {
+        var dx = end.X - start.X;
+        var dy = end.Y - start.Y;
+        if (Math.Abs(dx) < 0.0001f && Math.Abs(dy) < 0.0001f)
+            return start;
+
+        var t = ((point.X - start.X) * dx + (point.Y - start.Y) * dy) / (dx * dx + dy * dy);
+        t = Math.Clamp(t, 0f, 1f);
+        return new PointF(start.X + t * dx, start.Y + t * dy);
     }
 
     private IEnumerable<PointF> GetLineIntersections()
