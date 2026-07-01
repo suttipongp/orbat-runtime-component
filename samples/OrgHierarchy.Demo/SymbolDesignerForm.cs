@@ -44,6 +44,8 @@ public sealed class SymbolDesignerForm : Form
         StartPosition = FormStartPosition.CenterParent;
         MinimumSize = new Size(1120, 900);
         Size = new Size(1240, 980);
+        KeyPreview = true;
+        KeyDown += HandleShortcutKeyDown;
 
         _toolComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         _toolComboBox.Items.AddRange(Enum.GetNames<SymbolDesignerTool>().Cast<object>().ToArray());
@@ -136,6 +138,12 @@ public sealed class SymbolDesignerForm : Form
         var saveLibraryButton = CreateButton("Save library", SaveLibrary);
         var loadLibraryButton = CreateButton("Load library", LoadLibrary);
         var undoButton = CreateButton("Undo", () => _canvas.Undo());
+        var duplicateButton = CreateButton("Duplicate", () => _canvas.DuplicateSelected());
+        var copyButton = CreateButton("Copy", () => _canvas.CopySelected());
+        var pasteButton = CreateButton("Paste", () => _canvas.PasteCopied());
+        var rotateButton = CreateButton("Rotate 90", () => _canvas.RotateSelectedClockwise());
+        var mirrorHorizontalButton = CreateButton("Mirror H", () => _canvas.MirrorSelectedHorizontal());
+        var mirrorVerticalButton = CreateButton("Mirror V", () => _canvas.MirrorSelectedVertical());
         var deleteButton = CreateButton("Delete", DeleteSelectedCommand);
         var clearButton = CreateButton("Clear", () => _canvas.ClearCanvas());
         var closePathButton = CreateButton("Close path", CloseLinePath);
@@ -146,7 +154,7 @@ public sealed class SymbolDesignerForm : Form
         {
             Dock = DockStyle.Top,
             AutoScroll = true,
-            Height = 116,
+            Height = 148,
             Padding = new Padding(8, 8, 8, 4),
             WrapContents = true
         };
@@ -178,6 +186,12 @@ public sealed class SymbolDesignerForm : Form
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Size %", Margin = new Padding(8, 6, 4, 0) });
         toolbar.Controls.Add(_drawTextSizeInput);
         toolbar.Controls.Add(undoButton);
+        toolbar.Controls.Add(duplicateButton);
+        toolbar.Controls.Add(copyButton);
+        toolbar.Controls.Add(pasteButton);
+        toolbar.Controls.Add(rotateButton);
+        toolbar.Controls.Add(mirrorHorizontalButton);
+        toolbar.Controls.Add(mirrorVerticalButton);
         toolbar.Controls.Add(deleteButton);
         toolbar.Controls.Add(clearButton);
         toolbar.Controls.Add(closePathButton);
@@ -656,6 +670,63 @@ public sealed class SymbolDesignerForm : Form
     private static decimal ToDecimal(float value) => Math.Min(2m, Math.Max(-1m, (decimal)value));
 
     private static decimal ToFontSizeDecimal(float value) => Math.Min(72m, Math.Max(4m, (decimal)value));
+
+    private void HandleShortcutKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (IsEditingInput())
+            return;
+
+        if (e.Control && e.KeyCode == Keys.C)
+        {
+            _canvas.CopySelected();
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+        }
+        else if (e.Control && e.KeyCode == Keys.V)
+        {
+            _canvas.PasteCopied();
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+        }
+        else if (e.Control && e.KeyCode == Keys.D)
+        {
+            _canvas.DuplicateSelected();
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+        }
+        else if (e.Control && e.KeyCode == Keys.R)
+        {
+            _canvas.RotateSelectedClockwise();
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+        }
+        else if (e.KeyCode == Keys.Delete)
+        {
+            _canvas.DeleteSelected();
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+        }
+    }
+
+    private bool IsEditingInput()
+    {
+        if (ActiveControl is TextBoxBase or NumericUpDown)
+            return true;
+
+        return _textInput.ContainsFocus
+            || _drawTextInput.ContainsFocus
+            || _startXInput.ContainsFocus
+            || _startYInput.ContainsFocus
+            || _endXInput.ContainsFocus
+            || _endYInput.ContainsFocus
+            || _control1XInput.ContainsFocus
+            || _control1YInput.ContainsFocus
+            || _control2XInput.ContainsFocus
+            || _control2YInput.ContainsFocus
+            || _radiusInput.ContainsFocus
+            || _fontSizeInput.ContainsFocus
+            || _drawTextSizeInput.ContainsFocus;
+    }
 }
 
 internal enum SymbolDesignerTool
@@ -706,6 +777,7 @@ internal sealed class SymbolDesignerCanvas : Control
     private PointF? _arcPeak;
     private DragTarget _dragTarget = DragTarget.None;
     private SymbolDesignerTool _tool = SymbolDesignerTool.Line;
+    private SymbolDrawCommand? _copiedCommand;
 
     public event EventHandler? CommandsChanged;
     public event EventHandler? SelectionChanged;
@@ -781,6 +853,53 @@ internal sealed class SymbolDesignerCanvas : Control
         Invalidate();
     }
 
+    public void CopySelected()
+    {
+        var command = SelectedCommand;
+        if (command == null)
+            return;
+
+        _copiedCommand = command.Clone();
+    }
+
+    public void PasteCopied()
+    {
+        if (_copiedCommand == null)
+            return;
+
+        var command = _copiedCommand.Clone();
+        command.Move(new SymbolPoint(0.04f, 0.04f));
+        AddCommand(command);
+        _copiedCommand = command.Clone();
+    }
+
+    public void DuplicateSelected()
+    {
+        var command = SelectedCommand;
+        if (command == null)
+            return;
+
+        var duplicate = command.Clone();
+        duplicate.Move(new SymbolPoint(0.04f, 0.04f));
+        AddCommand(duplicate);
+        _copiedCommand = duplicate.Clone();
+    }
+
+    public void RotateSelectedClockwise()
+    {
+        TransformSelected(command => command.RotateClockwise(new SymbolPoint(0.5f, 0.5f)));
+    }
+
+    public void MirrorSelectedHorizontal()
+    {
+        TransformSelected(command => command.MirrorHorizontal(0.5f));
+    }
+
+    public void MirrorSelectedVertical()
+    {
+        TransformSelected(command => command.MirrorVertical(0.5f));
+    }
+
     public bool TryCloseLinePath(bool filled)
     {
         var pathCommands = _commands
@@ -817,6 +936,18 @@ internal sealed class SymbolDesignerCanvas : Control
     public void NotifyCommandEdited()
     {
         CommandsChanged?.Invoke(this, EventArgs.Empty);
+        Invalidate();
+    }
+
+    private void TransformSelected(Action<SymbolDrawCommand> transform)
+    {
+        var command = SelectedCommand;
+        if (command == null)
+            return;
+
+        transform(command);
+        CommandsChanged?.Invoke(this, EventArgs.Empty);
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
         Invalidate();
     }
 
@@ -1906,6 +2037,26 @@ internal sealed class SymbolDrawCommand
             Points = Points.Select(point => point.Offset(delta)).ToList();
     }
 
+    public void RotateClockwise(SymbolPoint center)
+    {
+        TransformPoints(point =>
+        {
+            var dx = point.X - center.X;
+            var dy = point.Y - center.Y;
+            return new SymbolPoint(center.X - dy, center.Y + dx);
+        });
+    }
+
+    public void MirrorHorizontal(float centerX)
+    {
+        TransformPoints(point => new SymbolPoint(centerX * 2f - point.X, point.Y));
+    }
+
+    public void MirrorVertical(float centerY)
+    {
+        TransformPoints(point => new SymbolPoint(point.X, centerY * 2f - point.Y));
+    }
+
     public void SetPoint(DragTarget target, SymbolPoint point)
     {
         switch (target)
@@ -1932,6 +2083,19 @@ internal sealed class SymbolDrawCommand
                 Control2 = updated.Control2;
                 break;
         }
+    }
+
+    private void TransformPoints(Func<SymbolPoint, SymbolPoint> transform)
+    {
+        Start = transform(Start);
+        End = transform(End);
+        Control1 = transform(Control1);
+        Control2 = transform(Control2);
+        if (Points.Count > 0)
+            Points = Points.Select(transform).ToList();
+
+        if (Kind is SymbolDrawCommandKind.Dot or SymbolDrawCommandKind.Text)
+            End = Start;
     }
 
     public IEnumerable<SymbolHandle> GetHandles()
