@@ -42,8 +42,8 @@ public sealed class SymbolDesignerForm : Form
     {
         Text = "ORBAT Symbol Designer";
         StartPosition = FormStartPosition.CenterParent;
-        MinimumSize = new Size(1120, 740);
-        Size = new Size(1240, 800);
+        MinimumSize = new Size(1120, 900);
+        Size = new Size(1240, 980);
 
         _toolComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         _toolComboBox.Items.AddRange(Enum.GetNames<SymbolDesignerTool>().Cast<object>().ToArray());
@@ -688,7 +688,7 @@ internal enum IconGuideShape
 internal sealed class SymbolDesignerCanvas : Control
 {
     private const float SnapThreshold = 0.025f;
-    private const float StandardFrameAspectRatio = 1f;
+    private const float StandardFrameAspectRatio = 1.5f;
     private readonly List<SymbolDrawCommand> _commands = new();
     private Bitmap? _referenceImage;
     private PointF? _dragStart;
@@ -915,11 +915,12 @@ internal sealed class SymbolDesignerCanvas : Control
         base.OnPaint(e);
         e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
+        var workspace = GetWorkspaceBounds();
         var frame = GetFrameBounds();
-        e.Graphics.FillRectangle(Brushes.White, frame);
+        e.Graphics.FillRectangle(Brushes.White, workspace);
         DrawReference(e.Graphics, frame);
         if (ShowGrid)
-            DrawGrid(e.Graphics, frame);
+            DrawGrid(e.Graphics, frame, workspace);
         if (ShowIconGuide)
             DrawIconGuide(e.Graphics, frame);
         SymbolFrameRenderer.DrawFrame(e.Graphics, frame, FrameShape, FrameStatus, fillFrame: false, IconGuideShape);
@@ -1085,23 +1086,23 @@ internal sealed class SymbolDesignerCanvas : Control
             attributes);
     }
 
-    private void DrawGrid(Graphics graphics, RectangleF frame)
+    private void DrawGrid(Graphics graphics, RectangleF frame, RectangleF workspace)
     {
         using var minorPen = new Pen(Color.FromArgb(205, 218, 226), 1f);
         using var majorPen = new Pen(Color.FromArgb(145, 164, 178), 1f);
-        foreach (var x in GetVerticalGridCoordinates())
-        {
-            var absoluteX = frame.Left + frame.Width * x;
-            var pen = IsCenterGridLine(x) ? majorPen : minorPen;
-            graphics.DrawLine(pen, absoluteX, frame.Top, absoluteX, frame.Bottom);
-        }
 
-        foreach (var y in GetHorizontalGridCoordinates())
-        {
-            var absoluteY = frame.Top + frame.Height * y;
-            var pen = IsCenterGridLine(y) ? majorPen : minorPen;
-            graphics.DrawLine(pen, frame.Left, absoluteY, frame.Right, absoluteY);
-        }
+        var step = frame.Height / Math.Max(1, GridDivisions);
+        var centerX = frame.Left + frame.Width / 2f;
+        var centerY = frame.Top + frame.Height / 2f;
+
+        for (var x = centerX; x <= workspace.Right + 0.5f; x += step)
+            graphics.DrawLine(IsCenterGridLine(x, centerX) ? majorPen : minorPen, x, workspace.Top, x, workspace.Bottom);
+        for (var x = centerX - step; x >= workspace.Left - 0.5f; x -= step)
+            graphics.DrawLine(minorPen, x, workspace.Top, x, workspace.Bottom);
+        for (var y = centerY; y <= workspace.Bottom + 0.5f; y += step)
+            graphics.DrawLine(IsCenterGridLine(y, centerY) ? majorPen : minorPen, workspace.Left, y, workspace.Right, y);
+        for (var y = centerY - step; y >= workspace.Top - 0.5f; y -= step)
+            graphics.DrawLine(minorPen, workspace.Left, y, workspace.Right, y);
     }
 
     private void DrawIconGuide(Graphics graphics, RectangleF frame)
@@ -1180,8 +1181,11 @@ internal sealed class SymbolDesignerCanvas : Control
     private PointF ToSymbolPoint(Point point, bool applySnap)
     {
         var frame = GetFrameBounds();
+        var workspace = GetWorkspaceBounds();
         var x = Math.Clamp((point.X - frame.Left) / frame.Width, 0f, 1f);
-        var y = Math.Clamp((point.Y - frame.Top) / frame.Height, 0f, 1f);
+        var minY = (workspace.Top - frame.Top) / frame.Height;
+        var maxY = (workspace.Bottom - frame.Top) / frame.Height;
+        var y = Math.Clamp((point.Y - frame.Top) / frame.Height, minY, maxY);
         var symbolPoint = new PointF(x, y);
         return applySnap && SnapEnabled ? SnapPoint(symbolPoint) : symbolPoint;
     }
@@ -1247,19 +1251,25 @@ internal sealed class SymbolDesignerCanvas : Control
     {
         var maxWidth = ClientSize.Width - 80;
         var maxHeight = ClientSize.Height - 100;
-        var width = Math.Min(maxWidth, maxHeight * StandardFrameAspectRatio);
+        var width = Math.Min(maxWidth, maxHeight);
         var height = width / StandardFrameAspectRatio;
-        if (height > maxHeight)
-        {
-            height = maxHeight;
-            width = height * StandardFrameAspectRatio;
-        }
 
         return new RectangleF(
             (ClientSize.Width - width) / 2f,
             (ClientSize.Height - height) / 2f,
             width,
             height);
+    }
+
+    private RectangleF GetWorkspaceBounds()
+    {
+        var frame = GetFrameBounds();
+        var side = frame.Width;
+        return new RectangleF(
+            frame.Left,
+            frame.Top + (frame.Height - side) / 2f,
+            side,
+            side);
     }
 
     private static PointF ToAbsolute(RectangleF frame, PointF point) =>
@@ -1310,6 +1320,8 @@ internal sealed class SymbolDesignerCanvas : Control
     }
 
     private static bool IsCenterGridLine(float value) => Math.Abs(value - 0.5f) < 0.0001f;
+
+    private static bool IsCenterGridLine(float value, float center) => Math.Abs(value - center) < 0.0001f;
 
     private static PointF[] GetIconGuidePoints(IconGuideShape shape)
     {
