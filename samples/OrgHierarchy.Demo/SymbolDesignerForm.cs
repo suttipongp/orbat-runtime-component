@@ -14,6 +14,7 @@ public sealed class SymbolDesignerForm : Form
     private readonly TrackBar _referenceOpacityTrackBar = new();
     private readonly CheckBox _showGridCheckBox = new() { Text = "Grid", Checked = true, AutoSize = true };
     private readonly CheckBox _showIconGuideCheckBox = new() { Text = "Icon guide", Checked = true, AutoSize = true };
+    private readonly ComboBox _iconGuideShapeComboBox = new();
     private readonly CheckBox _snapCheckBox = new() { Text = "Snap", Checked = true, AutoSize = true };
     private readonly CheckBox _fillCheckBox = new() { Text = "Fill closed", AutoSize = true };
     private readonly NumericUpDown _gridDivisionsInput = new();
@@ -69,7 +70,7 @@ public sealed class SymbolDesignerForm : Form
 
         _gridDivisionsInput.Minimum = 4;
         _gridDivisionsInput.Maximum = 40;
-        _gridDivisionsInput.Value = 10;
+        _gridDivisionsInput.Value = 12;
         _gridDivisionsInput.Width = 52;
         _gridDivisionsInput.ValueChanged += (_, _) =>
         {
@@ -85,6 +86,15 @@ public sealed class SymbolDesignerForm : Form
         _showIconGuideCheckBox.CheckedChanged += (_, _) =>
         {
             _canvas.ShowIconGuide = _showIconGuideCheckBox.Checked;
+            _canvas.Invalidate();
+        };
+        _iconGuideShapeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        _iconGuideShapeComboBox.Width = 128;
+        _iconGuideShapeComboBox.Items.AddRange(Enum.GetNames<IconGuideShape>().Cast<object>().ToArray());
+        _iconGuideShapeComboBox.SelectedItem = IconGuideShape.FlatTopBottom.ToString();
+        _iconGuideShapeComboBox.SelectedIndexChanged += (_, _) =>
+        {
+            _canvas.IconGuideShape = GetSelectedIconGuideShape();
             _canvas.Invalidate();
         };
         _snapCheckBox.CheckedChanged += (_, _) => _canvas.SnapEnabled = _snapCheckBox.Checked;
@@ -128,6 +138,8 @@ public sealed class SymbolDesignerForm : Form
         toolbar.Controls.Add(_referenceOpacityTrackBar);
         toolbar.Controls.Add(_showGridCheckBox);
         toolbar.Controls.Add(_showIconGuideCheckBox);
+        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Guide shape", Margin = new Padding(8, 6, 4, 0) });
+        toolbar.Controls.Add(_iconGuideShapeComboBox);
         toolbar.Controls.Add(_snapCheckBox);
         toolbar.Controls.Add(_fillCheckBox);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Grid", Margin = new Padding(8, 6, 4, 0) });
@@ -155,6 +167,7 @@ public sealed class SymbolDesignerForm : Form
         _canvas.GridDivisions = (int)_gridDivisionsInput.Value;
         _canvas.ShowGrid = _showGridCheckBox.Checked;
         _canvas.ShowIconGuide = _showIconGuideCheckBox.Checked;
+        _canvas.IconGuideShape = GetSelectedIconGuideShape();
         _canvas.SnapEnabled = _snapCheckBox.Checked;
         _canvas.FillClosedShapes = _fillCheckBox.Checked;
         _canvas.DrawText = _drawTextInput.Text;
@@ -328,6 +341,13 @@ public sealed class SymbolDesignerForm : Form
         return Enum.TryParse(Convert.ToString(_toolComboBox.SelectedItem), out SymbolDesignerTool tool)
             ? tool
             : SymbolDesignerTool.Line;
+    }
+
+    private IconGuideShape GetSelectedIconGuideShape()
+    {
+        return Enum.TryParse(Convert.ToString(_iconGuideShapeComboBox.SelectedItem), out IconGuideShape shape)
+            ? shape
+            : IconGuideShape.FlatTopBottom;
     }
 
     private void SelectTool(SymbolDesignerTool tool)
@@ -593,6 +613,12 @@ internal enum SymbolDesignerTool
     BezierArc
 }
 
+internal enum IconGuideShape
+{
+    FlatTopBottom,
+    PointedTopBottom
+}
+
 internal sealed class SymbolDesignerCanvas : Control
 {
     private const float SnapThreshold = 0.025f;
@@ -627,11 +653,12 @@ internal sealed class SymbolDesignerCanvas : Control
     public float ReferenceOpacity { get; set; } = 0.35f;
     public bool ShowGrid { get; set; } = true;
     public bool ShowIconGuide { get; set; } = true;
+    public IconGuideShape IconGuideShape { get; set; } = IconGuideShape.FlatTopBottom;
     public bool SnapEnabled { get; set; } = true;
     public bool FillClosedShapes { get; set; }
     public string DrawText { get; set; } = "TXT";
     public float DrawFontSize { get; set; } = 12f;
-    public int GridDivisions { get; set; } = 10;
+    public int GridDivisions { get; set; } = 12;
     public int SelectedIndex { get; private set; } = -1;
     public SymbolDrawCommand? SelectedCommand => SelectedIndex >= 0 && SelectedIndex < _commands.Count ? _commands[SelectedIndex] : null;
     public IReadOnlyList<SymbolDrawCommand> Commands => _commands;
@@ -1008,14 +1035,39 @@ internal sealed class SymbolDesignerCanvas : Control
         }
     }
 
-    private static void DrawIconGuide(Graphics graphics, RectangleF frame)
+    private void DrawIconGuide(Graphics graphics, RectangleF frame)
     {
         var guide = GetIconGuideBounds(frame);
-        var points = GetIconGuidePoints();
+        var points = GetIconGuidePoints(IconGuideShape);
         using var guidePen = new Pen(Color.FromArgb(150, 70, 135, 210), 1f);
-        graphics.DrawPolygon(guidePen, points.Select(point => ToAbsolute(frame, point)).ToArray());
+        var absolutePoints = points.Select(point => ToAbsolute(frame, point)).ToArray();
+        DrawIconGuideGrid(graphics, frame, absolutePoints);
+        graphics.DrawPolygon(guidePen, absolutePoints);
         graphics.DrawLine(guidePen, guide.Left, guide.Top + guide.Height / 2f, guide.Right, guide.Top + guide.Height / 2f);
         graphics.DrawLine(guidePen, guide.Left + guide.Width / 2f, guide.Top, guide.Left + guide.Width / 2f, guide.Bottom);
+    }
+
+    private void DrawIconGuideGrid(Graphics graphics, RectangleF frame, PointF[] absolutePoints)
+    {
+        using var path = new GraphicsPath();
+        path.AddPolygon(absolutePoints);
+        var state = graphics.Save();
+        graphics.SetClip(path, CombineMode.Intersect);
+        using var guideGridPen = new Pen(Color.FromArgb(120, 70, 135, 210), 1f) { DashStyle = DashStyle.Dash };
+
+        foreach (var x in GetVerticalGridCoordinates())
+        {
+            var absoluteX = frame.Left + frame.Width * x;
+            graphics.DrawLine(guideGridPen, absoluteX, frame.Top, absoluteX, frame.Bottom);
+        }
+
+        foreach (var y in GetHorizontalGridCoordinates())
+        {
+            var absoluteY = frame.Top + frame.Height * y;
+            graphics.DrawLine(guideGridPen, frame.Left, absoluteY, frame.Right, absoluteY);
+        }
+
+        graphics.Restore(state);
     }
 
     private static void DrawFrame(Graphics graphics, RectangleF frame)
@@ -1095,7 +1147,7 @@ internal sealed class SymbolDesignerCanvas : Control
         yield return new PointF(0f, 1f);
         yield return new PointF(1f, 1f);
 
-        foreach (var point in GetIconGuidePoints())
+        foreach (var point in GetIconGuidePoints(IconGuideShape))
             yield return point;
         yield return new PointF(0.5f, 0.5f);
 
@@ -1196,15 +1248,31 @@ internal sealed class SymbolDesignerCanvas : Control
 
     private static bool IsCenterGridLine(float value) => Math.Abs(value - 0.5f) < 0.0001f;
 
-    private static PointF[] GetIconGuidePoints()
+    private static PointF[] GetIconGuidePoints(IconGuideShape shape)
     {
         const float left = 1f / 6f;
         const float right = 5f / 6f;
         const float center = 0.5f;
+        const float flatLeft = 1f / 3f;
+        const float flatRight = 2f / 3f;
+        const float upperShoulder = 0.25f;
+        const float lowerShoulder = 0.75f;
         const float diagonalXOffset = 0.2357f;
         const float diagonalYOffset = 0.3536f;
 
-        return new[]
+        return shape == IconGuideShape.FlatTopBottom
+            ? new[]
+            {
+                new PointF(flatLeft, 0f),
+                new PointF(flatRight, 0f),
+                new PointF(right, upperShoulder),
+                new PointF(right, lowerShoulder),
+                new PointF(flatRight, 1f),
+                new PointF(flatLeft, 1f),
+                new PointF(left, lowerShoulder),
+                new PointF(left, upperShoulder)
+            }
+            : new[]
         {
             new PointF(center, 0f),
             new PointF(center + diagonalXOffset, center - diagonalYOffset),
