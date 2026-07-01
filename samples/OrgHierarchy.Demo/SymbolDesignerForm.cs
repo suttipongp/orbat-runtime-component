@@ -1088,7 +1088,7 @@ internal sealed class SymbolDesignerCanvas : Control
 
     private void DrawGrid(Graphics graphics, RectangleF frame, RectangleF workspace)
     {
-        using var minorPen = new Pen(Color.FromArgb(205, 218, 226), 1f);
+        using var minorPen = new Pen(Color.FromArgb(210, 220, 226), 1f);
         using var majorPen = new Pen(Color.FromArgb(145, 164, 178), 1f);
 
         var step = frame.Height / Math.Max(1, GridDivisions);
@@ -1109,7 +1109,7 @@ internal sealed class SymbolDesignerCanvas : Control
     {
         var guide = GetIconGuideBounds(frame);
         var points = GetIconGuidePoints(IconGuideShape);
-        using var guidePen = new Pen(Color.FromArgb(150, 70, 135, 210), 1f);
+        using var guidePen = new Pen(Color.FromArgb(190, 40, 100, 200), 1.4f);
         var absolutePoints = points.Select(point => ToAbsolute(frame, point)).ToArray();
         DrawIconGuideGrid(graphics, frame, absolutePoints);
         graphics.DrawPolygon(guidePen, absolutePoints);
@@ -1123,7 +1123,7 @@ internal sealed class SymbolDesignerCanvas : Control
         path.AddPolygon(absolutePoints);
         var state = graphics.Save();
         graphics.SetClip(path, CombineMode.Intersect);
-        using var guideGridPen = new Pen(Color.FromArgb(120, 70, 135, 210), 1f) { DashStyle = DashStyle.Dash };
+        using var guideGridPen = new Pen(Color.FromArgb(150, 64, 128, 220), 1f) { DashStyle = DashStyle.Dot };
 
         foreach (var x in GetVerticalGridCoordinates())
         {
