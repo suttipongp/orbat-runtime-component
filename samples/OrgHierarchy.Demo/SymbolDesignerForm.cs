@@ -1464,9 +1464,6 @@ internal static class SymbolFrameRenderer
 {
     public static void DrawFrame(Graphics graphics, RectangleF frame, SymbolFrameShape shape, SymbolFrameStatus status, bool fillFrame, IconGuideShape guideShape)
     {
-        if (shape == SymbolFrameShape.Unknown)
-            return;
-
         using var pen = new Pen(Color.Black, 2f);
         if (status == SymbolFrameStatus.PlannedAnticipated)
             pen.DashStyle = DashStyle.Dash;
@@ -1512,12 +1509,40 @@ internal static class SymbolFrameRenderer
                     side,
                     side));
                 break;
+            case SymbolFrameShape.Unknown:
+                AddUnknownFrame(path, frame);
+                break;
             default:
                 path.AddRectangle(frame);
                 break;
         }
 
         return path;
+    }
+
+    private static void AddUnknownFrame(GraphicsPath path, RectangleF frame)
+    {
+        path.AddBezier(
+            ToAbsolute(frame, new PointF(0.26995647f, 0.14187229f)),
+            ToAbsolute(frame, new PointF(0.16981132f, -0.24999999f)),
+            ToAbsolute(frame, new PointF(0.83309144f, -0.24999999f)),
+            ToAbsolute(frame, new PointF(0.7445573f, 0.15275763f)));
+        path.AddBezier(
+            ToAbsolute(frame, new PointF(0.7445573f, 0.15275763f)),
+            ToAbsolute(frame, new PointF(1f, 0f)),
+            ToAbsolute(frame, new PointF(1f, 1f)),
+            ToAbsolute(frame, new PointF(0.74746007f, 0.8385341f)));
+        path.AddBezier(
+            ToAbsolute(frame, new PointF(0.74746007f, 0.8385341f)),
+            ToAbsolute(frame, new PointF(0.796807f, 1.25f)),
+            ToAbsolute(frame, new PointF(0.20029028f, 1.2042816f)),
+            ToAbsolute(frame, new PointF(0.26850507f, 0.86030483f)));
+        path.AddBezier(
+            ToAbsolute(frame, new PointF(0.26850507f, 0.86030483f)),
+            ToAbsolute(frame, new PointF(0f, 1f)),
+            ToAbsolute(frame, new PointF(0f, 0f)),
+            ToAbsolute(frame, new PointF(0.26995647f, 0.14187229f)));
+        path.CloseFigure();
     }
 
     private static RectangleF GetGuideCircumcircleBounds(RectangleF frame, IconGuideShape guideShape)
