@@ -220,6 +220,13 @@ public sealed class SymbolLibraryViewerForm : Form
             return;
         }
 
+        if (Owner is SymbolDesignerForm ownerDesigner)
+        {
+            ownerDesigner.LoadLibraryFile(item.FileName);
+            Close();
+            return;
+        }
+
         using var form = new SymbolDesignerForm(item.FileName);
         form.ShowDialog(this);
         ReloadCurrentLibrary();

@@ -559,7 +559,7 @@ public sealed class SymbolDesignerForm : Form
         LoadLibraryFile(dialog.FileName);
     }
 
-    private void LoadLibraryFile(string fileName)
+    internal void LoadLibraryFile(string fileName)
     {
         var options = new JsonSerializerOptions();
         options.Converters.Add(new JsonStringEnumConverter());
