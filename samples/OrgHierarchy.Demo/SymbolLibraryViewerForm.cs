@@ -318,16 +318,13 @@ public sealed class SymbolLibraryViewerForm : Form
         graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
         graphics.Clear(Color.White);
 
-        var frame = new RectangleF(18, 30, 144, 96);
+        var contentBounds = new RectangleF(12, 8, 156, 104);
+        var frame = SymbolFrameRenderer.GetFittedFrame(contentBounds, definition.FrameShape, definition.Commands, IconGuideShape.FlatTopBottom);
         using var pen = new Pen(Color.Black, 2f);
         SymbolFrameRenderer.DrawFrame(graphics, frame, definition.FrameShape, definition.FrameStatus, fillFrame: true, IconGuideShape.FlatTopBottom);
         foreach (var command in definition.Commands)
             command.Draw(graphics, frame, pen, Brushes.Black);
 
-        using var textBrush = new SolidBrush(SystemColors.ControlText);
-        using var font = new Font(SystemFonts.DefaultFont.FontFamily, 8f, FontStyle.Regular);
-        var title = string.IsNullOrWhiteSpace(definition.Name) ? definition.UnitType : definition.Name;
-        graphics.DrawString(title, font, textBrush, new RectangleF(4, 4, 172, 20));
         return bitmap;
     }
 

@@ -1702,9 +1702,8 @@ internal sealed class SymbolPreviewControl : Control
         e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
         e.Graphics.Clear(Color.White);
 
-        var width = Math.Min(ClientSize.Width - 60, 280);
-        var height = width / StandardFrameAspectRatio;
-        var frame = new RectangleF((ClientSize.Width - width) / 2f, 80, width, height);
+        var contentBounds = new RectangleF(30, 68, Math.Max(1, ClientSize.Width - 60), Math.Max(1, ClientSize.Height - 98));
+        var frame = SymbolFrameRenderer.GetFittedFrame(contentBounds, _frameShape, _commands, IconGuideShape.FlatTopBottom);
 
         using var pen = new Pen(Color.Black, 2f);
         SymbolFrameRenderer.DrawFrame(e.Graphics, frame, _frameShape, _frameStatus, fillFrame: true, IconGuideShape.FlatTopBottom);
@@ -1733,6 +1732,8 @@ internal sealed class SymbolLibraryDefinition
 
 internal static class SymbolFrameRenderer
 {
+    private const float StandardFrameAspectRatio = 1.5f;
+
     public static void DrawFrame(Graphics graphics, RectangleF frame, SymbolFrameShape shape, SymbolFrameStatus status, bool fillFrame, IconGuideShape guideShape)
     {
         using var pen = new Pen(Color.Black, 2f);
@@ -1748,6 +1749,45 @@ internal static class SymbolFrameRenderer
         }
 
         graphics.DrawPath(pen, path);
+    }
+
+    public static RectangleF GetFittedFrame(RectangleF contentBounds, SymbolFrameShape shape, IReadOnlyList<SymbolDrawCommand> commands, IconGuideShape guideShape)
+    {
+        var normalizedBounds = GetNormalizedVisualBounds(shape, commands, guideShape);
+        if (normalizedBounds.Width <= 0f || normalizedBounds.Height <= 0f)
+            normalizedBounds = new RectangleF(0f, 0f, 1f, 1f);
+
+        var frameWidthFromContentWidth = contentBounds.Width / normalizedBounds.Width;
+        var frameHeightFromContentHeight = contentBounds.Height / normalizedBounds.Height;
+        var frameHeight = Math.Min(frameWidthFromContentWidth / StandardFrameAspectRatio, frameHeightFromContentHeight);
+        var frameWidth = frameHeight * StandardFrameAspectRatio;
+        var frameLeft = contentBounds.Left + (contentBounds.Width - frameWidth * normalizedBounds.Width) / 2f - frameWidth * normalizedBounds.Left;
+        var frameTop = contentBounds.Top + (contentBounds.Height - frameHeight * normalizedBounds.Height) / 2f - frameHeight * normalizedBounds.Top;
+        return new RectangleF(frameLeft, frameTop, frameWidth, frameHeight);
+    }
+
+    private static RectangleF GetNormalizedVisualBounds(SymbolFrameShape shape, IReadOnlyList<SymbolDrawCommand> commands, IconGuideShape guideShape)
+    {
+        using var path = CreatePath(new RectangleF(0f, 0f, 1f, 1f), shape, guideShape);
+        var bounds = path.GetBounds();
+        foreach (var command in commands)
+            bounds = Union(bounds, command.GetNormalizedVisualBounds());
+
+        return bounds;
+    }
+
+    private static RectangleF Union(RectangleF first, RectangleF second)
+    {
+        if (first.IsEmpty)
+            return second;
+        if (second.IsEmpty)
+            return first;
+
+        var left = Math.Min(first.Left, second.Left);
+        var top = Math.Min(first.Top, second.Top);
+        var right = Math.Max(first.Right, second.Right);
+        var bottom = Math.Max(first.Bottom, second.Bottom);
+        return RectangleF.FromLTRB(left, top, right, bottom);
     }
 
     public static SymbolPalette GetPalette(SymbolFrameShape shape)
@@ -2238,6 +2278,19 @@ internal sealed class SymbolDrawCommand
         };
     }
 
+    public RectangleF GetNormalizedVisualBounds()
+    {
+        return Kind switch
+        {
+            SymbolDrawCommandKind.Circle => RectangleF.FromLTRB(Start.X - Radius, Start.Y - Radius, Start.X + Radius, Start.Y + Radius),
+            SymbolDrawCommandKind.Dot => RectangleF.FromLTRB(Start.X - Radius, Start.Y - Radius, Start.X + Radius, Start.Y + Radius),
+            SymbolDrawCommandKind.Text => GetTextNormalizedBounds(),
+            SymbolDrawCommandKind.Path => GetPointsBounds(Points),
+            SymbolDrawCommandKind.Bezier => GetPointsBounds(new[] { Start, End, Control1, Control2 }),
+            _ => GetPointsBounds(new[] { Start, End })
+        };
+    }
+
     public string ToCSharp(string graphics, string pen, string brush, string bounds, string icon)
     {
         return Kind switch
@@ -2340,6 +2393,37 @@ internal sealed class SymbolDrawCommand
         var left = Math.Min(Start.X, End.X);
         var top = Math.Min(Start.Y, End.Y);
         return new RectangleF(left, top, Math.Abs(End.X - Start.X), Math.Abs(End.Y - Start.Y));
+    }
+
+    private RectangleF GetTextNormalizedBounds()
+    {
+        var height = Math.Clamp(FontSize, 4f, 72f) / 100f;
+        var width = Math.Max(0.18f, Math.Max(1, Text.Length) * height * 0.72f);
+        return RectangleF.FromLTRB(Start.X - width / 2f, Start.Y - height / 2f, Start.X + width / 2f, Start.Y + height / 2f);
+    }
+
+    private static RectangleF GetPointsBounds(IReadOnlyList<SymbolPoint> points)
+    {
+        if (points.Count == 0)
+            return RectangleF.Empty;
+
+        var left = points.Min(point => point.X);
+        var top = points.Min(point => point.Y);
+        var right = points.Max(point => point.X);
+        var bottom = points.Max(point => point.Y);
+        if (Math.Abs(right - left) < 0.0001f)
+        {
+            left -= 0.001f;
+            right += 0.001f;
+        }
+
+        if (Math.Abs(bottom - top) < 0.0001f)
+        {
+            top -= 0.001f;
+            bottom += 0.001f;
+        }
+
+        return RectangleF.FromLTRB(left, top, right, bottom);
     }
 
     private static PointF ToAbsolute(RectangleF frame, PointF point) =>
