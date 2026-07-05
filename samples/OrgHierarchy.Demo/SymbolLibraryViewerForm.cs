@@ -6,6 +6,11 @@ namespace OrgHierarchy.Demo;
 
 public sealed class SymbolLibraryViewerForm : Form
 {
+    private static readonly string SettingsFileName = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "OrgHierarchy.Demo",
+        "symbol-library-viewer.json");
+
     private readonly TextBox _libraryPathTextBox = new() { Dock = DockStyle.Fill, ReadOnly = true };
     private readonly Button _browseFolderButton = new() { Text = "Browse folder", AutoSize = true };
     private readonly Button _openFilesButton = new() { Text = "Open files", AutoSize = true };
@@ -49,6 +54,7 @@ public sealed class SymbolLibraryViewerForm : Form
         _reloadButton.Click += (_, _) => ReloadCurrentLibrary();
 
         Controls.Add(CreateMainLayout());
+        Load += (_, _) => LoadRecentLibrary();
     }
 
     private Control CreateMainLayout()
@@ -169,6 +175,7 @@ public sealed class SymbolLibraryViewerForm : Form
             return;
 
         LoadFolder(dialog.SelectedPath);
+        SaveRecentLibrary(SymbolLibraryLoadMode.Folder, dialog.SelectedPath, Array.Empty<string>());
     }
 
     private void OpenFiles()
@@ -185,6 +192,7 @@ public sealed class SymbolLibraryViewerForm : Form
 
         LoadFiles(dialog.FileNames);
         _libraryPathTextBox.Text = Path.GetDirectoryName(dialog.FileNames[0]) ?? string.Empty;
+        SaveRecentLibrary(SymbolLibraryLoadMode.Files, _libraryPathTextBox.Text, dialog.FileNames);
     }
 
     private void ReloadCurrentLibrary()
@@ -199,6 +207,37 @@ public sealed class SymbolLibraryViewerForm : Form
             LoadFolder(_libraryPathTextBox.Text);
     }
 
+    private void LoadRecentLibrary()
+    {
+        var settings = LoadSettings();
+        if (settings == null)
+        {
+            _statusLabel.Text = "Choose a symbol library folder or open symbol files.";
+            return;
+        }
+
+        if (settings.Mode == SymbolLibraryLoadMode.Files && settings.Files.Count > 0)
+        {
+            var files = settings.Files.Where(File.Exists).ToArray();
+            if (files.Length > 0)
+            {
+                LoadFiles(files);
+                _libraryPathTextBox.Text = Directory.Exists(settings.Folder)
+                    ? settings.Folder
+                    : Path.GetDirectoryName(files[0]) ?? string.Empty;
+                return;
+            }
+        }
+
+        if (Directory.Exists(settings.Folder))
+        {
+            LoadFolder(settings.Folder);
+            return;
+        }
+
+        _statusLabel.Text = "Recent library was not found. Choose a folder or open symbol files.";
+    }
+
     private void LoadFolder(string folder)
     {
         _libraryPathTextBox.Text = folder;
@@ -207,6 +246,43 @@ public sealed class SymbolLibraryViewerForm : Form
             .OrderBy(Path.GetFileName)
             .ToArray();
         LoadFiles(files);
+    }
+
+    private static SymbolLibraryViewerSettings? LoadSettings()
+    {
+        try
+        {
+            if (!File.Exists(SettingsFileName))
+                return null;
+
+            return JsonSerializer.Deserialize<SymbolLibraryViewerSettings>(File.ReadAllText(SettingsFileName, Encoding.UTF8));
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static void SaveRecentLibrary(SymbolLibraryLoadMode mode, string folder, IReadOnlyList<string> files)
+    {
+        try
+        {
+            var directory = Path.GetDirectoryName(SettingsFileName);
+            if (!string.IsNullOrWhiteSpace(directory))
+                Directory.CreateDirectory(directory);
+
+            var settings = new SymbolLibraryViewerSettings
+            {
+                Mode = mode,
+                Folder = folder,
+                Files = files.ToList()
+            };
+            File.WriteAllText(SettingsFileName, JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true }), Encoding.UTF8);
+        }
+        catch
+        {
+            // Recent-library persistence is a convenience; keep the viewer usable if settings cannot be written.
+        }
     }
 
     private void LoadFiles(IReadOnlyList<string> files)
@@ -351,5 +427,18 @@ public sealed class SymbolLibraryViewerForm : Form
                 : !string.IsNullOrWhiteSpace(Definition.UnitType)
                     ? Definition.UnitType
                     : Path.GetFileNameWithoutExtension(FileName);
+    }
+
+    private sealed class SymbolLibraryViewerSettings
+    {
+        public SymbolLibraryLoadMode Mode { get; set; } = SymbolLibraryLoadMode.Folder;
+        public string Folder { get; set; } = string.Empty;
+        public List<string> Files { get; set; } = new();
+    }
+
+    private enum SymbolLibraryLoadMode
+    {
+        Folder,
+        Files
     }
 }
