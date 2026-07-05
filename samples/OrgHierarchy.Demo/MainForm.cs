@@ -1118,7 +1118,7 @@ public sealed partial class MainForm : Form
             var table = new DataTable("Orbat");
             table.ReadXml(path);
             EnsureOrbatColumns(table);
-            return table;
+            return EnsureCurrentDemoUnits(table);
         }
         catch (Exception)
         {
@@ -1283,8 +1283,24 @@ public sealed partial class MainForm : Form
         AddUnit(table, "460-ARTY", "III-CORPS", "460 Field Artillery Battalion", "460 FA", "460", "Friend", "Battalion", "Artillery", false, false, false, false, 210);
         AddUnit(table, "3-PSYOP", "III-CORPS", "3 Psychological Operations Company", "3 PSYOP", "3", "Friend", "Company", "PsychologicalOperations", false, false, false, false, 220);
         AddUnit(table, "13-LOG", "III-CORPS", "13 Combat Service Support", "13 CSS", "13", "Friend", "Battalion", "Logistics", false, false, false, false, 230);
+        AddUnit(table, "13-CBRN", "III-CORPS", "13 CBRN Company", "13 CBRN", "13", "Friend", "Company", "CBRN", false, false, false, false, 240);
 
         return table;
+    }
+
+    private static DataTable EnsureCurrentDemoUnits(DataTable table)
+    {
+        if (HasOrbatRow(table, "III-CORPS") && !HasOrbatRow(table, "13-CBRN"))
+            AddUnit(table, "13-CBRN", "III-CORPS", "13 CBRN Company", "13 CBRN", "13", "Friend", "Company", "CBRN", false, false, false, false, 240);
+
+        return table;
+    }
+
+    private static bool HasOrbatRow(DataTable table, string id)
+    {
+        return table.Rows
+            .Cast<DataRow>()
+            .Any(row => string.Equals(Convert.ToString(row["Id"]), id, StringComparison.OrdinalIgnoreCase));
     }
 
     private static DataTable CreateOrbatSchemaTable()
