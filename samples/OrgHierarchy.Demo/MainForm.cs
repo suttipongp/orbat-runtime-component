@@ -38,6 +38,7 @@ public sealed partial class MainForm : Form
         _importOrbatButton.Click += (_, _) => ImportOrbatData();
         _resetOrbatButton.Click += (_, _) => ResetOrbatData();
         _openSymbolDesignerButton.Click += (_, _) => OpenSymbolDesigner();
+        _viewSymbolLibraryButton.Click += (_, _) => OpenSymbolLibraryViewer();
         KeyDown += MainForm_KeyDown;
 
         _orbatContextMenu.Items.Add("Add unit under this unit", null, (_, _) => AddChildUnit());
@@ -102,6 +103,12 @@ public sealed partial class MainForm : Form
     private void OpenSymbolDesigner()
     {
         using var form = new SymbolDesignerForm();
+        form.ShowDialog(this);
+    }
+
+    private void OpenSymbolLibraryViewer()
+    {
+        using var form = new SymbolLibraryViewerForm();
         form.ShowDialog(this);
     }
 

@@ -24,6 +24,7 @@ partial class MainForm
     private Button _importOrbatButton = null!;
     private Button _resetOrbatButton = null!;
     private Button _openSymbolDesignerButton = null!;
+    private Button _viewSymbolLibraryButton = null!;
     private ContextMenuStrip _orbatContextMenu = null!;
     private Panel _orbatOptionsPanel = null!;
     private Panel _symbolsHeaderPanel = null!;
@@ -65,6 +66,7 @@ partial class MainForm
         _importOrbatButton = new Button();
         _resetOrbatButton = new Button();
         _openSymbolDesignerButton = new Button();
+        _viewSymbolLibraryButton = new Button();
         _orbatContextMenu = new ContextMenuStrip(components);
         _orbatOptionsPanel = new Panel();
         _symbolsHeaderPanel = new Panel();
@@ -272,6 +274,16 @@ partial class MainForm
         _openSymbolDesignerButton.Text = "Open symbol designer";
         _openSymbolDesignerButton.UseVisualStyleBackColor = true;
         // 
+        // _viewSymbolLibraryButton
+        // 
+        _viewSymbolLibraryButton.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+        _viewSymbolLibraryButton.Location = new Point(158, 8);
+        _viewSymbolLibraryButton.Name = "_viewSymbolLibraryButton";
+        _viewSymbolLibraryButton.Size = new Size(96, 28);
+        _viewSymbolLibraryButton.TabIndex = 1;
+        _viewSymbolLibraryButton.Text = "View library";
+        _viewSymbolLibraryButton.UseVisualStyleBackColor = true;
+        // 
         // _orbatOptionsPanel
         // 
         _orbatOptionsPanel.Controls.Add(_showUniqueDesignationCheckBox);
@@ -297,6 +309,7 @@ partial class MainForm
         // 
         // _symbolsHeaderPanel
         // 
+        _symbolsHeaderPanel.Controls.Add(_viewSymbolLibraryButton);
         _symbolsHeaderPanel.Controls.Add(_openSymbolDesignerButton);
         _symbolsHeaderPanel.Dock = DockStyle.Top;
         _symbolsHeaderPanel.Location = new Point(3, 3);
