@@ -1275,6 +1275,7 @@ public sealed partial class MainForm : Form
         AddUnit(table, "420-INF", "III-CORPS", "420 Infantry Battalion", "420 Inf", "420", "Friend", "Battalion", "Infantry", false, false, false, false, 130);
         AddUnit(table, "504-MED", "III-CORPS", "504 Medical Battalion", "504 Med", "504", "Friend", "Battalion", "Medical", false, false, false, false, 140);
         AddUnit(table, "31-ENG", "III-CORPS", "31 Engineer Battalion", "31 Eng", "31", "Friend", "Battalion", "Engineer", false, false, false, false, 150);
+        AddUnit(table, "2-AVN", "III-CORPS", "2 Aviation Battalion", "2 Avn", "2", "Friend", "Battalion", "Aviation", false, false, false, false, 160);
 
         AddUnit(table, "3-SIG", "3-BDE", "3 Signal Company", "Signal", "", "Friend", "Company", "Signal", false, false, false, false, 10);
         AddUnit(table, "SRT", "3-SIG", "Signal Relay Team", "SRT", "", "Friend", "Team", "Signal", false, false, false, false, 10);
@@ -1292,6 +1293,9 @@ public sealed partial class MainForm : Form
     {
         if (HasOrbatRow(table, "III-CORPS") && !HasOrbatRow(table, "13-CBRN"))
             AddUnit(table, "13-CBRN", "III-CORPS", "13 CBRN Company", "13 CBRN", "13", "Friend", "Company", "CBRN", false, false, false, false, 240);
+
+        if (HasOrbatRow(table, "III-CORPS") && !HasOrbatRow(table, "2-AVN"))
+            AddUnit(table, "2-AVN", "III-CORPS", "2 Aviation Battalion", "2 Avn", "2", "Friend", "Battalion", "Aviation", false, false, false, false, 160);
 
         return table;
     }

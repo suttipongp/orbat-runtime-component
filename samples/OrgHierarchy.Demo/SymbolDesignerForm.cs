@@ -2694,6 +2694,15 @@ internal static class BuiltInSymbolLibrary
             {
                 SymbolDrawCommand.AirDefenseArc()
             },
+            Components.OrbatUnitType.Aviation => new[]
+            {
+                SymbolDrawCommand.Path(new[]
+                {
+                    new SymbolPoint(0.12f, 0.5f),
+                    new SymbolPoint(0.88f, 0.18f),
+                    new SymbolPoint(0.88f, 0.82f)
+                }, filled: true)
+            },
             Components.OrbatUnitType.Engineer => new[]
             {
                 SymbolDrawCommand.Line(new PointF(0.28f, 0.36f), new PointF(0.28f, 0.64f)),
