@@ -712,6 +712,12 @@ public sealed class OrbatChartView : UserControl
             case OrbatUnitType.CBRN:
                 graphics.DrawString("CBRN", font, brush, icon, centerFormat);
                 break;
+            case OrbatUnitType.Ordnance:
+                graphics.DrawString("ORD", font, brush, icon, centerFormat);
+                break;
+            case OrbatUnitType.Quartermaster:
+                graphics.DrawString("QM", font, brush, icon, centerFormat);
+                break;
             case OrbatUnitType.Logistics:
             case OrbatUnitType.Maintenance:
             case OrbatUnitType.Transportation:

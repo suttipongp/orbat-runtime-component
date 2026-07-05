@@ -842,6 +842,8 @@ public sealed partial class MainForm : Form
             OrbatUnitType.Medical => "MED",
             OrbatUnitType.CBRN => "CBRN",
             OrbatUnitType.Logistics => "LOG",
+            OrbatUnitType.Ordnance => "ORD",
+            OrbatUnitType.Quartermaster => "QM",
             OrbatUnitType.Maintenance => "MAINT",
             OrbatUnitType.Transportation => "TRANS",
             OrbatUnitType.SpecialOperations => "SOF",
@@ -1285,6 +1287,8 @@ public sealed partial class MainForm : Form
         AddUnit(table, "3-PSYOP", "III-CORPS", "3 Psychological Operations Company", "3 PSYOP", "3", "Friend", "Company", "PsychologicalOperations", false, false, false, false, 220);
         AddUnit(table, "13-LOG", "III-CORPS", "13 Combat Service Support", "13 CSS", "13", "Friend", "Battalion", "Logistics", false, false, false, false, 230);
         AddUnit(table, "13-CBRN", "III-CORPS", "13 CBRN Company", "13 CBRN", "13", "Friend", "Company", "CBRN", false, false, false, false, 240);
+        AddUnit(table, "13-ORD", "III-CORPS", "13 Ordnance Company", "13 Ord", "13", "Friend", "Company", "Ordnance", false, false, false, false, 250);
+        AddUnit(table, "13-QM", "III-CORPS", "13 Quartermaster Company", "13 QM", "13", "Friend", "Company", "Quartermaster", false, false, false, false, 260);
 
         return table;
     }
@@ -1296,6 +1300,12 @@ public sealed partial class MainForm : Form
 
         if (HasOrbatRow(table, "III-CORPS") && !HasOrbatRow(table, "2-AVN"))
             AddUnit(table, "2-AVN", "III-CORPS", "2 Aviation Battalion", "2 Avn", "2", "Friend", "Battalion", "Aviation", false, false, false, false, 160);
+
+        if (HasOrbatRow(table, "III-CORPS") && !HasOrbatRow(table, "13-ORD"))
+            AddUnit(table, "13-ORD", "III-CORPS", "13 Ordnance Company", "13 Ord", "13", "Friend", "Company", "Ordnance", false, false, false, false, 250);
+
+        if (HasOrbatRow(table, "III-CORPS") && !HasOrbatRow(table, "13-QM"))
+            AddUnit(table, "13-QM", "III-CORPS", "13 Quartermaster Company", "13 QM", "13", "Friend", "Company", "Quartermaster", false, false, false, false, 260);
 
         return table;
     }
@@ -1355,10 +1365,12 @@ public sealed partial class MainForm : Form
         AddSymbolCatalogUnit(table, "SYM-MED", "SYM-SUPPORT", OrbatUnitType.Medical, 20);
         AddSymbolCatalogUnit(table, "SYM-CBRN", "SYM-SUPPORT", OrbatUnitType.CBRN, 30);
         AddSymbolCatalogUnit(table, "SYM-LOG", "SYM-SUPPORT", OrbatUnitType.Logistics, 40);
-        AddSymbolCatalogUnit(table, "SYM-MAINT", "SYM-SUPPORT", OrbatUnitType.Maintenance, 50);
-        AddSymbolCatalogUnit(table, "SYM-TRANS", "SYM-SUPPORT", OrbatUnitType.Transportation, 60);
-        AddSymbolCatalogUnit(table, "SYM-INT", "SYM-SUPPORT", OrbatUnitType.Intelligence, 70);
-        AddSymbolCatalogUnit(table, "SYM-PSYOP", "SYM-SUPPORT", OrbatUnitType.PsychologicalOperations, 80);
+        AddSymbolCatalogUnit(table, "SYM-ORD", "SYM-SUPPORT", OrbatUnitType.Ordnance, 50);
+        AddSymbolCatalogUnit(table, "SYM-QM", "SYM-SUPPORT", OrbatUnitType.Quartermaster, 60);
+        AddSymbolCatalogUnit(table, "SYM-MAINT", "SYM-SUPPORT", OrbatUnitType.Maintenance, 70);
+        AddSymbolCatalogUnit(table, "SYM-TRANS", "SYM-SUPPORT", OrbatUnitType.Transportation, 80);
+        AddSymbolCatalogUnit(table, "SYM-INT", "SYM-SUPPORT", OrbatUnitType.Intelligence, 90);
+        AddSymbolCatalogUnit(table, "SYM-PSYOP", "SYM-SUPPORT", OrbatUnitType.PsychologicalOperations, 100);
 
         AddSymbolCatalogUnit(table, "SYM-SOF", "SYM-DOMAIN", OrbatUnitType.SpecialOperations, 10);
         AddSymbolCatalogUnit(table, "SYM-NAV", "SYM-DOMAIN", OrbatUnitType.Naval, 20);

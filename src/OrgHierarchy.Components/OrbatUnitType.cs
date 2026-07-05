@@ -17,6 +17,8 @@ public enum OrbatUnitType
     Medical,
     CBRN,
     Logistics,
+    Ordnance,
+    Quartermaster,
     Maintenance,
     Transportation,
     SpecialOperations,

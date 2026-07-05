@@ -2725,6 +2725,14 @@ internal static class BuiltInSymbolLibrary
             {
                 SymbolDrawCommand.TextCommand(new PointF(0.5f, 0.5f), "CBRN", 18f)
             },
+            Components.OrbatUnitType.Ordnance => new[]
+            {
+                SymbolDrawCommand.TextCommand(new PointF(0.5f, 0.5f), "ORD", 18f)
+            },
+            Components.OrbatUnitType.Quartermaster => new[]
+            {
+                SymbolDrawCommand.TextCommand(new PointF(0.5f, 0.5f), "QM", 18f)
+            },
             _ => Array.Empty<SymbolDrawCommand>()
         };
     }
