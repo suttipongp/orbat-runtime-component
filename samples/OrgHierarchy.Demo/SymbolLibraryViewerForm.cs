@@ -15,6 +15,7 @@ public sealed class SymbolLibraryViewerForm : Form
     private readonly Button _browseFolderButton = new() { Text = "Browse folder", AutoSize = true };
     private readonly Button _openFilesButton = new() { Text = "Open files", AutoSize = true };
     private readonly Button _reloadButton = new() { Text = "Reload", AutoSize = true };
+    private readonly Button _editInDesignerButton = new() { Text = "Edit in designer", AutoSize = true };
     private readonly Label _statusLabel = new() { Dock = DockStyle.Fill, ForeColor = SystemColors.GrayText, TextAlign = ContentAlignment.MiddleLeft };
     private readonly ListView _symbolListView = new();
     private readonly ImageList _thumbnailImages = new();
@@ -45,6 +46,7 @@ public sealed class SymbolLibraryViewerForm : Form
         _symbolListView.HideSelection = false;
         _symbolListView.LargeImageList = _thumbnailImages;
         _symbolListView.SelectedIndexChanged += (_, _) => ShowSelectedSymbol();
+        _symbolListView.DoubleClick += (_, _) => EditSelectedInDesigner();
 
         _preview.Dock = DockStyle.Fill;
         _preview.BackColor = Color.White;
@@ -52,6 +54,7 @@ public sealed class SymbolLibraryViewerForm : Form
         _browseFolderButton.Click += (_, _) => BrowseFolder();
         _openFilesButton.Click += (_, _) => OpenFiles();
         _reloadButton.Click += (_, _) => ReloadCurrentLibrary();
+        _editInDesignerButton.Click += (_, _) => EditSelectedInDesigner();
 
         Controls.Add(CreateMainLayout());
         Load += (_, _) => LoadRecentLibrary();
@@ -89,19 +92,21 @@ public sealed class SymbolLibraryViewerForm : Form
         var toolbar = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            ColumnCount = 5
+            ColumnCount = 6
         };
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 94));
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 112));
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90));
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 76));
+        toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 126));
 
         toolbar.Controls.Add(new Label { Text = "Library", AutoSize = true, TextAlign = ContentAlignment.MiddleLeft, Margin = new Padding(0, 7, 8, 0) }, 0, 0);
         toolbar.Controls.Add(_libraryPathTextBox, 1, 0);
         toolbar.Controls.Add(_browseFolderButton, 2, 0);
         toolbar.Controls.Add(_openFilesButton, 3, 0);
         toolbar.Controls.Add(_reloadButton, 4, 0);
+        toolbar.Controls.Add(_editInDesignerButton, 5, 0);
         return toolbar;
     }
 
@@ -205,6 +210,19 @@ public sealed class SymbolLibraryViewerForm : Form
 
         if (Directory.Exists(_libraryPathTextBox.Text))
             LoadFolder(_libraryPathTextBox.Text);
+    }
+
+    private void EditSelectedInDesigner()
+    {
+        if (_symbolListView.SelectedItems.Count == 0 || _symbolListView.SelectedItems[0].Tag is not SymbolLibraryItem item)
+        {
+            MessageBox.Show(this, "Please select a symbol to edit.", "Symbol Library", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        using var form = new SymbolDesignerForm(item.FileName);
+        form.ShowDialog(this);
+        ReloadCurrentLibrary();
     }
 
     private void LoadRecentLibrary()

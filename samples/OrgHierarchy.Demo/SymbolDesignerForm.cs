@@ -137,6 +137,7 @@ public sealed class SymbolDesignerForm : Form
         var loadBaseButton = CreateButton("Load base", LoadBaseSymbol);
         var saveLibraryButton = CreateButton("Save library", SaveLibrary);
         var loadLibraryButton = CreateButton("Load library", LoadLibrary);
+        var viewLibraryButton = CreateButton("View library", ViewLibrary);
         var undoButton = CreateButton("Undo", () => _canvas.Undo());
         var duplicateButton = CreateButton("Duplicate", () => _canvas.DuplicateSelected());
         var copyButton = CreateButton("Copy", () => _canvas.CopySelected());
@@ -171,6 +172,7 @@ public sealed class SymbolDesignerForm : Form
         toolbar.Controls.Add(loadBaseButton);
         toolbar.Controls.Add(saveLibraryButton);
         toolbar.Controls.Add(loadLibraryButton);
+        toolbar.Controls.Add(viewLibraryButton);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Reference", Margin = new Padding(14, 6, 4, 0) });
         toolbar.Controls.Add(_referenceOpacityTrackBar);
         toolbar.Controls.Add(_showGridCheckBox);
@@ -273,6 +275,12 @@ public sealed class SymbolDesignerForm : Form
         RefreshOutput();
         RefreshSelectionControls();
         UpdateToolStatus();
+    }
+
+    public SymbolDesignerForm(string libraryFileName)
+        : this()
+    {
+        LoadLibraryFile(libraryFileName);
     }
 
     private static Button CreateButton(string text, Action action)
@@ -548,9 +556,14 @@ public sealed class SymbolDesignerForm : Form
         if (dialog.ShowDialog(this) != DialogResult.OK)
             return;
 
+        LoadLibraryFile(dialog.FileName);
+    }
+
+    private void LoadLibraryFile(string fileName)
+    {
         var options = new JsonSerializerOptions();
         options.Converters.Add(new JsonStringEnumConverter());
-        var definition = JsonSerializer.Deserialize<SymbolLibraryDefinition>(File.ReadAllText(dialog.FileName, Encoding.UTF8), options);
+        var definition = JsonSerializer.Deserialize<SymbolLibraryDefinition>(File.ReadAllText(fileName, Encoding.UTF8), options);
         if (definition == null)
             return;
 
@@ -561,6 +574,13 @@ public sealed class SymbolDesignerForm : Form
         _canvas.FrameShape = definition.FrameShape;
         _canvas.FrameStatus = definition.FrameStatus;
         _canvas.SetCommands(definition.Commands);
+        Text = $"ORBAT Symbol Designer - {GetLibraryNameFromFileName(fileName)}";
+    }
+
+    private void ViewLibrary()
+    {
+        using var form = new SymbolLibraryViewerForm();
+        form.ShowDialog(this);
     }
 
     private void AddAirDefenseArc()
