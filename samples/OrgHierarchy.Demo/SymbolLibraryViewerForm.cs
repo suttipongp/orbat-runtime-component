@@ -44,6 +44,7 @@ public sealed class SymbolLibraryViewerForm : Form
         _symbolListView.View = View.LargeIcon;
         _symbolListView.MultiSelect = false;
         _symbolListView.HideSelection = false;
+        _symbolListView.ShowGroups = true;
         _symbolListView.LargeImageList = _thumbnailImages;
         _symbolListView.SelectedIndexChanged += (_, _) => ShowSelectedSymbol();
         _symbolListView.DoubleClick += (_, _) => EditSelectedInDesigner();
@@ -317,10 +318,12 @@ public sealed class SymbolLibraryViewerForm : Form
         try
         {
             _symbolListView.Items.Clear();
+            _symbolListView.Groups.Clear();
             _thumbnailImages.Images.Clear();
             _commandListBox.Items.Clear();
             ClearDetails();
 
+            var groups = CreateSymbolGroups();
             var skipped = 0;
             foreach (var file in files)
             {
@@ -337,6 +340,7 @@ public sealed class SymbolLibraryViewerForm : Form
                     Tag = item,
                     ToolTipText = file
                 };
+                listItem.Group = groups[GetGroupKey(item.Definition.FrameShape)];
                 listItem.SubItems.Add(item.Definition.UnitType);
                 _symbolListView.Items.Add(listItem);
             }
@@ -353,6 +357,36 @@ public sealed class SymbolLibraryViewerForm : Form
         {
             _symbolListView.EndUpdate();
         }
+    }
+
+    private Dictionary<string, ListViewGroup> CreateSymbolGroups()
+    {
+        var groups = new Dictionary<string, ListViewGroup>(StringComparer.OrdinalIgnoreCase);
+        AddSymbolGroup(groups, "Friendly", "Friendly");
+        AddSymbolGroup(groups, "Hostile", "Hostile");
+        AddSymbolGroup(groups, "Unknown", "Unknown");
+        AddSymbolGroup(groups, "Neutral", "Neutral");
+        AddSymbolGroup(groups, "Other", "Other");
+        return groups;
+    }
+
+    private void AddSymbolGroup(Dictionary<string, ListViewGroup> groups, string key, string header)
+    {
+        var group = new ListViewGroup(key, header);
+        groups.Add(key, group);
+        _symbolListView.Groups.Add(group);
+    }
+
+    private static string GetGroupKey(SymbolFrameShape frameShape)
+    {
+        return frameShape switch
+        {
+            SymbolFrameShape.FriendlyUnit or SymbolFrameShape.FriendlyEquipment => "Friendly",
+            SymbolFrameShape.Hostile => "Hostile",
+            SymbolFrameShape.Unknown => "Unknown",
+            SymbolFrameShape.Neutral => "Neutral",
+            _ => "Other"
+        };
     }
 
     private bool TryLoadItem(string file, out SymbolLibraryItem item)
