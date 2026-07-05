@@ -492,10 +492,13 @@ public sealed class SymbolDesignerForm : Form
         if (dialog.ShowDialog(this) != DialogResult.OK)
             return;
 
+        var libraryName = GetLibraryNameFromFileName(dialog.FileName);
+        var selectedUnitType = Convert.ToString(_unitTypeComboBox.SelectedItem) ?? Components.OrbatUnitType.Unspecified.ToString();
+        var libraryUnitType = InferUnitTypeFromLibraryName(libraryName, selectedUnitType);
         var definition = new SymbolLibraryDefinition
         {
-            Name = Convert.ToString(_unitTypeComboBox.SelectedItem) ?? "Unspecified",
-            UnitType = Convert.ToString(_unitTypeComboBox.SelectedItem) ?? "Unspecified",
+            Name = libraryName,
+            UnitType = libraryUnitType,
             FrameShape = GetSelectedFrameShape(),
             FrameStatus = GetSelectedFrameStatus(),
             Version = 1,
@@ -505,6 +508,33 @@ public sealed class SymbolDesignerForm : Form
         var options = new JsonSerializerOptions { WriteIndented = true };
         options.Converters.Add(new JsonStringEnumConverter());
         File.WriteAllText(dialog.FileName, JsonSerializer.Serialize(definition, options), Encoding.UTF8);
+    }
+
+    private static string GetLibraryNameFromFileName(string fileName)
+    {
+        var name = Path.GetFileName(fileName);
+        if (name.EndsWith(".orbatsymbol.json", StringComparison.OrdinalIgnoreCase))
+            name = name[..^".orbatsymbol.json".Length];
+        else
+            name = Path.GetFileNameWithoutExtension(name);
+
+        return string.IsNullOrWhiteSpace(name)
+            ? Components.OrbatUnitType.Unspecified.ToString()
+            : name;
+    }
+
+    private static string InferUnitTypeFromLibraryName(string libraryName, string fallbackUnitType)
+    {
+        if (Enum.TryParse(libraryName, ignoreCase: true, out Components.OrbatUnitType exactUnitType))
+            return exactUnitType.ToString();
+
+        var normalized = new string(libraryName.Where(char.IsLetterOrDigit).ToArray());
+        if (Enum.TryParse(normalized, ignoreCase: true, out Components.OrbatUnitType normalizedUnitType))
+            return normalizedUnitType.ToString();
+
+        return normalized.Equals("transport", StringComparison.OrdinalIgnoreCase)
+            ? Components.OrbatUnitType.Transportation.ToString()
+            : fallbackUnitType;
     }
 
     private void LoadLibrary()

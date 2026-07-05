@@ -422,11 +422,32 @@ public sealed class SymbolLibraryViewerForm : Form
     private sealed record SymbolLibraryItem(string FileName, SymbolLibraryDefinition Definition)
     {
         public string DisplayName =>
-            !string.IsNullOrWhiteSpace(Definition.Name)
-                ? Definition.Name
-                : !string.IsNullOrWhiteSpace(Definition.UnitType)
-                    ? Definition.UnitType
-                    : Path.GetFileNameWithoutExtension(FileName);
+            ShouldPreferFileName()
+                ? GetLibraryNameFromFileName()
+                : !string.IsNullOrWhiteSpace(Definition.Name)
+                    ? Definition.Name
+                    : !string.IsNullOrWhiteSpace(Definition.UnitType)
+                        ? Definition.UnitType
+                        : GetLibraryNameFromFileName();
+
+        private bool ShouldPreferFileName()
+        {
+            var fileName = GetLibraryNameFromFileName();
+            return !string.IsNullOrWhiteSpace(fileName)
+                && !fileName.Equals(Definition.Name, StringComparison.OrdinalIgnoreCase)
+                && Definition.Name.Equals(Definition.UnitType, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private string GetLibraryNameFromFileName()
+        {
+            var name = Path.GetFileName(FileName);
+            if (name.EndsWith(".orbatsymbol.json", StringComparison.OrdinalIgnoreCase))
+                name = name[..^".orbatsymbol.json".Length];
+            else
+                name = Path.GetFileNameWithoutExtension(name);
+
+            return string.IsNullOrWhiteSpace(name) ? Definition.UnitType : name;
+        }
     }
 
     private sealed class SymbolLibraryViewerSettings
