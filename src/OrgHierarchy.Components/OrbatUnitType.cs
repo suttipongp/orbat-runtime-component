@@ -15,6 +15,7 @@ public enum OrbatUnitType
     Signal,
     MilitaryPolice,
     Medical,
+    CBRN,
     Logistics,
     Maintenance,
     Transportation,

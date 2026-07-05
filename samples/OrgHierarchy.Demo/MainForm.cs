@@ -840,6 +840,7 @@ public sealed partial class MainForm : Form
             OrbatUnitType.Signal => "SIG",
             OrbatUnitType.MilitaryPolice => "MP",
             OrbatUnitType.Medical => "MED",
+            OrbatUnitType.CBRN => "CBRN",
             OrbatUnitType.Logistics => "LOG",
             OrbatUnitType.Maintenance => "MAINT",
             OrbatUnitType.Transportation => "TRANS",
@@ -1332,11 +1333,12 @@ public sealed partial class MainForm : Form
 
         AddSymbolCatalogUnit(table, "SYM-MP", "SYM-SUPPORT", OrbatUnitType.MilitaryPolice, 10);
         AddSymbolCatalogUnit(table, "SYM-MED", "SYM-SUPPORT", OrbatUnitType.Medical, 20);
-        AddSymbolCatalogUnit(table, "SYM-LOG", "SYM-SUPPORT", OrbatUnitType.Logistics, 30);
-        AddSymbolCatalogUnit(table, "SYM-MAINT", "SYM-SUPPORT", OrbatUnitType.Maintenance, 40);
-        AddSymbolCatalogUnit(table, "SYM-TRANS", "SYM-SUPPORT", OrbatUnitType.Transportation, 50);
-        AddSymbolCatalogUnit(table, "SYM-INT", "SYM-SUPPORT", OrbatUnitType.Intelligence, 60);
-        AddSymbolCatalogUnit(table, "SYM-PSYOP", "SYM-SUPPORT", OrbatUnitType.PsychologicalOperations, 70);
+        AddSymbolCatalogUnit(table, "SYM-CBRN", "SYM-SUPPORT", OrbatUnitType.CBRN, 30);
+        AddSymbolCatalogUnit(table, "SYM-LOG", "SYM-SUPPORT", OrbatUnitType.Logistics, 40);
+        AddSymbolCatalogUnit(table, "SYM-MAINT", "SYM-SUPPORT", OrbatUnitType.Maintenance, 50);
+        AddSymbolCatalogUnit(table, "SYM-TRANS", "SYM-SUPPORT", OrbatUnitType.Transportation, 60);
+        AddSymbolCatalogUnit(table, "SYM-INT", "SYM-SUPPORT", OrbatUnitType.Intelligence, 70);
+        AddSymbolCatalogUnit(table, "SYM-PSYOP", "SYM-SUPPORT", OrbatUnitType.PsychologicalOperations, 80);
 
         AddSymbolCatalogUnit(table, "SYM-SOF", "SYM-DOMAIN", OrbatUnitType.SpecialOperations, 10);
         AddSymbolCatalogUnit(table, "SYM-NAV", "SYM-DOMAIN", OrbatUnitType.Naval, 20);

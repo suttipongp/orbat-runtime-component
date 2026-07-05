@@ -542,6 +542,9 @@ public sealed class SymbolDesignerForm : Form
 
         return normalized.Equals("transport", StringComparison.OrdinalIgnoreCase)
             ? Components.OrbatUnitType.Transportation.ToString()
+            : normalized.Equals("chemical", StringComparison.OrdinalIgnoreCase)
+                || normalized.Equals("nbc", StringComparison.OrdinalIgnoreCase)
+                ? Components.OrbatUnitType.CBRN.ToString()
             : fallbackUnitType;
     }
 
@@ -2708,6 +2711,10 @@ internal static class BuiltInSymbolLibrary
             {
                 SymbolDrawCommand.Line(new PointF(0.5f, 0f), new PointF(0.5f, 1f)),
                 SymbolDrawCommand.Line(new PointF(0f, 0.5f), new PointF(1f, 0.5f))
+            },
+            Components.OrbatUnitType.CBRN => new[]
+            {
+                SymbolDrawCommand.TextCommand(new PointF(0.5f, 0.5f), "CBRN", 18f)
             },
             _ => Array.Empty<SymbolDrawCommand>()
         };

@@ -210,6 +210,7 @@ public static class OrbatSidcParser
             "210100" => OrbatUnitType.Transportation,
             "220100" => OrbatUnitType.Intelligence,
             "220200" => OrbatUnitType.PsychologicalOperations,
+            "230100" => OrbatUnitType.CBRN,
             _ => OrbatUnitType.Unspecified
         };
     }
@@ -244,6 +245,8 @@ public static class OrbatSidcParser
             return OrbatUnitType.Transportation;
         if (entity.StartsWith("22", StringComparison.Ordinal))
             return OrbatUnitType.Intelligence;
+        if (entity.StartsWith("23", StringComparison.Ordinal))
+            return OrbatUnitType.CBRN;
 
         return OrbatUnitType.Unspecified;
     }
@@ -269,6 +272,7 @@ public static class OrbatSidcParser
             OrbatUnitType.Transportation => "210100",
             OrbatUnitType.Intelligence => "220100",
             OrbatUnitType.PsychologicalOperations => "220200",
+            OrbatUnitType.CBRN => "230100",
             OrbatUnitType.Naval => "000000",
             OrbatUnitType.Air => "000000",
             OrbatUnitType.Cyber => "000000",

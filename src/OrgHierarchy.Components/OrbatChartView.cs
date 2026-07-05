@@ -709,6 +709,9 @@ public sealed class OrbatChartView : UserControl
                 graphics.DrawLine(pen, bounds.Left + bounds.Width / 2f, bounds.Top, bounds.Left + bounds.Width / 2f, bounds.Bottom);
                 graphics.DrawLine(pen, bounds.Left, bounds.Top + bounds.Height / 2f, bounds.Right, bounds.Top + bounds.Height / 2f);
                 break;
+            case OrbatUnitType.CBRN:
+                graphics.DrawString("CBRN", font, brush, icon, centerFormat);
+                break;
             case OrbatUnitType.Logistics:
             case OrbatUnitType.Maintenance:
             case OrbatUnitType.Transportation:
