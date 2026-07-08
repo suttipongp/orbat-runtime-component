@@ -22,6 +22,7 @@ public sealed class SymbolLibraryViewerForm : Form
     private readonly SymbolPreviewControl _preview = new();
     private readonly Label _nameLabel = CreateValueLabel();
     private readonly Label _unitTypeLabel = CreateValueLabel();
+    private readonly Label _equipmentFunctionLabel = CreateValueLabel();
     private readonly Label _frameLabel = CreateValueLabel();
     private readonly Label _statusValueLabel = CreateValueLabel();
     private readonly Label _commandCountLabel = CreateValueLabel();
@@ -146,7 +147,7 @@ public sealed class SymbolLibraryViewerForm : Form
         {
             Dock = DockStyle.Fill,
             ColumnCount = 2,
-            RowCount = 6,
+            RowCount = 7,
             Padding = new Padding(0, 8, 0, 0)
         };
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 96));
@@ -154,16 +155,17 @@ public sealed class SymbolLibraryViewerForm : Form
 
         AddMetadataRow(panel, 0, "Name", _nameLabel);
         AddMetadataRow(panel, 1, "Unit type", _unitTypeLabel);
-        AddMetadataRow(panel, 2, "Frame", _frameLabel);
-        AddMetadataRow(panel, 3, "Status", _statusValueLabel);
-        AddMetadataRow(panel, 4, "Commands", _commandCountLabel);
-        AddMetadataRow(panel, 5, "File", _fileTextBox);
+        AddMetadataRow(panel, 2, "Equipment fn", _equipmentFunctionLabel);
+        AddMetadataRow(panel, 3, "Frame", _frameLabel);
+        AddMetadataRow(panel, 4, "Status", _statusValueLabel);
+        AddMetadataRow(panel, 5, "Commands", _commandCountLabel);
+        AddMetadataRow(panel, 6, "File", _fileTextBox);
         return panel;
     }
 
     private static void AddMetadataRow(TableLayoutPanel panel, int row, string label, Control value)
     {
-        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, row == 5 ? 56 : 30));
+        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, row == 6 ? 56 : 30));
         panel.Controls.Add(new Label { Text = label, AutoSize = true, Margin = new Padding(0, 6, 8, 0) }, 0, row);
         panel.Controls.Add(value, 1, row);
     }
@@ -419,6 +421,7 @@ public sealed class SymbolLibraryViewerForm : Form
         _preview.SetCommands(definition.Commands);
         _nameLabel.Text = item.DisplayName;
         _unitTypeLabel.Text = definition.UnitType;
+        _equipmentFunctionLabel.Text = definition.EquipmentFunction;
         _frameLabel.Text = $"{definition.GetEffectiveAffiliation()} / {definition.GetEffectivePhysicalDomain()}";
         _statusValueLabel.Text = definition.FrameStatus.ToString();
         _commandCountLabel.Text = definition.Commands.Count.ToString();
@@ -442,6 +445,7 @@ public sealed class SymbolLibraryViewerForm : Form
         _preview.SetCommands(Array.Empty<SymbolDrawCommand>());
         _nameLabel.Text = string.Empty;
         _unitTypeLabel.Text = string.Empty;
+        _equipmentFunctionLabel.Text = string.Empty;
         _frameLabel.Text = string.Empty;
         _statusValueLabel.Text = string.Empty;
         _commandCountLabel.Text = string.Empty;

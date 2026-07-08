@@ -11,6 +11,7 @@ public sealed class SymbolDesignerForm : Form
     private readonly SymbolPreviewControl _preview = new();
     private readonly ComboBox _toolComboBox = new();
     private readonly ComboBox _unitTypeComboBox = new();
+    private readonly ComboBox _equipmentFunctionComboBox = new();
     private readonly ComboBox _affiliationComboBox = new();
     private readonly ComboBox _physicalDomainComboBox = new();
     private readonly ComboBox _frameStatusComboBox = new();
@@ -64,6 +65,11 @@ public sealed class SymbolDesignerForm : Form
         _unitTypeComboBox.SelectedItem = Components.OrbatUnitType.Unspecified.ToString();
         _unitTypeComboBox.SelectedIndexChanged += (_, _) => RefreshOutput();
 
+        _equipmentFunctionComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        _equipmentFunctionComboBox.Items.AddRange(Enum.GetNames<Components.OrbatEquipmentFunction>().Cast<object>().ToArray());
+        _equipmentFunctionComboBox.SelectedItem = Components.OrbatEquipmentFunction.Unspecified.ToString();
+        _equipmentFunctionComboBox.SelectedIndexChanged += (_, _) => RefreshOutput();
+
         _affiliationComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         _affiliationComboBox.Width = 92;
         _affiliationComboBox.Items.AddRange(Enum.GetNames<SymbolAffiliation>().Cast<object>().ToArray());
@@ -82,6 +88,7 @@ public sealed class SymbolDesignerForm : Form
         _physicalDomainComboBox.SelectedIndexChanged += (_, _) =>
         {
             _canvas.FrameShape = GetSelectedFrameShape();
+            UpdateFunctionSelectorState();
             RefreshOutput();
             _canvas.Invalidate();
         };
@@ -180,12 +187,14 @@ public sealed class SymbolDesignerForm : Form
             Padding = new Padding(8, 8, 8, 4),
             WrapContents = true
         };
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Unit type", Margin = new Padding(0, 6, 4, 0) });
+        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Domain", Margin = new Padding(0, 6, 4, 0) });
+        toolbar.Controls.Add(_physicalDomainComboBox);
+        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Unit type", Margin = new Padding(8, 6, 4, 0) });
         toolbar.Controls.Add(_unitTypeComboBox);
+        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Equipment function", Margin = new Padding(8, 6, 4, 0) });
+        toolbar.Controls.Add(_equipmentFunctionComboBox);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Affiliation", Margin = new Padding(14, 6, 4, 0) });
         toolbar.Controls.Add(_affiliationComboBox);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Domain", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(_physicalDomainComboBox);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Status", Margin = new Padding(8, 6, 4, 0) });
         toolbar.Controls.Add(_frameStatusComboBox);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Tool", Margin = new Padding(14, 6, 4, 0) });
@@ -300,6 +309,7 @@ public sealed class SymbolDesignerForm : Form
         Controls.Add(statusPanel);
         Controls.Add(toolbar);
 
+        UpdateFunctionSelectorState();
         RefreshOutput();
         RefreshSelectionControls();
         UpdateToolStatus();
@@ -458,6 +468,13 @@ public sealed class SymbolDesignerForm : Form
             : SymbolPhysicalDomain.LandUnit;
     }
 
+    private Components.OrbatEquipmentFunction GetSelectedEquipmentFunction()
+    {
+        return Enum.TryParse(Convert.ToString(_equipmentFunctionComboBox.SelectedItem), out Components.OrbatEquipmentFunction function)
+            ? function
+            : Components.OrbatEquipmentFunction.Unspecified;
+    }
+
     private SymbolFrameStatus GetSelectedFrameStatus()
     {
         return Enum.TryParse(Convert.ToString(_frameStatusComboBox.SelectedItem), out SymbolFrameStatus status)
@@ -470,6 +487,13 @@ public sealed class SymbolDesignerForm : Form
         return Enum.TryParse(Convert.ToString(_iconGuideShapeComboBox.SelectedItem), out IconGuideShape shape)
             ? shape
             : IconGuideShape.FlatTopBottom;
+    }
+
+    private void UpdateFunctionSelectorState()
+    {
+        var equipment = GetSelectedPhysicalDomain() == SymbolPhysicalDomain.Equipment;
+        _unitTypeComboBox.Enabled = !equipment;
+        _equipmentFunctionComboBox.Enabled = equipment;
     }
 
     private void SelectTool(SymbolDesignerTool tool)
@@ -530,11 +554,26 @@ public sealed class SymbolDesignerForm : Form
 
     private void LoadBaseSymbol()
     {
+        IReadOnlyList<SymbolDrawCommand> commands;
+        if (GetSelectedPhysicalDomain() == SymbolPhysicalDomain.Equipment)
+        {
+            var equipmentFunction = GetSelectedEquipmentFunction();
+            commands = BuiltInSymbolLibrary.Create(equipmentFunction);
+            if (commands.Count == 0)
+            {
+                MessageBox.Show(this, "No editable base symbol is available for this equipment function yet.", "Symbol Designer", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            _canvas.SetCommands(commands);
+            return;
+        }
+
         var selected = Convert.ToString(_unitTypeComboBox.SelectedItem);
         if (!Enum.TryParse(selected, out Components.OrbatUnitType unitType))
             return;
 
-        var commands = BuiltInSymbolLibrary.Create(unitType);
+        commands = BuiltInSymbolLibrary.Create(unitType);
         if (commands.Count == 0)
         {
             MessageBox.Show(this, "No editable base symbol is available for this unit type yet.", "Symbol Designer", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -563,6 +602,7 @@ public sealed class SymbolDesignerForm : Form
         {
             Name = libraryName,
             UnitType = libraryUnitType,
+            EquipmentFunction = Convert.ToString(_equipmentFunctionComboBox.SelectedItem) ?? Components.OrbatEquipmentFunction.Unspecified.ToString(),
             Affiliation = GetSelectedAffiliation(),
             PhysicalDomain = GetSelectedPhysicalDomain(),
             FrameShape = GetSelectedFrameShape(),
@@ -630,8 +670,11 @@ public sealed class SymbolDesignerForm : Form
 
         if (Enum.TryParse(definition.UnitType, out Components.OrbatUnitType unitType))
             _unitTypeComboBox.SelectedItem = unitType.ToString();
+        if (Enum.TryParse(definition.EquipmentFunction, out Components.OrbatEquipmentFunction equipmentFunction))
+            _equipmentFunctionComboBox.SelectedItem = equipmentFunction.ToString();
         _affiliationComboBox.SelectedItem = definition.GetEffectiveAffiliation().ToString();
         _physicalDomainComboBox.SelectedItem = definition.GetEffectivePhysicalDomain().ToString();
+        UpdateFunctionSelectorState();
         _frameStatusComboBox.SelectedItem = definition.FrameStatus.ToString();
         _canvas.FrameShape = definition.GetEffectiveFrameShape();
         _canvas.FrameStatus = definition.FrameStatus;
@@ -965,6 +1008,8 @@ internal enum IconGuideShape
 internal sealed class SymbolDesignerCanvas : Control
 {
     private const float SnapThreshold = 0.025f;
+    private const float PointSnapThreshold = 0.045f;
+    private const float LineSnapThreshold = 0.032f;
     private const float StandardFrameAspectRatio = 1.5f;
     private const int HistoryLimit = 100;
     private readonly List<SymbolDrawCommand> _commands = new();
@@ -1729,7 +1774,6 @@ internal sealed class SymbolDesignerCanvas : Control
         var points = GetIconGuidePoints(IconGuideShape);
         using var guidePen = new Pen(Color.FromArgb(220, 24, 82, 180), 1.4f);
         var absolutePoints = points.Select(point => ToAbsolute(guide, point)).ToArray();
-        DrawIconGuideGrid(graphics, guide, absolutePoints);
         graphics.DrawPolygon(guidePen, absolutePoints);
         graphics.DrawLine(guidePen, guide.Left, guide.Top + guide.Height / 2f, guide.Right, guide.Top + guide.Height / 2f);
         graphics.DrawLine(guidePen, guide.Left + guide.Width / 2f, guide.Top, guide.Left + guide.Width / 2f, guide.Bottom);
@@ -1886,8 +1930,22 @@ internal sealed class SymbolDesignerCanvas : Control
     private PointF SnapPoint(PointF point)
     {
         var best = point;
-        var bestDistance = SnapThreshold;
-        foreach (var candidate in GetSnapCandidates())
+        var bestDistance = PointSnapThreshold;
+        foreach (var candidate in GetPrioritySnapCandidates())
+        {
+            var distance = Distance(point, candidate);
+            if (distance < bestDistance)
+            {
+                best = candidate;
+                bestDistance = distance;
+            }
+        }
+
+        if (bestDistance < PointSnapThreshold)
+            return best;
+
+        bestDistance = SnapThreshold;
+        foreach (var candidate in GetGridSnapCandidates())
         {
             var distance = Distance(point, candidate);
             if (distance < bestDistance)
@@ -1900,7 +1958,7 @@ internal sealed class SymbolDesignerCanvas : Control
         foreach (var candidate in GetLineSnapCandidates(point))
         {
             var distance = Distance(point, candidate);
-            if (distance < bestDistance)
+            if (distance < Math.Min(bestDistance, LineSnapThreshold))
             {
                 best = candidate;
                 bestDistance = distance;
@@ -1910,7 +1968,19 @@ internal sealed class SymbolDesignerCanvas : Control
         return best;
     }
 
-    private IEnumerable<PointF> GetSnapCandidates()
+    private IEnumerable<PointF> GetPrioritySnapCandidates()
+    {
+        foreach (var command in _commands)
+        {
+            foreach (var point in command.GetSnapPoints())
+                yield return point;
+        }
+
+        foreach (var intersection in GetLineIntersections())
+            yield return intersection;
+    }
+
+    private IEnumerable<PointF> GetGridSnapCandidates()
     {
         yield return new PointF(0f, 0f);
         yield return new PointF(1f, 0f);
@@ -1926,15 +1996,6 @@ internal sealed class SymbolDesignerCanvas : Control
             foreach (var y in GetHorizontalGridCoordinates())
                 yield return new PointF(x, y);
         }
-
-        foreach (var command in _commands)
-        {
-            foreach (var point in command.GetSnapPoints())
-                yield return point;
-        }
-
-        foreach (var intersection in GetLineIntersections())
-            yield return intersection;
     }
 
     private IEnumerable<PointF> GetLineSnapCandidates(PointF point)
@@ -2279,6 +2340,7 @@ internal sealed class SymbolLibraryDefinition
     public int Version { get; set; } = 1;
     public string Name { get; set; } = string.Empty;
     public string UnitType { get; set; } = string.Empty;
+    public string EquipmentFunction { get; set; } = Components.OrbatEquipmentFunction.Unspecified.ToString();
     public SymbolAffiliation Affiliation { get; set; } = SymbolAffiliation.Friendly;
     public SymbolPhysicalDomain PhysicalDomain { get; set; } = SymbolPhysicalDomain.LandUnit;
     public SymbolFrameShape FrameShape { get; set; } = SymbolFrameShape.FriendlyUnit;
@@ -3407,6 +3469,73 @@ internal enum SymbolDrawCommandKind
 
 internal static class BuiltInSymbolLibrary
 {
+    public static IReadOnlyList<SymbolDrawCommand> Create(Components.OrbatEquipmentFunction equipmentFunction)
+    {
+        return equipmentFunction switch
+        {
+            Components.OrbatEquipmentFunction.Mortar => new[]
+            {
+                SymbolDrawCommand.Line(new PointF(0.5f, 0.24f), new PointF(0.5f, 0.72f)),
+                SymbolDrawCommand.Line(new PointF(0.5f, 0.24f), new PointF(0.36f, 0.42f)),
+                SymbolDrawCommand.Line(new PointF(0.5f, 0.24f), new PointF(0.64f, 0.42f)),
+                SymbolDrawCommand.Ellipse(new PointF(0.42f, 0.72f), new PointF(0.58f, 0.88f))
+            },
+            Components.OrbatEquipmentFunction.Gun or
+            Components.OrbatEquipmentFunction.DirectFireGun => new[]
+            {
+                SymbolDrawCommand.Line(new PointF(0.5f, 0.18f), new PointF(0.5f, 0.82f)),
+                SymbolDrawCommand.Line(new PointF(0.36f, 0.34f), new PointF(0.64f, 0.34f))
+            },
+            Components.OrbatEquipmentFunction.AntiTankGun => new[]
+            {
+                SymbolDrawCommand.Line(new PointF(0.5f, 0.18f), new PointF(0.5f, 0.82f)),
+                SymbolDrawCommand.Line(new PointF(0.34f, 0.46f), new PointF(0.5f, 0.28f)),
+                SymbolDrawCommand.Line(new PointF(0.66f, 0.46f), new PointF(0.5f, 0.28f))
+            },
+            Components.OrbatEquipmentFunction.Howitzer => new[]
+            {
+                SymbolDrawCommand.Line(new PointF(0.5f, 0.2f), new PointF(0.5f, 0.78f)),
+                SymbolDrawCommand.Dot(new PointF(0.5f, 0.78f), 0.08f)
+            },
+            Components.OrbatEquipmentFunction.Radar or
+            Components.OrbatEquipmentFunction.Sensor => new[]
+            {
+                SymbolDrawCommand.Line(new PointF(0.5f, 0.72f), new PointF(0.5f, 0.34f)),
+                SymbolDrawCommand.Arc(new PointF(0.24f, 0.42f), new PointF(0.76f, 0.42f)),
+                SymbolDrawCommand.Arc(new PointF(0.14f, 0.32f), new PointF(0.86f, 0.32f))
+            },
+            Components.OrbatEquipmentFunction.Launcher or
+            Components.OrbatEquipmentFunction.MissileLauncher => new[]
+            {
+                SymbolDrawCommand.Line(new PointF(0.3f, 0.72f), new PointF(0.7f, 0.28f)),
+                SymbolDrawCommand.Line(new PointF(0.7f, 0.28f), new PointF(0.5f, 0.32f)),
+                SymbolDrawCommand.Line(new PointF(0.7f, 0.28f), new PointF(0.66f, 0.48f))
+            },
+            Components.OrbatEquipmentFunction.AirDefenseGun => new[]
+            {
+                SymbolDrawCommand.AirDefenseArc(),
+                SymbolDrawCommand.Line(new PointF(0.5f, 0.22f), new PointF(0.5f, 0.78f))
+            },
+            Components.OrbatEquipmentFunction.Vehicle or
+            Components.OrbatEquipmentFunction.ArmoredVehicle => new[]
+            {
+                SymbolDrawCommand.Capsule(new PointF(0.18f, 0.34f), new PointF(0.82f, 0.66f))
+            },
+            Components.OrbatEquipmentFunction.WheeledVehicle => new[]
+            {
+                SymbolDrawCommand.Capsule(new PointF(0.18f, 0.34f), new PointF(0.82f, 0.66f)),
+                SymbolDrawCommand.Dot(new PointF(0.32f, 0.7f), 0.05f),
+                SymbolDrawCommand.Dot(new PointF(0.68f, 0.7f), 0.05f)
+            },
+            Components.OrbatEquipmentFunction.TrackedVehicle => new[]
+            {
+                SymbolDrawCommand.Capsule(new PointF(0.14f, 0.32f), new PointF(0.86f, 0.68f)),
+                SymbolDrawCommand.Line(new PointF(0.3f, 0.5f), new PointF(0.7f, 0.5f))
+            },
+            _ => Array.Empty<SymbolDrawCommand>()
+        };
+    }
+
     public static IReadOnlyList<SymbolDrawCommand> Create(Components.OrbatUnitType unitType)
     {
         return unitType switch

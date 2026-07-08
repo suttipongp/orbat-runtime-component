@@ -9,6 +9,7 @@ public sealed class SymbolOverlayDemoForm : Form
     private readonly ComboBox _affiliationComboBox = new();
     private readonly ComboBox _statusComboBox = new();
     private readonly ComboBox _unitTypeComboBox = new();
+    private readonly ComboBox _equipmentFunctionComboBox = new();
     private readonly TableLayoutPanel _fieldsPanel = new();
     private readonly Dictionary<string, TextBox> _fieldInputs = new(StringComparer.OrdinalIgnoreCase);
 
@@ -22,7 +23,11 @@ public sealed class SymbolOverlayDemoForm : Form
         _domainComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         _domainComboBox.Items.AddRange(Enum.GetNames<SymbolPhysicalDomain>().Cast<object>().ToArray());
         _domainComboBox.SelectedItem = SymbolPhysicalDomain.LandUnit.ToString();
-        _domainComboBox.SelectedIndexChanged += (_, _) => RebuildFieldEditor(loadSample: true);
+        _domainComboBox.SelectedIndexChanged += (_, _) =>
+        {
+            UpdateFunctionSelectorState();
+            RebuildFieldEditor(loadSample: true);
+        };
 
         _affiliationComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         _affiliationComboBox.Items.AddRange(Enum.GetNames<SymbolAffiliation>().Cast<object>().ToArray());
@@ -38,6 +43,11 @@ public sealed class SymbolOverlayDemoForm : Form
         _unitTypeComboBox.Items.AddRange(Enum.GetNames<OrbatUnitType>().Cast<object>().ToArray());
         _unitTypeComboBox.SelectedItem = OrbatUnitType.Armor.ToString();
         _unitTypeComboBox.SelectedIndexChanged += (_, _) => ApplyModelToCanvas();
+
+        _equipmentFunctionComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        _equipmentFunctionComboBox.Items.AddRange(Enum.GetNames<OrbatEquipmentFunction>().Cast<object>().ToArray());
+        _equipmentFunctionComboBox.SelectedItem = OrbatEquipmentFunction.Mortar.ToString();
+        _equipmentFunctionComboBox.SelectedIndexChanged += (_, _) => ApplyModelToCanvas();
 
         var resetButton = new Button { Text = "Load sample", AutoSize = true };
         resetButton.Click += (_, _) => RebuildFieldEditor(loadSample: true);
@@ -68,6 +78,7 @@ public sealed class SymbolOverlayDemoForm : Form
         split.Panel2.Controls.Add(sidePanel);
 
         Controls.Add(split);
+        UpdateFunctionSelectorState();
         RebuildFieldEditor(loadSample: true);
     }
 
@@ -87,6 +98,7 @@ public sealed class SymbolOverlayDemoForm : Form
         AddRow(panel, "Affiliation", _affiliationComboBox);
         AddRow(panel, "Status", _statusComboBox);
         AddRow(panel, "Unit type", _unitTypeComboBox);
+        AddRow(panel, "Equipment fn", _equipmentFunctionComboBox);
         panel.Controls.Add(resetButton, 1, panel.RowCount);
         panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
         panel.RowCount++;
@@ -139,6 +151,7 @@ public sealed class SymbolOverlayDemoForm : Form
             Affiliation = GetSelectedAffiliation(),
             Status = GetSelectedStatus(),
             UnitType = GetSelectedUnitType(),
+            EquipmentFunction = GetSelectedEquipmentFunction(),
             Amplifiers = _fieldInputs.ToDictionary(pair => pair.Key, pair => pair.Value.Text, StringComparer.OrdinalIgnoreCase)
         };
         _canvas.Invalidate();
@@ -163,6 +176,18 @@ public sealed class SymbolOverlayDemoForm : Form
         Enum.TryParse(Convert.ToString(_unitTypeComboBox.SelectedItem), out OrbatUnitType unitType)
             ? unitType
             : OrbatUnitType.Unspecified;
+
+    private OrbatEquipmentFunction GetSelectedEquipmentFunction() =>
+        Enum.TryParse(Convert.ToString(_equipmentFunctionComboBox.SelectedItem), out OrbatEquipmentFunction equipmentFunction)
+            ? equipmentFunction
+            : OrbatEquipmentFunction.Unspecified;
+
+    private void UpdateFunctionSelectorState()
+    {
+        var equipment = GetSelectedDomain() == SymbolPhysicalDomain.Equipment;
+        _unitTypeComboBox.Enabled = !equipment;
+        _equipmentFunctionComboBox.Enabled = equipment;
+    }
 
     private static OrbatSymbolDomain ToComponentDomain(SymbolPhysicalDomain domain) =>
         domain == SymbolPhysicalDomain.Equipment ? OrbatSymbolDomain.Equipment : OrbatSymbolDomain.LandUnit;
@@ -220,6 +245,7 @@ internal sealed class OverlaySymbolModel
     public SymbolAffiliation Affiliation { get; set; } = SymbolAffiliation.Friendly;
     public SymbolFrameStatus Status { get; set; } = SymbolFrameStatus.Present;
     public OrbatUnitType UnitType { get; set; } = OrbatUnitType.Armor;
+    public OrbatEquipmentFunction EquipmentFunction { get; set; } = OrbatEquipmentFunction.Mortar;
     public Dictionary<string, string> Amplifiers { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }
 
@@ -290,9 +316,15 @@ internal sealed class OverlayCanvas : Control
         using var pen = new Pen(Color.Black, 2.4f);
         SymbolFrameRenderer.DrawFrame(graphics, symbolBounds, frameShape, Model.Status, fillFrame: true, IconGuideShape.FlatTopBottom);
 
-        var commands = BuiltInSymbolLibrary.Create(Model.UnitType);
+        var commands = Model.Domain == SymbolPhysicalDomain.Equipment
+            ? BuiltInSymbolLibrary.Create(Model.EquipmentFunction)
+            : BuiltInSymbolLibrary.Create(Model.UnitType);
         if (commands.Count == 0)
-            commands = BuiltInSymbolLibrary.Create(OrbatUnitType.Armor);
+        {
+            commands = Model.Domain == SymbolPhysicalDomain.Equipment
+                ? BuiltInSymbolLibrary.Create(OrbatEquipmentFunction.Mortar)
+                : BuiltInSymbolLibrary.Create(OrbatUnitType.Armor);
+        }
 
         var drawingFrame = Model.Domain == SymbolPhysicalDomain.Equipment
             ? RectangleF.Inflate(SymbolFrameRenderer.GetInteriorFrame(symbolBounds, frameShape, IconGuideShape.FlatTopBottom), -42f, -42f)
