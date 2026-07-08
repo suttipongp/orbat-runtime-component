@@ -11,7 +11,8 @@ public sealed class SymbolDesignerForm : Form
     private readonly SymbolPreviewControl _preview = new();
     private readonly ComboBox _toolComboBox = new();
     private readonly ComboBox _unitTypeComboBox = new();
-    private readonly ComboBox _frameShapeComboBox = new();
+    private readonly ComboBox _affiliationComboBox = new();
+    private readonly ComboBox _physicalDomainComboBox = new();
     private readonly ComboBox _frameStatusComboBox = new();
     private readonly TrackBar _referenceOpacityTrackBar = new();
     private readonly CheckBox _showGridCheckBox = new() { Text = "Grid", Checked = true, AutoSize = true };
@@ -33,9 +34,11 @@ public sealed class SymbolDesignerForm : Form
     private readonly NumericUpDown _control2YInput = CreateCoordinateInput();
     private readonly NumericUpDown _radiusInput = CreateCoordinateInput();
     private readonly NumericUpDown _fontSizeInput = CreateFontSizeInput();
+    private readonly NumericUpDown _strokeWidthInput = CreateStrokeWidthInput();
     private readonly TextBox _textInput = new();
     private readonly TextBox _drawTextInput = new() { Text = "TXT", Width = 80 };
     private readonly NumericUpDown _drawTextSizeInput = CreateFontSizeInput();
+    private readonly NumericUpDown _drawStrokeWidthInput = CreateStrokeWidthInput();
     private bool _updatingSelectionControls;
 
     public SymbolDesignerForm()
@@ -61,11 +64,22 @@ public sealed class SymbolDesignerForm : Form
         _unitTypeComboBox.SelectedItem = Components.OrbatUnitType.Unspecified.ToString();
         _unitTypeComboBox.SelectedIndexChanged += (_, _) => RefreshOutput();
 
-        _frameShapeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-        _frameShapeComboBox.Width = 152;
-        _frameShapeComboBox.Items.AddRange(Enum.GetNames<SymbolFrameShape>().Cast<object>().ToArray());
-        _frameShapeComboBox.SelectedItem = SymbolFrameShape.FriendlyUnit.ToString();
-        _frameShapeComboBox.SelectedIndexChanged += (_, _) =>
+        _affiliationComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        _affiliationComboBox.Width = 92;
+        _affiliationComboBox.Items.AddRange(Enum.GetNames<SymbolAffiliation>().Cast<object>().ToArray());
+        _affiliationComboBox.SelectedItem = SymbolAffiliation.Friendly.ToString();
+        _affiliationComboBox.SelectedIndexChanged += (_, _) =>
+        {
+            _canvas.FrameShape = GetSelectedFrameShape();
+            RefreshOutput();
+            _canvas.Invalidate();
+        };
+
+        _physicalDomainComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        _physicalDomainComboBox.Width = 92;
+        _physicalDomainComboBox.Items.AddRange(Enum.GetNames<SymbolPhysicalDomain>().Cast<object>().ToArray());
+        _physicalDomainComboBox.SelectedItem = SymbolPhysicalDomain.LandUnit.ToString();
+        _physicalDomainComboBox.SelectedIndexChanged += (_, _) =>
         {
             _canvas.FrameShape = GetSelectedFrameShape();
             RefreshOutput();
@@ -131,14 +145,21 @@ public sealed class SymbolDesignerForm : Form
         };
         _drawTextInput.TextChanged += (_, _) => _canvas.DrawText = _drawTextInput.Text;
         _drawTextSizeInput.ValueChanged += (_, _) => _canvas.DrawFontSize = (float)_drawTextSizeInput.Value;
+        _drawStrokeWidthInput.ValueChanged += (_, _) =>
+        {
+            _canvas.DrawStrokeWidth = (float)_drawStrokeWidthInput.Value;
+            ApplyToolbarStrokeToSelection();
+        };
 
         var loadButton = CreateButton("Load reference", LoadReferenceImage);
         var loadClipboardButton = CreateButton("Load clipboard", LoadReferenceFromClipboard);
+        var resetReferenceButton = CreateButton("Reset ref", () => _canvas.ResetReferenceTransform());
         var loadBaseButton = CreateButton("Load base", LoadBaseSymbol);
         var saveLibraryButton = CreateButton("Save library", SaveLibrary);
         var loadLibraryButton = CreateButton("Load library", LoadLibrary);
         var viewLibraryButton = CreateButton("View library", ViewLibrary);
         var undoButton = CreateButton("Undo", () => _canvas.Undo());
+        var redoButton = CreateButton("Redo", () => _canvas.Redo());
         var duplicateButton = CreateButton("Duplicate", () => _canvas.DuplicateSelected());
         var copyButton = CreateButton("Copy", () => _canvas.CopySelected());
         var pasteButton = CreateButton("Paste", () => _canvas.PasteCopied());
@@ -161,14 +182,17 @@ public sealed class SymbolDesignerForm : Form
         };
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Unit type", Margin = new Padding(0, 6, 4, 0) });
         toolbar.Controls.Add(_unitTypeComboBox);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Frame", Margin = new Padding(14, 6, 4, 0) });
-        toolbar.Controls.Add(_frameShapeComboBox);
+        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Affiliation", Margin = new Padding(14, 6, 4, 0) });
+        toolbar.Controls.Add(_affiliationComboBox);
+        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Domain", Margin = new Padding(8, 6, 4, 0) });
+        toolbar.Controls.Add(_physicalDomainComboBox);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Status", Margin = new Padding(8, 6, 4, 0) });
         toolbar.Controls.Add(_frameStatusComboBox);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Tool", Margin = new Padding(14, 6, 4, 0) });
         toolbar.Controls.Add(_toolComboBox);
         toolbar.Controls.Add(loadButton);
         toolbar.Controls.Add(loadClipboardButton);
+        toolbar.Controls.Add(resetReferenceButton);
         toolbar.Controls.Add(loadBaseButton);
         toolbar.Controls.Add(saveLibraryButton);
         toolbar.Controls.Add(loadLibraryButton);
@@ -187,7 +211,10 @@ public sealed class SymbolDesignerForm : Form
         toolbar.Controls.Add(_drawTextInput);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Size %", Margin = new Padding(8, 6, 4, 0) });
         toolbar.Controls.Add(_drawTextSizeInput);
+        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Stroke", Margin = new Padding(8, 6, 4, 0) });
+        toolbar.Controls.Add(_drawStrokeWidthInput);
         toolbar.Controls.Add(undoButton);
+        toolbar.Controls.Add(redoButton);
         toolbar.Controls.Add(duplicateButton);
         toolbar.Controls.Add(copyButton);
         toolbar.Controls.Add(pasteButton);
@@ -220,6 +247,7 @@ public sealed class SymbolDesignerForm : Form
         _canvas.FillClosedShapes = _fillCheckBox.Checked;
         _canvas.DrawText = _drawTextInput.Text;
         _canvas.DrawFontSize = (float)_drawTextSizeInput.Value;
+        _canvas.DrawStrokeWidth = (float)_drawStrokeWidthInput.Value;
         _canvas.CommandsChanged += (_, _) =>
         {
             RefreshOutput();
@@ -322,6 +350,19 @@ public sealed class SymbolDesignerForm : Form
         };
     }
 
+    private static NumericUpDown CreateStrokeWidthInput()
+    {
+        return new NumericUpDown
+        {
+            DecimalPlaces = 1,
+            Increment = 0.5m,
+            Minimum = 0.5m,
+            Maximum = 12m,
+            Value = 2m,
+            Width = 60
+        };
+    }
+
     private Control CreateCommandsPanel()
     {
         var split = new SplitContainer
@@ -341,7 +382,7 @@ public sealed class SymbolDesignerForm : Form
         {
             Dock = DockStyle.Fill,
             ColumnCount = 4,
-            RowCount = 7,
+            RowCount = 8,
             Padding = new Padding(0, 8, 0, 0)
         };
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70));
@@ -353,9 +394,10 @@ public sealed class SymbolDesignerForm : Form
         AddCoordinateRow(panel, 2, "C1 X", _control1XInput, "C1 Y", _control1YInput);
         AddCoordinateRow(panel, 3, "C2 X", _control2XInput, "C2 Y", _control2YInput);
         AddCoordinateRow(panel, 4, "Radius", _radiusInput, "Text %", _fontSizeInput);
-        AddTextRow(panel, 5, "Text", _textInput);
-        panel.Controls.Add(new Label { AutoSize = true, Text = "Select a command, then drag it on the canvas or edit values here.", ForeColor = SystemColors.GrayText }, 0, 6);
-        panel.SetColumnSpan(panel.GetControlFromPosition(0, 6)!, 4);
+        AddCoordinateRow(panel, 5, "Stroke", _strokeWidthInput, string.Empty, new Panel());
+        AddTextRow(panel, 6, "Text", _textInput);
+        panel.Controls.Add(new Label { AutoSize = true, Text = "Select a command, then drag it on the canvas or edit values here.", ForeColor = SystemColors.GrayText }, 0, 7);
+        panel.SetColumnSpan(panel.GetControlFromPosition(0, 7)!, 4);
         return panel;
     }
 
@@ -381,7 +423,7 @@ public sealed class SymbolDesignerForm : Form
         foreach (var input in new[]
         {
             _startXInput, _startYInput, _endXInput, _endYInput,
-            _control1XInput, _control1YInput, _control2XInput, _control2YInput, _radiusInput, _fontSizeInput
+            _control1XInput, _control1YInput, _control2XInput, _control2YInput, _radiusInput, _fontSizeInput, _strokeWidthInput
         })
         {
             input.ValueChanged += (_, _) => ApplySelectionControls();
@@ -399,9 +441,21 @@ public sealed class SymbolDesignerForm : Form
 
     private SymbolFrameShape GetSelectedFrameShape()
     {
-        return Enum.TryParse(Convert.ToString(_frameShapeComboBox.SelectedItem), out SymbolFrameShape shape)
-            ? shape
-            : SymbolFrameShape.FriendlyUnit;
+        return SymbolFrameMapping.GetFrameShape(GetSelectedAffiliation(), GetSelectedPhysicalDomain());
+    }
+
+    private SymbolAffiliation GetSelectedAffiliation()
+    {
+        return Enum.TryParse(Convert.ToString(_affiliationComboBox.SelectedItem), out SymbolAffiliation affiliation)
+            ? affiliation
+            : SymbolAffiliation.Friendly;
+    }
+
+    private SymbolPhysicalDomain GetSelectedPhysicalDomain()
+    {
+        return Enum.TryParse(Convert.ToString(_physicalDomainComboBox.SelectedItem), out SymbolPhysicalDomain domain)
+            ? domain
+            : SymbolPhysicalDomain.LandUnit;
     }
 
     private SymbolFrameStatus GetSelectedFrameStatus()
@@ -433,10 +487,12 @@ public sealed class SymbolDesignerForm : Form
         _statusLabel.Text = GetSelectedTool() switch
         {
             SymbolDesignerTool.SelectMove => "SelectMove: drag a line to move it, or drag a handle to edit an endpoint.",
+            SymbolDesignerTool.ParallelLine => "ParallelLine: select an existing line or segment, then drag a new line parallel to it.",
+            SymbolDesignerTool.PerpendicularLine => "PerpendicularLine: select an existing line or segment, then drag a new line perpendicular to it.",
             SymbolDesignerTool.Arc => "Arc: click start, click highest point, click end.",
             SymbolDesignerTool.Circle => "Circle: drag from the center outward. Use Fill closed for a solid circle.",
             SymbolDesignerTool.Text => "Text: enter text in the toolbar, then click the canvas to place it.",
-            _ => "Draw: drag on the canvas. Use Fill closed for closed shapes."
+            _ => "Draw: drag on the canvas. Reference: right-drag to move, mouse wheel to zoom, Reset ref to fit."
         };
     }
 
@@ -507,6 +563,8 @@ public sealed class SymbolDesignerForm : Form
         {
             Name = libraryName,
             UnitType = libraryUnitType,
+            Affiliation = GetSelectedAffiliation(),
+            PhysicalDomain = GetSelectedPhysicalDomain(),
             FrameShape = GetSelectedFrameShape(),
             FrameStatus = GetSelectedFrameStatus(),
             Version = 1,
@@ -572,9 +630,10 @@ public sealed class SymbolDesignerForm : Form
 
         if (Enum.TryParse(definition.UnitType, out Components.OrbatUnitType unitType))
             _unitTypeComboBox.SelectedItem = unitType.ToString();
-        _frameShapeComboBox.SelectedItem = definition.FrameShape.ToString();
+        _affiliationComboBox.SelectedItem = definition.GetEffectiveAffiliation().ToString();
+        _physicalDomainComboBox.SelectedItem = definition.GetEffectivePhysicalDomain().ToString();
         _frameStatusComboBox.SelectedItem = definition.FrameStatus.ToString();
-        _canvas.FrameShape = definition.FrameShape;
+        _canvas.FrameShape = definition.GetEffectiveFrameShape();
         _canvas.FrameStatus = definition.FrameStatus;
         _canvas.SetCommands(definition.Commands);
         Text = $"ORBAT Symbol Designer - {GetLibraryNameFromFileName(fileName)}";
@@ -588,7 +647,7 @@ public sealed class SymbolDesignerForm : Form
 
     private void AddAirDefenseArc()
     {
-        _canvas.AddCommand(SymbolDrawCommand.AirDefenseArc());
+        _canvas.AddCommand(SymbolDrawCommand.AirDefenseArc().WithStrokeWidth((float)_drawStrokeWidthInput.Value));
     }
 
     private void CloseLinePath()
@@ -611,6 +670,7 @@ public sealed class SymbolDesignerForm : Form
     {
         var commands = _canvas.Commands.ToArray();
         _preview.SetFrame(GetSelectedFrameShape(), GetSelectedFrameStatus());
+        _preview.PhysicalDomain = GetSelectedPhysicalDomain();
         _preview.SetCommands(commands);
         _commandListBox.BeginUpdate();
         try
@@ -641,7 +701,7 @@ public sealed class SymbolDesignerForm : Form
             foreach (Control control in new Control[]
             {
                 _startXInput, _startYInput, _endXInput, _endYInput,
-                _control1XInput, _control1YInput, _control2XInput, _control2YInput, _radiusInput, _fontSizeInput, _textInput
+                _control1XInput, _control1YInput, _control2XInput, _control2YInput, _radiusInput, _fontSizeInput, _strokeWidthInput, _textInput
             })
             {
                 control.Enabled = enabled;
@@ -663,6 +723,8 @@ public sealed class SymbolDesignerForm : Form
             _control2YInput.Value = ToDecimal(command.Control2.Y);
             _radiusInput.Value = ToDecimal(command.Radius);
             _fontSizeInput.Value = ToFontSizeDecimal(command.FontSize);
+            _strokeWidthInput.Value = ToStrokeWidthDecimal(command.StrokeWidth);
+            _drawStrokeWidthInput.Value = ToStrokeWidthDecimal(command.StrokeWidth);
             _textInput.Text = command.Text;
             _fillCheckBox.Enabled = true;
             if (command.CanFill)
@@ -686,8 +748,21 @@ public sealed class SymbolDesignerForm : Form
         if (command == null || !command.CanFill)
             return;
 
-        command.Filled = _fillCheckBox.Checked;
-        _canvas.NotifyCommandEdited();
+        _canvas.UpdateSelectedCommand(command => command.Filled = _fillCheckBox.Checked);
+    }
+
+    private void ApplyToolbarStrokeToSelection()
+    {
+        if (_updatingSelectionControls)
+            return;
+
+        var command = _canvas.SelectedCommand;
+        if (command == null || !command.UsesStroke)
+            return;
+
+        var strokeWidth = Math.Clamp((float)_drawStrokeWidthInput.Value, 0.5f, 12f);
+        _strokeWidthInput.Value = ToStrokeWidthDecimal(strokeWidth);
+        _canvas.UpdateSelectedCommand(command => command.StrokeWidth = strokeWidth);
     }
 
     private void ApplySelectionControls()
@@ -699,14 +774,17 @@ public sealed class SymbolDesignerForm : Form
         if (command == null)
             return;
 
-        command.Start = new SymbolPoint((float)_startXInput.Value, (float)_startYInput.Value);
-        command.End = new SymbolPoint((float)_endXInput.Value, (float)_endYInput.Value);
-        command.Control1 = new SymbolPoint((float)_control1XInput.Value, (float)_control1YInput.Value);
-        command.Control2 = new SymbolPoint((float)_control2XInput.Value, (float)_control2YInput.Value);
-        command.Radius = Math.Clamp((float)_radiusInput.Value, 0f, 1f);
-        command.FontSize = Math.Clamp((float)_fontSizeInput.Value, 4f, 72f);
-        command.Text = _textInput.Text;
-        _canvas.NotifyCommandEdited();
+        _canvas.UpdateSelectedCommand(command =>
+        {
+            command.Start = new SymbolPoint((float)_startXInput.Value, (float)_startYInput.Value);
+            command.End = new SymbolPoint((float)_endXInput.Value, (float)_endYInput.Value);
+            command.Control1 = new SymbolPoint((float)_control1XInput.Value, (float)_control1YInput.Value);
+            command.Control2 = new SymbolPoint((float)_control2XInput.Value, (float)_control2YInput.Value);
+            command.Radius = Math.Clamp((float)_radiusInput.Value, 0f, 1f);
+            command.FontSize = Math.Clamp((float)_fontSizeInput.Value, 4f, 72f);
+            command.StrokeWidth = Math.Clamp((float)_strokeWidthInput.Value, 0.5f, 12f);
+            command.Text = _textInput.Text;
+        });
     }
 
     private string GenerateCode(IReadOnlyList<SymbolDrawCommand> commands)
@@ -724,12 +802,26 @@ public sealed class SymbolDesignerForm : Form
 
     private static decimal ToFontSizeDecimal(float value) => Math.Min(72m, Math.Max(4m, (decimal)value));
 
+    private static decimal ToStrokeWidthDecimal(float value) => Math.Min(12m, Math.Max(0.5m, (decimal)value));
+
     private void HandleShortcutKeyDown(object? sender, KeyEventArgs e)
     {
         if (IsEditingInput())
             return;
 
-        if (e.Control && e.KeyCode == Keys.C)
+        if (e.Control && (e.KeyCode == Keys.Y || (e.Shift && e.KeyCode == Keys.Z)))
+        {
+            _canvas.Redo();
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+        }
+        else if (e.Control && e.KeyCode == Keys.Z)
+        {
+            _canvas.Undo();
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+        }
+        else if (e.Control && e.KeyCode == Keys.C)
         {
             _canvas.CopySelected();
             e.Handled = true;
@@ -778,7 +870,9 @@ public sealed class SymbolDesignerForm : Form
             || _control2YInput.ContainsFocus
             || _radiusInput.ContainsFocus
             || _fontSizeInput.ContainsFocus
-            || _drawTextSizeInput.ContainsFocus;
+            || _strokeWidthInput.ContainsFocus
+            || _drawTextSizeInput.ContainsFocus
+            || _drawStrokeWidthInput.ContainsFocus;
     }
 }
 
@@ -786,6 +880,8 @@ internal enum SymbolDesignerTool
 {
     SelectMove,
     Line,
+    ParallelLine,
+    PerpendicularLine,
     Rectangle,
     Ellipse,
     Circle,
@@ -805,10 +901,59 @@ internal enum SymbolFrameShape
     Unknown
 }
 
+internal enum SymbolAffiliation
+{
+    Friendly,
+    Hostile,
+    Neutral,
+    Unknown
+}
+
+internal enum SymbolPhysicalDomain
+{
+    LandUnit,
+    Equipment
+}
+
 internal enum SymbolFrameStatus
 {
     Present,
     PlannedAnticipated
+}
+
+internal static class SymbolFrameMapping
+{
+    public static SymbolFrameShape GetFrameShape(SymbolAffiliation affiliation, SymbolPhysicalDomain domain)
+    {
+        return affiliation switch
+        {
+            SymbolAffiliation.Friendly => domain == SymbolPhysicalDomain.Equipment
+                ? SymbolFrameShape.FriendlyEquipment
+                : SymbolFrameShape.FriendlyUnit,
+            SymbolAffiliation.Hostile => SymbolFrameShape.Hostile,
+            SymbolAffiliation.Neutral => SymbolFrameShape.Neutral,
+            SymbolAffiliation.Unknown => SymbolFrameShape.Unknown,
+            _ => SymbolFrameShape.FriendlyUnit
+        };
+    }
+
+    public static SymbolAffiliation GetAffiliation(SymbolFrameShape frameShape)
+    {
+        return frameShape switch
+        {
+            SymbolFrameShape.Hostile => SymbolAffiliation.Hostile,
+            SymbolFrameShape.Neutral => SymbolAffiliation.Neutral,
+            SymbolFrameShape.Unknown => SymbolAffiliation.Unknown,
+            _ => SymbolAffiliation.Friendly
+        };
+    }
+
+    public static SymbolPhysicalDomain GetPhysicalDomain(SymbolFrameShape frameShape)
+    {
+        return frameShape == SymbolFrameShape.FriendlyEquipment
+            ? SymbolPhysicalDomain.Equipment
+            : SymbolPhysicalDomain.LandUnit;
+    }
 }
 
 internal enum IconGuideShape
@@ -821,8 +966,16 @@ internal sealed class SymbolDesignerCanvas : Control
 {
     private const float SnapThreshold = 0.025f;
     private const float StandardFrameAspectRatio = 1.5f;
+    private const int HistoryLimit = 100;
     private readonly List<SymbolDrawCommand> _commands = new();
+    private readonly Stack<SymbolCanvasSnapshot> _undoStack = new();
+    private readonly Stack<SymbolCanvasSnapshot> _redoStack = new();
     private Bitmap? _referenceImage;
+    private float _referenceScale = 1f;
+    private PointF _referenceOffset;
+    private bool _draggingReference;
+    private Point _referenceDragStart;
+    private PointF _referenceDragStartOffset;
     private PointF? _dragStart;
     private PointF? _dragCurrent;
     private PointF? _lastDragPoint;
@@ -831,6 +984,8 @@ internal sealed class SymbolDesignerCanvas : Control
     private DragTarget _dragTarget = DragTarget.None;
     private SymbolDesignerTool _tool = SymbolDesignerTool.Line;
     private SymbolDrawCommand? _copiedCommand;
+    private SymbolCanvasSnapshot? _pendingEditSnapshot;
+    private bool _editHistoryCommitted;
 
     public event EventHandler? CommandsChanged;
     public event EventHandler? SelectionChanged;
@@ -860,6 +1015,7 @@ internal sealed class SymbolDesignerCanvas : Control
     public bool FillClosedShapes { get; set; }
     public string DrawText { get; set; } = "TXT";
     public float DrawFontSize { get; set; } = 12f;
+    public float DrawStrokeWidth { get; set; } = 2f;
     public int GridDivisions { get; set; } = 12;
     public int SelectedIndex { get; private set; } = -1;
     public SymbolDrawCommand? SelectedCommand => SelectedIndex >= 0 && SelectedIndex < _commands.Count ? _commands[SelectedIndex] : null;
@@ -870,6 +1026,7 @@ internal sealed class SymbolDesignerCanvas : Control
         DoubleBuffered = true;
         BackColor = Color.White;
         Cursor = Cursors.Cross;
+        TabStop = true;
         SetStyle(ControlStyles.ResizeRedraw, true);
     }
 
@@ -877,6 +1034,7 @@ internal sealed class SymbolDesignerCanvas : Control
     {
         _referenceImage?.Dispose();
         _referenceImage = new Bitmap(fileName);
+        ResetReferenceTransform();
         Invalidate();
     }
 
@@ -884,11 +1042,20 @@ internal sealed class SymbolDesignerCanvas : Control
     {
         _referenceImage?.Dispose();
         _referenceImage = new Bitmap(image);
+        ResetReferenceTransform();
+        Invalidate();
+    }
+
+    public void ResetReferenceTransform()
+    {
+        _referenceScale = 1f;
+        _referenceOffset = PointF.Empty;
         Invalidate();
     }
 
     public void SetCommands(IEnumerable<SymbolDrawCommand> commands)
     {
+        SaveHistory();
         _commands.Clear();
         _commands.AddRange(commands.Select(command => command.Clone()));
         SelectedIndex = _commands.Count > 0 ? 0 : -1;
@@ -899,6 +1066,7 @@ internal sealed class SymbolDesignerCanvas : Control
 
     public void AddCommand(SymbolDrawCommand command)
     {
+        SaveHistory();
         _commands.Add(command);
         SelectedIndex = _commands.Count - 1;
         CommandsChanged?.Invoke(this, EventArgs.Empty);
@@ -966,6 +1134,7 @@ internal sealed class SymbolDesignerCanvas : Control
         if (points.Count < 3)
             return false;
 
+        SaveHistory();
         _commands.RemoveAll(command => command.Kind is SymbolDrawCommandKind.Line or SymbolDrawCommandKind.Bezier);
         _commands.Add(SymbolDrawCommand.Path(points, filled));
         SelectedIndex = _commands.Count - 1;
@@ -986,10 +1155,20 @@ internal sealed class SymbolDesignerCanvas : Control
         Invalidate();
     }
 
-    public void NotifyCommandEdited()
+    public void UpdateSelectedCommand(Action<SymbolDrawCommand> update)
     {
-        CommandsChanged?.Invoke(this, EventArgs.Empty);
-        Invalidate();
+        var command = SelectedCommand;
+        if (command == null)
+            return;
+
+        var before = CaptureSnapshot();
+        update(command);
+        if (SnapshotEquals(before))
+            return;
+
+        PushUndoSnapshot(before);
+        _redoStack.Clear();
+        NotifyCommandsChanged(includeSelection: false);
     }
 
     private void TransformSelected(Action<SymbolDrawCommand> transform)
@@ -998,6 +1177,7 @@ internal sealed class SymbolDesignerCanvas : Control
         if (command == null)
             return;
 
+        SaveHistory();
         transform(command);
         CommandsChanged?.Invoke(this, EventArgs.Empty);
         SelectionChanged?.Invoke(this, EventArgs.Empty);
@@ -1009,6 +1189,7 @@ internal sealed class SymbolDesignerCanvas : Control
         if (SelectedIndex < 0 || SelectedIndex >= _commands.Count)
             return;
 
+        SaveHistory();
         _commands.RemoveAt(SelectedIndex);
         SelectedIndex = Math.Min(SelectedIndex, _commands.Count - 1);
         CommandsChanged?.Invoke(this, EventArgs.Empty);
@@ -1018,18 +1199,30 @@ internal sealed class SymbolDesignerCanvas : Control
 
     public void Undo()
     {
-        if (_commands.Count == 0)
+        if (_undoStack.Count == 0)
             return;
 
-        _commands.RemoveAt(_commands.Count - 1);
-        SelectedIndex = Math.Min(SelectedIndex, _commands.Count - 1);
-        CommandsChanged?.Invoke(this, EventArgs.Empty);
-        SelectionChanged?.Invoke(this, EventArgs.Empty);
-        Invalidate();
+        _redoStack.Push(CaptureSnapshot());
+        RestoreSnapshot(_undoStack.Pop());
+        NotifyCommandsChanged(includeSelection: true);
+    }
+
+    public void Redo()
+    {
+        if (_redoStack.Count == 0)
+            return;
+
+        _undoStack.Push(CaptureSnapshot());
+        RestoreSnapshot(_redoStack.Pop());
+        NotifyCommandsChanged(includeSelection: true);
     }
 
     public void ClearCommands()
     {
+        if (_commands.Count == 0 && SelectedIndex == -1)
+            return;
+
+        SaveHistory();
         _commands.Clear();
         SelectedIndex = -1;
         CommandsChanged?.Invoke(this, EventArgs.Empty);
@@ -1042,6 +1235,58 @@ internal sealed class SymbolDesignerCanvas : Control
         _referenceImage?.Dispose();
         _referenceImage = null;
         ClearCommands();
+    }
+
+    private void SaveHistory()
+    {
+        PushUndoSnapshot(CaptureSnapshot());
+        _redoStack.Clear();
+    }
+
+    private void PushUndoSnapshot(SymbolCanvasSnapshot snapshot)
+    {
+        _undoStack.Push(snapshot);
+        if (_undoStack.Count <= HistoryLimit)
+            return;
+
+        var snapshots = _undoStack.ToArray().Take(HistoryLimit).Reverse().ToArray();
+        _undoStack.Clear();
+        foreach (var item in snapshots)
+            _undoStack.Push(item);
+    }
+
+    private SymbolCanvasSnapshot CaptureSnapshot() =>
+        new(_commands.Select(command => command.Clone()).ToList(), SelectedIndex);
+
+    private void RestoreSnapshot(SymbolCanvasSnapshot snapshot)
+    {
+        _commands.Clear();
+        _commands.AddRange(snapshot.Commands.Select(command => command.Clone()));
+        SelectedIndex = snapshot.SelectedIndex >= 0 && snapshot.SelectedIndex < _commands.Count
+            ? snapshot.SelectedIndex
+            : _commands.Count > 0 ? Math.Min(snapshot.SelectedIndex, _commands.Count - 1) : -1;
+    }
+
+    private bool SnapshotEquals(SymbolCanvasSnapshot snapshot)
+    {
+        if (SelectedIndex != snapshot.SelectedIndex || _commands.Count != snapshot.Commands.Count)
+            return false;
+
+        for (var index = 0; index < _commands.Count; index++)
+        {
+            if (!_commands[index].HasSameState(snapshot.Commands[index]))
+                return false;
+        }
+
+        return true;
+    }
+
+    private void NotifyCommandsChanged(bool includeSelection)
+    {
+        CommandsChanged?.Invoke(this, EventArgs.Empty);
+        if (includeSelection)
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
+        Invalidate();
     }
 
     private static List<SymbolPoint> BuildConnectedPath(List<SymbolDrawCommand> segments)
@@ -1108,6 +1353,16 @@ internal sealed class SymbolDesignerCanvas : Control
     protected override void OnMouseDown(MouseEventArgs e)
     {
         base.OnMouseDown(e);
+        Focus();
+        if (e.Button == MouseButtons.Right && _referenceImage != null)
+        {
+            _draggingReference = true;
+            _referenceDragStart = e.Location;
+            _referenceDragStartOffset = _referenceOffset;
+            Cursor = Cursors.SizeAll;
+            return;
+        }
+
         if (e.Button != MouseButtons.Left)
             return;
 
@@ -1132,6 +1387,15 @@ internal sealed class SymbolDesignerCanvas : Control
     protected override void OnMouseMove(MouseEventArgs e)
     {
         base.OnMouseMove(e);
+        if (_draggingReference)
+        {
+            _referenceOffset = new PointF(
+                _referenceDragStartOffset.X + e.Location.X - _referenceDragStart.X,
+                _referenceDragStartOffset.Y + e.Location.Y - _referenceDragStart.Y);
+            Invalidate();
+            return;
+        }
+
         var symbolPoint = ToSymbolPoint(e.Location, _dragTarget != DragTarget.Move);
 
         if (_dragTarget != DragTarget.None && SelectedCommand != null && _lastDragPoint.HasValue)
@@ -1163,6 +1427,14 @@ internal sealed class SymbolDesignerCanvas : Control
     protected override void OnMouseUp(MouseEventArgs e)
     {
         base.OnMouseUp(e);
+        if (e.Button == MouseButtons.Right && _draggingReference)
+        {
+            _draggingReference = false;
+            Cursor = Tool == SymbolDesignerTool.SelectMove ? Cursors.Default : Cursors.Cross;
+            Invalidate();
+            return;
+        }
+
         if (e.Button != MouseButtons.Left)
             return;
 
@@ -1173,6 +1445,8 @@ internal sealed class SymbolDesignerCanvas : Control
         {
             _dragTarget = DragTarget.None;
             _lastDragPoint = null;
+            _pendingEditSnapshot = null;
+            _editHistoryCommitted = false;
             CommandsChanged?.Invoke(this, EventArgs.Empty);
             Invalidate();
             return;
@@ -1192,6 +1466,31 @@ internal sealed class SymbolDesignerCanvas : Control
             Invalidate();
     }
 
+    protected override void OnMouseWheel(MouseEventArgs e)
+    {
+        base.OnMouseWheel(e);
+        if (_referenceImage == null || e.Delta == 0)
+            return;
+
+        var frame = GetDrawingFrameBounds();
+        var oldScale = _referenceScale;
+        var zoomFactor = e.Delta > 0 ? 1.1f : 1f / 1.1f;
+        var newScale = Math.Clamp(oldScale * zoomFactor, 0.15f, 8f);
+        if (Math.Abs(newScale - oldScale) < 0.0001f)
+            return;
+
+        var frameCenter = new PointF(frame.Left + frame.Width / 2f, frame.Top + frame.Height / 2f);
+        var oldCenter = new PointF(frameCenter.X + _referenceOffset.X, frameCenter.Y + _referenceOffset.Y);
+        var scaleRatio = newScale / oldScale;
+        var newCenter = new PointF(
+            e.X - (e.X - oldCenter.X) * scaleRatio,
+            e.Y - (e.Y - oldCenter.Y) * scaleRatio);
+
+        _referenceScale = newScale;
+        _referenceOffset = new PointF(newCenter.X - frameCenter.X, newCenter.Y - frameCenter.Y);
+        Invalidate();
+    }
+
     protected override void OnPaint(PaintEventArgs e)
     {
         base.OnPaint(e);
@@ -1199,29 +1498,32 @@ internal sealed class SymbolDesignerCanvas : Control
 
         var workspace = GetWorkspaceBounds();
         var frame = GetFrameBounds();
+        var drawingFrame = GetDrawingFrameBounds(frame);
+        var guideFrame = GetGuideFrameBounds(frame);
         e.Graphics.FillRectangle(Brushes.White, workspace);
-        DrawReference(e.Graphics, frame);
+        DrawReference(e.Graphics, drawingFrame);
         if (ShowGrid)
-            DrawGrid(e.Graphics, frame, workspace);
+            DrawGrid(e.Graphics, guideFrame, guideFrame);
         if (ShowIconGuide)
-            DrawIconGuide(e.Graphics, frame);
+            DrawIconGuide(e.Graphics, guideFrame);
         SymbolFrameRenderer.DrawFrame(e.Graphics, frame, FrameShape, FrameStatus, fillFrame: false, IconGuideShape);
+        DrawDrawingBounds(e.Graphics, drawingFrame);
 
         for (var index = 0; index < _commands.Count; index++)
         {
             using var pen = new Pen(index == SelectedIndex ? Color.FromArgb(40, 120, 220) : Color.Black, index == SelectedIndex ? 2.4f : 2f);
-            _commands[index].Draw(e.Graphics, frame, pen, Brushes.Black);
+            SymbolFrameRenderer.DrawCommand(e.Graphics, frame, GetCommandDrawingFrame(drawingFrame, _commands[index]), FrameShape, _commands[index], pen, Brushes.Black, IconGuideShape);
         }
 
         if (_dragStart.HasValue && _dragCurrent.HasValue)
         {
             using var previewPen = new Pen(Color.FromArgb(190, Color.Goldenrod), 1.5f) { DashStyle = DashStyle.Dash };
-            CreateCommand(_dragStart.Value, _dragCurrent.Value)?.Draw(e.Graphics, frame, previewPen, Brushes.Goldenrod);
+            CreateCommand(_dragStart.Value, _dragCurrent.Value)?.Draw(e.Graphics, drawingFrame, previewPen, Brushes.Goldenrod);
         }
 
-        DrawArcPreview(e.Graphics, frame);
+        DrawArcPreview(e.Graphics, drawingFrame);
 
-        DrawSelectionHandles(e.Graphics, frame);
+        DrawSelectionHandles(e.Graphics, drawingFrame);
     }
 
     private void HandleArcClick(PointF symbolPoint)
@@ -1249,11 +1551,13 @@ internal sealed class SymbolDesignerCanvas : Control
 
     private void BeginEditDrag(Point mousePoint, PointF symbolPoint)
     {
-        var frame = GetFrameBounds();
+        var frame = GetDrawingFrameBounds();
         var target = HitTestHandle(mousePoint, frame);
         if (target.Target != DragTarget.None)
         {
             SelectCommand(target.Index);
+            _pendingEditSnapshot = CaptureSnapshot();
+            _editHistoryCommitted = false;
             _dragTarget = target.Target;
             _lastDragPoint = symbolPoint;
             return;
@@ -1263,6 +1567,8 @@ internal sealed class SymbolDesignerCanvas : Control
         SelectCommand(index);
         if (index >= 0)
         {
+            _pendingEditSnapshot = CaptureSnapshot();
+            _editHistoryCommitted = false;
             _dragTarget = DragTarget.Move;
             _lastDragPoint = ToSymbolPoint(mousePoint, false);
             Cursor = Cursors.SizeAll;
@@ -1275,9 +1581,13 @@ internal sealed class SymbolDesignerCanvas : Control
         if (command == null || !_lastDragPoint.HasValue)
             return;
 
+        var before = !_editHistoryCommitted ? _pendingEditSnapshot ?? CaptureSnapshot() : null;
         if (_dragTarget == DragTarget.Move)
         {
             var delta = new SymbolPoint(symbolPoint.X - _lastDragPoint.Value.X, symbolPoint.Y - _lastDragPoint.Value.Y);
+            if (IsSamePoint(delta, default))
+                return;
+
             command.Move(delta);
             _lastDragPoint = symbolPoint;
         }
@@ -1288,19 +1598,33 @@ internal sealed class SymbolDesignerCanvas : Control
             _lastDragPoint = symbolPoint;
         }
 
+        if (before != null)
+        {
+            if (SnapshotEquals(before))
+                return;
+
+            PushUndoSnapshot(before);
+            _redoStack.Clear();
+            _pendingEditSnapshot = null;
+            _editHistoryCommitted = true;
+        }
         CommandsChanged?.Invoke(this, EventArgs.Empty);
         SelectionChanged?.Invoke(this, EventArgs.Empty);
         Invalidate();
     }
+
+    private static bool IsSamePoint(SymbolPoint first, SymbolPoint second) =>
+        Math.Abs(first.X - second.X) < 0.0001f && Math.Abs(first.Y - second.Y) < 0.0001f;
 
     private (int Index, DragTarget Target) HitTestHandle(Point mousePoint, RectangleF frame)
     {
         const float handleRadius = 10f;
         for (var index = _commands.Count - 1; index >= 0; index--)
         {
+            var commandFrame = GetCommandDrawingFrame(frame, _commands[index]);
             foreach (var handle in _commands[index].GetHandles())
             {
-                var absolute = ToAbsolute(frame, handle.Point);
+                var absolute = ToAbsolute(commandFrame, handle.Point);
                 if (Distance(mousePoint, absolute) <= handleRadius)
                     return (index, handle.Target);
             }
@@ -1313,7 +1637,7 @@ internal sealed class SymbolDesignerCanvas : Control
     {
         for (var index = _commands.Count - 1; index >= 0; index--)
         {
-            if (_commands[index].HitTest(mousePoint, frame, 12f))
+            if (_commands[index].HitTest(mousePoint, GetCommandDrawingFrame(frame, _commands[index]), 12f))
                 return index;
         }
 
@@ -1322,7 +1646,7 @@ internal sealed class SymbolDesignerCanvas : Control
 
     private void UpdateHoverCursor(Point mousePoint)
     {
-        var frame = GetFrameBounds();
+        var frame = GetDrawingFrameBounds();
         var handle = HitTestHandle(mousePoint, frame);
         if (handle.Target != DragTarget.None)
         {
@@ -1339,9 +1663,10 @@ internal sealed class SymbolDesignerCanvas : Control
         if (command == null)
             return;
 
+        var commandFrame = GetCommandDrawingFrame(frame, command);
         foreach (var handle in command.GetHandles())
         {
-            var absolute = ToAbsolute(frame, handle.Point);
+            var absolute = ToAbsolute(commandFrame, handle.Point);
             var rect = new RectangleF(absolute.X - 4f, absolute.Y - 4f, 8f, 8f);
             graphics.FillRectangle(Brushes.White, rect);
             graphics.DrawRectangle(Pens.DodgerBlue, Rectangle.Round(rect));
@@ -1356,7 +1681,7 @@ internal sealed class SymbolDesignerCanvas : Control
         using var attributes = new System.Drawing.Imaging.ImageAttributes();
         var matrix = new System.Drawing.Imaging.ColorMatrix { Matrix33 = ReferenceOpacity };
         attributes.SetColorMatrix(matrix);
-        var destination = Rectangle.Round(frame);
+        var destination = Rectangle.Round(GetReferenceDestination(frame));
         graphics.DrawImage(
             _referenceImage,
             destination,
@@ -1366,6 +1691,17 @@ internal sealed class SymbolDesignerCanvas : Control
             _referenceImage.Height,
             GraphicsUnit.Pixel,
             attributes);
+    }
+
+    private RectangleF GetReferenceDestination(RectangleF frame)
+    {
+        var width = frame.Width * _referenceScale;
+        var height = frame.Height * _referenceScale;
+        return new RectangleF(
+            frame.Left + (frame.Width - width) / 2f + _referenceOffset.X,
+            frame.Top + (frame.Height - height) / 2f + _referenceOffset.Y,
+            width,
+            height);
     }
 
     private void DrawGrid(Graphics graphics, RectangleF frame, RectangleF workspace)
@@ -1392,8 +1728,8 @@ internal sealed class SymbolDesignerCanvas : Control
         var guide = GetIconGuideBounds(frame);
         var points = GetIconGuidePoints(IconGuideShape);
         using var guidePen = new Pen(Color.FromArgb(220, 24, 82, 180), 1.4f);
-        var absolutePoints = points.Select(point => ToAbsolute(frame, point)).ToArray();
-        DrawIconGuideGrid(graphics, frame, absolutePoints);
+        var absolutePoints = points.Select(point => ToAbsolute(guide, point)).ToArray();
+        DrawIconGuideGrid(graphics, guide, absolutePoints);
         graphics.DrawPolygon(guidePen, absolutePoints);
         graphics.DrawLine(guidePen, guide.Left, guide.Top + guide.Height / 2f, guide.Right, guide.Top + guide.Height / 2f);
         graphics.DrawLine(guidePen, guide.Left + guide.Width / 2f, guide.Top, guide.Left + guide.Width / 2f, guide.Bottom);
@@ -1407,19 +1743,28 @@ internal sealed class SymbolDesignerCanvas : Control
         graphics.SetClip(path, CombineMode.Intersect);
         using var guideGridPen = new Pen(Color.FromArgb(150, 64, 128, 220), 1f) { DashStyle = DashStyle.Dot };
 
-        foreach (var x in GetVerticalGridCoordinates())
+        foreach (var x in GetSquareGridCoordinates())
         {
             var absoluteX = frame.Left + frame.Width * x;
             graphics.DrawLine(guideGridPen, absoluteX, frame.Top, absoluteX, frame.Bottom);
         }
 
-        foreach (var y in GetHorizontalGridCoordinates())
+        foreach (var y in GetSquareGridCoordinates())
         {
             var absoluteY = frame.Top + frame.Height * y;
             graphics.DrawLine(guideGridPen, frame.Left, absoluteY, frame.Right, absoluteY);
         }
 
         graphics.Restore(state);
+    }
+
+    private void DrawDrawingBounds(Graphics graphics, RectangleF drawingFrame)
+    {
+        if (FrameShape == SymbolFrameShape.FriendlyUnit)
+            return;
+
+        using var pen = new Pen(Color.FromArgb(170, 40, 120, 220), 1f) { DashStyle = DashStyle.Dash };
+        graphics.DrawRectangle(pen, Rectangle.Round(drawingFrame));
     }
 
     private SymbolDrawCommand? CreateCommand(PointF start, PointF end)
@@ -1430,12 +1775,14 @@ internal sealed class SymbolDesignerCanvas : Control
         if (Tool == SymbolDesignerTool.Arc && !HasRenderableArea(start, end))
             return null;
 
-        return Tool switch
+        var command = Tool switch
         {
             SymbolDesignerTool.Line => SymbolDrawCommand.Line(start, end),
+            SymbolDesignerTool.ParallelLine => SymbolDrawCommand.Line(start, ConstrainLineEnd(start, end, perpendicular: false)),
+            SymbolDesignerTool.PerpendicularLine => SymbolDrawCommand.Line(start, ConstrainLineEnd(start, end, perpendicular: true)),
             SymbolDesignerTool.Rectangle => SymbolDrawCommand.Rectangle(start, end, FillClosedShapes),
             SymbolDesignerTool.Ellipse => SymbolDrawCommand.Ellipse(start, end, FillClosedShapes),
-            SymbolDesignerTool.Circle => SymbolDrawCommand.Circle(start, end, GetFrameBounds(), FillClosedShapes),
+            SymbolDesignerTool.Circle => SymbolDrawCommand.Circle(start, end, GetDrawingFrameBounds(), FillClosedShapes),
             SymbolDesignerTool.Capsule => SymbolDrawCommand.Capsule(start, end, FillClosedShapes),
             SymbolDesignerTool.Dot => SymbolDrawCommand.Dot(end, 0.08f),
             SymbolDesignerTool.Text => SymbolDrawCommand.TextCommand(end, string.IsNullOrWhiteSpace(DrawText) ? "TXT" : DrawText, DrawFontSize),
@@ -1443,7 +1790,74 @@ internal sealed class SymbolDesignerCanvas : Control
             SymbolDesignerTool.BezierArc => SymbolDrawCommand.BezierArc(start, end),
             _ => null
         };
+
+        return command?.WithStrokeWidth(DrawStrokeWidth);
     }
+
+    private PointF ConstrainLineEnd(PointF start, PointF end, bool perpendicular)
+    {
+        if (!TryGetReferenceSegment(out var reference))
+            return end;
+
+        var frame = GetDrawingFrameBounds();
+        var direction = ToAbsoluteVector(reference.Start, reference.End, frame);
+        if (perpendicular)
+            direction = new PointF(-direction.Y, direction.X);
+
+        var length = MathF.Sqrt(direction.X * direction.X + direction.Y * direction.Y);
+        if (length < 0.0001f)
+            return end;
+
+        direction = new PointF(direction.X / length, direction.Y / length);
+        var raw = ToAbsoluteVector(start, end, frame);
+        var projectedLength = raw.X * direction.X + raw.Y * direction.Y;
+        if (Math.Abs(projectedLength) < 0.5f)
+        {
+            var rawLength = MathF.Sqrt(raw.X * raw.X + raw.Y * raw.Y);
+            projectedLength = rawLength;
+        }
+
+        return new PointF(
+            start.X + direction.X * projectedLength / frame.Width,
+            start.Y + direction.Y * projectedLength / frame.Height);
+    }
+
+    private bool TryGetReferenceSegment(out SymbolSegment segment)
+    {
+        var selectedCommand = SelectedCommand;
+        if (selectedCommand != null)
+        {
+            foreach (var selectedSegment in selectedCommand.GetSegments())
+            {
+                if (HasSegmentLength(selectedSegment))
+                {
+                    segment = selectedSegment;
+                    return true;
+                }
+            }
+        }
+
+        for (var index = _commands.Count - 1; index >= 0; index--)
+        {
+            foreach (var commandSegment in _commands[index].GetSegments())
+            {
+                if (HasSegmentLength(commandSegment))
+                {
+                    segment = commandSegment;
+                    return true;
+                }
+            }
+        }
+
+        segment = default;
+        return false;
+    }
+
+    private static bool HasSegmentLength(SymbolSegment segment) =>
+        Distance(segment.Start, segment.End) >= 0.0001f;
+
+    private static PointF ToAbsoluteVector(PointF start, PointF end, RectangleF frame) =>
+        new((end.X - start.X) * frame.Width, (end.Y - start.Y) * frame.Height);
 
     private void DrawArcPreview(Graphics graphics, RectangleF frame)
     {
@@ -1462,12 +1876,9 @@ internal sealed class SymbolDesignerCanvas : Control
 
     private PointF ToSymbolPoint(Point point, bool applySnap)
     {
-        var frame = GetFrameBounds();
-        var workspace = GetWorkspaceBounds();
+        var frame = GetDrawingFrameBounds();
         var x = Math.Clamp((point.X - frame.Left) / frame.Width, 0f, 1f);
-        var minY = (workspace.Top - frame.Top) / frame.Height;
-        var maxY = (workspace.Bottom - frame.Top) / frame.Height;
-        var y = Math.Clamp((point.Y - frame.Top) / frame.Height, minY, maxY);
+        var y = Math.Clamp((point.Y - frame.Top) / frame.Height, 0f, 1f);
         var symbolPoint = new PointF(x, y);
         return applySnap && SnapEnabled ? SnapPoint(symbolPoint) : symbolPoint;
     }
@@ -1506,7 +1917,7 @@ internal sealed class SymbolDesignerCanvas : Control
         yield return new PointF(0f, 1f);
         yield return new PointF(1f, 1f);
 
-        foreach (var point in GetIconGuidePoints(IconGuideShape))
+        foreach (var point in GetIconGuideSnapCandidates())
             yield return point;
         yield return new PointF(0.5f, 0.5f);
 
@@ -1585,6 +1996,17 @@ internal sealed class SymbolDesignerCanvas : Control
             height);
     }
 
+    private RectangleF GetDrawingFrameBounds() => GetDrawingFrameBounds(GetFrameBounds());
+
+    private RectangleF GetDrawingFrameBounds(RectangleF frame) =>
+        SymbolFrameRenderer.GetInteriorFrame(frame, FrameShape, IconGuideShape);
+
+    private RectangleF GetGuideFrameBounds(RectangleF frame) =>
+        SymbolFrameRenderer.GetGuideFrame(frame, FrameShape, IconGuideShape);
+
+    private RectangleF GetCommandDrawingFrame(RectangleF drawingFrame, SymbolDrawCommand command) =>
+        SymbolFrameRenderer.GetCommandFrame(drawingFrame, FrameShape, command);
+
     private RectangleF GetWorkspaceBounds()
     {
         var frame = GetFrameBounds();
@@ -1598,6 +2020,9 @@ internal sealed class SymbolDesignerCanvas : Control
 
     private static PointF ToAbsolute(RectangleF frame, PointF point) =>
         new(frame.Left + frame.Width * point.X, frame.Top + frame.Height * point.Y);
+
+    private static PointF ToRelative(RectangleF frame, PointF point) =>
+        new((point.X - frame.Left) / frame.Width, (point.Y - frame.Top) / frame.Height);
 
     private static RectangleF GetIconGuideBounds(RectangleF frame)
     {
@@ -1621,6 +2046,13 @@ internal sealed class SymbolDesignerCanvas : Control
         var divisions = Math.Max(1, GridDivisions);
         var horizontalStepInFrame = 1f / divisions / StandardFrameAspectRatio;
         return GetCenteredGridCoordinates(horizontalStepInFrame);
+    }
+
+    private IEnumerable<float> GetSquareGridCoordinates()
+    {
+        var divisions = Math.Max(1, GridDivisions);
+        var step = 1f / divisions;
+        return GetCenteredGridCoordinates(step);
     }
 
     private static IEnumerable<float> GetCenteredGridCoordinates(float step)
@@ -1647,38 +2079,44 @@ internal sealed class SymbolDesignerCanvas : Control
 
     private static bool IsCenterGridLine(float value, float center) => Math.Abs(value - center) < 0.0001f;
 
+    private IEnumerable<PointF> GetIconGuideSnapCandidates()
+    {
+        var frame = GetDrawingFrameBounds();
+        var guide = GetIconGuideBounds(frame);
+        foreach (var point in GetIconGuidePoints(IconGuideShape))
+            yield return ToRelative(frame, ToAbsolute(guide, point));
+    }
+
     private static PointF[] GetIconGuidePoints(IconGuideShape shape)
     {
-        const float left = 1f / 6f;
-        const float right = 5f / 6f;
         const float center = 0.5f;
-        const float flatXOffset = 0.1381f;
-        const float flatYShoulder = 0.2929f;
-        const float diagonalXOffset = 0.2357f;
-        const float diagonalYOffset = 0.3536f;
-
-        return shape == IconGuideShape.FlatTopBottom
-            ? new[]
+        if (shape == IconGuideShape.FlatTopBottom)
+        {
+            const float inset = 0.29289323f;
+            return new[]
             {
-                new PointF(center - flatXOffset, 0f),
-                new PointF(center + flatXOffset, 0f),
-                new PointF(right, flatYShoulder),
-                new PointF(right, 1f - flatYShoulder),
-                new PointF(center + flatXOffset, 1f),
-                new PointF(center - flatXOffset, 1f),
-                new PointF(left, 1f - flatYShoulder),
-                new PointF(left, flatYShoulder)
-            }
-            : new[]
+                new PointF(inset, 0f),
+                new PointF(1f - inset, 0f),
+                new PointF(1f, inset),
+                new PointF(1f, 1f - inset),
+                new PointF(1f - inset, 1f),
+                new PointF(inset, 1f),
+                new PointF(0f, 1f - inset),
+                new PointF(0f, inset)
+            };
+        }
+
+        const float diagonalInset = 0.14644662f;
+        return new[]
         {
             new PointF(center, 0f),
-            new PointF(center + diagonalXOffset, center - diagonalYOffset),
-            new PointF(right, center),
-            new PointF(center + diagonalXOffset, center + diagonalYOffset),
+            new PointF(1f - diagonalInset, diagonalInset),
+            new PointF(1f, center),
+            new PointF(1f - diagonalInset, 1f - diagonalInset),
             new PointF(center, 1f),
-            new PointF(center - diagonalXOffset, center + diagonalYOffset),
-            new PointF(left, center),
-            new PointF(center - diagonalXOffset, center - diagonalYOffset)
+            new PointF(diagonalInset, 1f - diagonalInset),
+            new PointF(0f, center),
+            new PointF(diagonalInset, diagonalInset)
         };
     }
 
@@ -1726,6 +2164,14 @@ internal sealed class SymbolDesignerCanvas : Control
 internal sealed class SymbolPreviewControl : Control
 {
     private const float StandardFrameAspectRatio = 1.5f;
+    private static readonly (SymbolFrameShape Shape, string Label)[] AffiliationPreviews =
+    {
+        (SymbolFrameShape.FriendlyUnit, "Friendly"),
+        (SymbolFrameShape.Hostile, "Hostile"),
+        (SymbolFrameShape.Neutral, "Neutral"),
+        (SymbolFrameShape.Unknown, "Unknown")
+    };
+
     private IReadOnlyList<SymbolDrawCommand> _commands = Array.Empty<SymbolDrawCommand>();
     private SymbolFrameShape _frameShape = SymbolFrameShape.FriendlyUnit;
     private SymbolFrameStatus _frameStatus = SymbolFrameStatus.Present;
@@ -1736,6 +2182,9 @@ internal sealed class SymbolPreviewControl : Control
         SetStyle(ControlStyles.ResizeRedraw, true);
     }
 
+    public float PreviewScale { get; set; } = 1f;
+    public SymbolPhysicalDomain PhysicalDomain { get; set; } = SymbolPhysicalDomain.LandUnit;
+
     public void SetCommands(IReadOnlyList<SymbolDrawCommand> commands)
     {
         _commands = commands;
@@ -1745,6 +2194,7 @@ internal sealed class SymbolPreviewControl : Control
     public void SetFrame(SymbolFrameShape frameShape, SymbolFrameStatus frameStatus)
     {
         _frameShape = frameShape;
+        PhysicalDomain = SymbolFrameMapping.GetPhysicalDomain(frameShape);
         _frameStatus = frameStatus;
         Invalidate();
     }
@@ -1755,22 +2205,73 @@ internal sealed class SymbolPreviewControl : Control
         e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
         e.Graphics.Clear(Color.White);
 
-        var contentBounds = new RectangleF(30, 68, Math.Max(1, ClientSize.Width - 60), Math.Max(1, ClientSize.Height - 98));
-        var frame = SymbolFrameRenderer.GetFittedFrame(contentBounds, _frameShape, _commands, IconGuideShape.FlatTopBottom);
-
-        using var pen = new Pen(Color.Black, 2f);
-        SymbolFrameRenderer.DrawFrame(e.Graphics, frame, _frameShape, _frameStatus, fillFrame: true, IconGuideShape.FlatTopBottom);
-        foreach (var command in _commands)
-            command.Draw(e.Graphics, frame, pen, Brushes.Black);
-
         TextRenderer.DrawText(
             e.Graphics,
-            "Preview",
+            "Affiliation preview",
             Font,
-            new Rectangle(0, 24, ClientSize.Width, 24),
+            new Rectangle(0, 12, ClientSize.Width, 24),
             SystemColors.ControlText,
             TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+
+        var previewBounds = new RectangleF(16, 44, Math.Max(1, ClientSize.Width - 32), Math.Max(1, ClientSize.Height - 56));
+        var columns = ClientSize.Width >= 420 ? 2 : 1;
+        var rows = (int)Math.Ceiling(AffiliationPreviews.Length / (float)columns);
+        var gap = 14f;
+        var tileWidth = (previewBounds.Width - gap * (columns - 1)) / columns;
+        var tileHeight = (previewBounds.Height - gap * (rows - 1)) / rows;
+
+        for (var index = 0; index < AffiliationPreviews.Length; index++)
+        {
+            var column = index % columns;
+            var row = index / columns;
+            var tile = new RectangleF(
+                previewBounds.Left + column * (tileWidth + gap),
+                previewBounds.Top + row * (tileHeight + gap),
+                tileWidth,
+                tileHeight);
+            var shape = AffiliationPreviews[index].Shape == SymbolFrameShape.FriendlyUnit
+                ? SymbolFrameMapping.GetFrameShape(SymbolAffiliation.Friendly, PhysicalDomain)
+                : AffiliationPreviews[index].Shape;
+            DrawAffiliationPreview(e.Graphics, tile, shape, AffiliationPreviews[index].Label);
+        }
     }
+
+    private void DrawAffiliationPreview(Graphics graphics, RectangleF tile, SymbolFrameShape shape, string label)
+    {
+        TextRenderer.DrawText(
+            graphics,
+            label,
+            Font,
+            Rectangle.Round(new RectangleF(tile.Left, tile.Top, tile.Width, 20)),
+            SystemColors.ControlText,
+            TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+
+        var contentBounds = new RectangleF(tile.Left + 6, tile.Top + 26, Math.Max(1, tile.Width - 12), Math.Max(1, tile.Height - 34));
+        var frame = GetPreviewFrame(contentBounds, shape);
+        var symbolFrame = SymbolFrameRenderer.GetInteriorFrame(frame, shape, IconGuideShape.FlatTopBottom);
+
+        using var pen = new Pen(Color.Black, 2f);
+        SymbolFrameRenderer.DrawFrame(graphics, frame, shape, _frameStatus, fillFrame: true, IconGuideShape.FlatTopBottom);
+        foreach (var command in _commands)
+            SymbolFrameRenderer.DrawCommand(graphics, frame, SymbolFrameRenderer.GetCommandFrame(symbolFrame, shape, command), shape, command, pen, Brushes.Black, IconGuideShape.FlatTopBottom);
+
+        if (shape == _frameShape)
+        {
+            using var selectedPen = new Pen(Color.FromArgb(40, 120, 220), 1.4f);
+            var selection = RectangleF.Inflate(frame, 5f, 5f);
+            graphics.DrawRectangle(selectedPen, Rectangle.Round(selection));
+        }
+    }
+
+    private RectangleF GetPreviewFrame(RectangleF contentBounds, SymbolFrameShape shape)
+    {
+        var frame = SymbolFrameRenderer.GetFittedFrame(contentBounds, shape, Array.Empty<SymbolDrawCommand>(), IconGuideShape.FlatTopBottom);
+        if (PreviewScale <= 1f)
+            return frame;
+
+        return SymbolFrameRenderer.ScaleFrameToFitVisualBounds(frame, contentBounds, shape, IconGuideShape.FlatTopBottom, PreviewScale);
+    }
+
 }
 
 internal sealed class SymbolLibraryDefinition
@@ -1778,9 +2279,24 @@ internal sealed class SymbolLibraryDefinition
     public int Version { get; set; } = 1;
     public string Name { get; set; } = string.Empty;
     public string UnitType { get; set; } = string.Empty;
+    public SymbolAffiliation Affiliation { get; set; } = SymbolAffiliation.Friendly;
+    public SymbolPhysicalDomain PhysicalDomain { get; set; } = SymbolPhysicalDomain.LandUnit;
     public SymbolFrameShape FrameShape { get; set; } = SymbolFrameShape.FriendlyUnit;
     public SymbolFrameStatus FrameStatus { get; set; } = SymbolFrameStatus.Present;
     public List<SymbolDrawCommand> Commands { get; set; } = new();
+
+    public SymbolAffiliation GetEffectiveAffiliation() =>
+        FrameShape == SymbolFrameMapping.GetFrameShape(Affiliation, PhysicalDomain)
+            ? Affiliation
+            : SymbolFrameMapping.GetAffiliation(FrameShape);
+
+    public SymbolPhysicalDomain GetEffectivePhysicalDomain() =>
+        FrameShape == SymbolFrameMapping.GetFrameShape(Affiliation, PhysicalDomain)
+            ? PhysicalDomain
+            : SymbolFrameMapping.GetPhysicalDomain(FrameShape);
+
+    public SymbolFrameShape GetEffectiveFrameShape() =>
+        SymbolFrameMapping.GetFrameShape(GetEffectiveAffiliation(), GetEffectivePhysicalDomain());
 }
 
 internal static class SymbolFrameRenderer
@@ -1804,6 +2320,15 @@ internal static class SymbolFrameRenderer
         graphics.DrawPath(pen, path);
     }
 
+    public static void DrawCommand(Graphics graphics, RectangleF frame, RectangleF commandFrame, SymbolFrameShape shape, SymbolDrawCommand command, Pen pen, Brush brush, IconGuideShape guideShape)
+    {
+        var state = graphics.Save();
+        using var path = CreatePath(frame, shape, guideShape);
+        graphics.SetClip(path, CombineMode.Intersect);
+        command.Draw(graphics, commandFrame, pen, brush);
+        graphics.Restore(state);
+    }
+
     public static RectangleF GetFittedFrame(RectangleF contentBounds, SymbolFrameShape shape, IReadOnlyList<SymbolDrawCommand> commands, IconGuideShape guideShape)
     {
         var normalizedBounds = GetNormalizedVisualBounds(shape, commands, guideShape);
@@ -1819,6 +2344,64 @@ internal static class SymbolFrameRenderer
         return new RectangleF(frameLeft, frameTop, frameWidth, frameHeight);
     }
 
+    public static RectangleF ScaleFrameToFitVisualBounds(RectangleF frame, RectangleF contentBounds, SymbolFrameShape shape, IconGuideShape guideShape, float requestedScale)
+    {
+        requestedScale = Math.Max(1f, requestedScale);
+        var visualBounds = GetFrameVisualBounds(frame, shape, guideShape);
+        if (visualBounds.Width <= 0f || visualBounds.Height <= 0f)
+            return frame;
+
+        var maxScaleX = contentBounds.Width / visualBounds.Width;
+        var maxScaleY = contentBounds.Height / visualBounds.Height;
+        var scale = Math.Min(requestedScale, Math.Min(maxScaleX, maxScaleY));
+        if (scale <= 1f)
+            return frame;
+
+        var center = new PointF(frame.Left + frame.Width / 2f, frame.Top + frame.Height / 2f);
+        var scaled = new RectangleF(
+            center.X - frame.Width * scale / 2f,
+            center.Y - frame.Height * scale / 2f,
+            frame.Width * scale,
+            frame.Height * scale);
+        var scaledVisual = GetFrameVisualBounds(scaled, shape, guideShape);
+        var dx = GetContainmentOffset(scaledVisual.Left, scaledVisual.Right, contentBounds.Left, contentBounds.Right);
+        var dy = GetContainmentOffset(scaledVisual.Top, scaledVisual.Bottom, contentBounds.Top, contentBounds.Bottom);
+        scaled.Offset(dx, dy);
+        return scaled;
+    }
+
+    public static RectangleF GetInteriorFrame(RectangleF frame, SymbolFrameShape shape, IconGuideShape guideShape)
+    {
+        return shape switch
+        {
+            SymbolFrameShape.Hostile => GetHostileInteriorFrame(frame, guideShape),
+            SymbolFrameShape.Neutral => GetNeutralInteriorFrame(frame),
+            SymbolFrameShape.Unknown => GetUnknownInteriorFrame(frame),
+            SymbolFrameShape.FriendlyEquipment => GetEquipmentInteriorFrame(frame, guideShape),
+            _ => GetFriendlyUnitInteriorFrame(frame)
+        };
+    }
+
+    public static RectangleF GetGuideFrame(RectangleF frame, SymbolFrameShape shape, IconGuideShape guideShape)
+    {
+        return shape switch
+        {
+            SymbolFrameShape.Hostile => GetHostileGuideFrame(frame, guideShape),
+            SymbolFrameShape.Neutral => GetNeutralGuideFrame(frame),
+            SymbolFrameShape.Unknown => GetUnknownGuideFrame(frame),
+            SymbolFrameShape.FriendlyEquipment => GetEquipmentGuideFrame(frame, guideShape),
+            _ => frame
+        };
+    }
+
+    public static RectangleF GetCommandFrame(RectangleF interiorFrame, SymbolFrameShape shape, SymbolDrawCommand command)
+    {
+        if (shape != SymbolFrameShape.Hostile || command.Kind != SymbolDrawCommandKind.Capsule)
+            return interiorFrame;
+
+        return ScaleRectangle(interiorFrame, 1.24f, 1f);
+    }
+
     private static RectangleF GetNormalizedVisualBounds(SymbolFrameShape shape, IReadOnlyList<SymbolDrawCommand> commands, IconGuideShape guideShape)
     {
         using var path = CreatePath(new RectangleF(0f, 0f, 1f, 1f), shape, guideShape);
@@ -1827,6 +2410,21 @@ internal static class SymbolFrameRenderer
             bounds = Union(bounds, command.GetNormalizedVisualBounds());
 
         return bounds;
+    }
+
+    private static RectangleF GetFrameVisualBounds(RectangleF frame, SymbolFrameShape shape, IconGuideShape guideShape)
+    {
+        using var path = CreatePath(frame, shape, guideShape);
+        return path.GetBounds();
+    }
+
+    private static float GetContainmentOffset(float innerStart, float innerEnd, float outerStart, float outerEnd)
+    {
+        if (innerStart < outerStart)
+            return outerStart - innerStart;
+        if (innerEnd > outerEnd)
+            return outerEnd - innerEnd;
+        return 0f;
     }
 
     private static RectangleF Union(RectangleF first, RectangleF second)
@@ -1841,6 +2439,98 @@ internal static class SymbolFrameRenderer
         var right = Math.Max(first.Right, second.Right);
         var bottom = Math.Max(first.Bottom, second.Bottom);
         return RectangleF.FromLTRB(left, top, right, bottom);
+    }
+
+    private static RectangleF GetFriendlyUnitInteriorFrame(RectangleF frame) => frame;
+
+    private static RectangleF ScaleRectangle(RectangleF rectangle, float scaleX, float scaleY)
+    {
+        var width = rectangle.Width * scaleX;
+        var height = rectangle.Height * scaleY;
+        return new RectangleF(
+            rectangle.Left + (rectangle.Width - width) / 2f,
+            rectangle.Top + (rectangle.Height - height) / 2f,
+            width,
+            height);
+    }
+
+    private static RectangleF GetHostileInteriorFrame(RectangleF frame, IconGuideShape guideShape)
+    {
+        var diamond = GetHostileDiamondPoints(frame, guideShape);
+        var center = new PointF(frame.Left + frame.Width / 2f, frame.Top + frame.Height / 2f);
+        var top = diamond.OrderBy(point => point.Y).First().Y;
+        var right = diamond.OrderByDescending(point => point.X).First().X;
+        var bottom = diamond.OrderByDescending(point => point.Y).First().Y;
+        var left = diamond.OrderBy(point => point.X).First().X;
+
+        var halfWidth = Math.Min(center.X - left, right - center.X) * 0.74f;
+        var halfHeight = Math.Min(center.Y - top, bottom - center.Y) * 0.74f;
+        return RectangleF.FromLTRB(center.X - halfWidth, center.Y - halfHeight, center.X + halfWidth, center.Y + halfHeight);
+    }
+
+    private static RectangleF GetHostileGuideFrame(RectangleF frame, IconGuideShape guideShape)
+    {
+        var diamond = GetHostileDiamondPoints(frame, guideShape);
+        var center = new PointF(frame.Left + frame.Width / 2f, frame.Top + frame.Height / 2f);
+        var top = diamond.OrderBy(point => point.Y).First().Y;
+        var right = diamond.OrderByDescending(point => point.X).First().X;
+        var bottom = diamond.OrderByDescending(point => point.Y).First().Y;
+        var left = diamond.OrderBy(point => point.X).First().X;
+
+        var halfWidth = Math.Min(center.X - left, right - center.X) * 0.72f;
+        var halfHeight = Math.Min(center.Y - top, bottom - center.Y) * 0.72f;
+        return RectangleF.FromLTRB(center.X - halfWidth, center.Y - halfHeight, center.X + halfWidth, center.Y + halfHeight);
+    }
+
+    private static RectangleF GetNeutralInteriorFrame(RectangleF frame)
+    {
+        var side = Math.Min(frame.Width, frame.Height);
+        var square = new RectangleF(
+            frame.Left + (frame.Width - side) / 2f,
+            frame.Top + (frame.Height - side) / 2f,
+            side,
+            side);
+        return RectangleF.Inflate(square, -square.Width * 0.06f, -square.Height * 0.06f);
+    }
+
+    private static RectangleF GetNeutralGuideFrame(RectangleF frame)
+    {
+        var side = Math.Min(frame.Width, frame.Height);
+        return new RectangleF(
+            frame.Left + (frame.Width - side) / 2f,
+            frame.Top + (frame.Height - side) / 2f,
+            side,
+            side);
+    }
+
+    private static RectangleF GetUnknownInteriorFrame(RectangleF frame) =>
+        RectangleF.FromLTRB(
+            frame.Left + frame.Width * 0.22f,
+            frame.Top + frame.Height * 0.22f,
+            frame.Right - frame.Width * 0.22f,
+            frame.Bottom - frame.Height * 0.22f);
+
+    private static RectangleF GetUnknownGuideFrame(RectangleF frame) =>
+        RectangleF.FromLTRB(
+            frame.Left + frame.Width * 0.12f,
+            frame.Top + frame.Height * 0.12f,
+            frame.Right - frame.Width * 0.12f,
+            frame.Bottom - frame.Height * 0.12f);
+
+    private static RectangleF GetEquipmentInteriorFrame(RectangleF frame, IconGuideShape guideShape)
+    {
+        var circle = GetGuideCircumcircleBounds(frame, guideShape);
+        var side = Math.Min(circle.Width, circle.Height) * 0.68f;
+        return new RectangleF(
+            circle.Left + (circle.Width - side) / 2f,
+            circle.Top + (circle.Height - side) / 2f,
+            side,
+            side);
+    }
+
+    private static RectangleF GetEquipmentGuideFrame(RectangleF frame, IconGuideShape guideShape)
+    {
+        return frame;
     }
 
     public static SymbolPalette GetPalette(SymbolFrameShape shape)
@@ -1911,35 +2601,35 @@ internal static class SymbolFrameRenderer
 
     private static RectangleF GetGuideCircumcircleBounds(RectangleF frame, IconGuideShape guideShape)
     {
-        var center = new PointF(frame.Left + frame.Width / 2f, frame.Top + frame.Height / 2f);
+        var guide = GetIconGuideBounds(frame);
+        var center = new PointF(guide.Left + guide.Width / 2f, guide.Top + guide.Height / 2f);
         var radius = GetIconGuidePoints(guideShape)
-            .Select(point => ToAbsolute(frame, point))
+            .Select(point => ToAbsolute(guide, point))
             .Select(point => Distance(center, point))
             .Max();
         return new RectangleF(center.X - radius, center.Y - radius, radius * 2f, radius * 2f);
     }
 
+    private static RectangleF GetIconGuideBounds(RectangleF frame)
+    {
+        var size = Math.Min(frame.Width, frame.Height);
+        return new RectangleF(
+            frame.Left + (frame.Width - size) / 2f,
+            frame.Top + (frame.Height - size) / 2f,
+            size,
+            size);
+    }
+
     private static PointF[] GetHostileDiamondPoints(RectangleF frame, IconGuideShape guideShape)
     {
-        var guidePoints = GetIconGuidePoints(guideShape).Select(point => ToAbsolute(frame, point)).ToArray();
-        if (guideShape == IconGuideShape.FlatTopBottom)
-        {
-            return new[]
-            {
-                GetLineIntersection(guidePoints[7], guidePoints[0], guidePoints[1], guidePoints[2]),
-                GetLineIntersection(guidePoints[1], guidePoints[2], guidePoints[3], guidePoints[4]),
-                GetLineIntersection(guidePoints[3], guidePoints[4], guidePoints[5], guidePoints[6]),
-                GetLineIntersection(guidePoints[5], guidePoints[6], guidePoints[7], guidePoints[0])
-            };
-        }
-
         var center = new PointF(frame.Left + frame.Width / 2f, frame.Top + frame.Height / 2f);
+        var radius = Math.Min(frame.Width, frame.Height) / 2f;
         return new[]
         {
-            guidePoints.OrderBy(point => point.Y).ThenBy(point => Math.Abs(point.X - center.X)).First(),
-            guidePoints.OrderByDescending(point => point.X).ThenBy(point => Math.Abs(point.Y - center.Y)).First(),
-            guidePoints.OrderByDescending(point => point.Y).ThenBy(point => Math.Abs(point.X - center.X)).First(),
-            guidePoints.OrderBy(point => point.X).ThenBy(point => Math.Abs(point.Y - center.Y)).First()
+            new PointF(center.X, center.Y - radius),
+            new PointF(center.X + radius, center.Y),
+            new PointF(center.X, center.Y + radius),
+            new PointF(center.X - radius, center.Y)
         };
     }
 
@@ -1972,41 +2662,41 @@ internal static class SymbolFrameRenderer
 
     private static PointF[] GetIconGuidePoints(IconGuideShape shape)
     {
-        const float left = 1f / 6f;
-        const float right = 5f / 6f;
         const float center = 0.5f;
-        const float flatXOffset = 0.1381f;
-        const float flatYShoulder = 0.2929f;
-        const float diagonalXOffset = 0.2357f;
-        const float diagonalYOffset = 0.3536f;
-
-        return shape == IconGuideShape.FlatTopBottom
-            ? new[]
+        if (shape == IconGuideShape.FlatTopBottom)
+        {
+            const float inset = 0.29289323f;
+            return new[]
             {
-                new PointF(center - flatXOffset, 0f),
-                new PointF(center + flatXOffset, 0f),
-                new PointF(right, flatYShoulder),
-                new PointF(right, 1f - flatYShoulder),
-                new PointF(center + flatXOffset, 1f),
-                new PointF(center - flatXOffset, 1f),
-                new PointF(left, 1f - flatYShoulder),
-                new PointF(left, flatYShoulder)
-            }
-            : new[]
-            {
-                new PointF(center, 0f),
-                new PointF(center + diagonalXOffset, center - diagonalYOffset),
-                new PointF(right, center),
-                new PointF(center + diagonalXOffset, center + diagonalYOffset),
-                new PointF(center, 1f),
-                new PointF(center - diagonalXOffset, center + diagonalYOffset),
-                new PointF(left, center),
-                new PointF(center - diagonalXOffset, center - diagonalYOffset)
+                new PointF(inset, 0f),
+                new PointF(1f - inset, 0f),
+                new PointF(1f, inset),
+                new PointF(1f, 1f - inset),
+                new PointF(1f - inset, 1f),
+                new PointF(inset, 1f),
+                new PointF(0f, 1f - inset),
+                new PointF(0f, inset)
             };
+        }
+
+        const float diagonalInset = 0.14644662f;
+        return new[]
+        {
+            new PointF(center, 0f),
+            new PointF(1f - diagonalInset, diagonalInset),
+            new PointF(1f, center),
+            new PointF(1f - diagonalInset, 1f - diagonalInset),
+            new PointF(center, 1f),
+            new PointF(diagonalInset, 1f - diagonalInset),
+            new PointF(0f, center),
+            new PointF(diagonalInset, diagonalInset)
+        };
     }
 }
 
 internal readonly record struct SymbolPalette(Color Fill, Color Symbol);
+
+internal sealed record SymbolCanvasSnapshot(List<SymbolDrawCommand> Commands, int SelectedIndex);
 
 internal sealed class SymbolDrawCommand
 {
@@ -2017,6 +2707,7 @@ internal sealed class SymbolDrawCommand
     public SymbolPoint Control2 { get; set; }
     public float Radius { get; set; }
     public float FontSize { get; set; } = 12f;
+    public float StrokeWidth { get; set; } = 2f;
     public string Text { get; set; } = string.Empty;
     public bool Filled { get; set; }
     public List<SymbolPoint> Points { get; set; } = new();
@@ -2115,10 +2806,31 @@ internal sealed class SymbolDrawCommand
             Control2 = Control2,
             Radius = Radius,
             FontSize = FontSize,
+            StrokeWidth = StrokeWidth,
             Text = Text,
             Filled = Filled,
             Points = Points.Select(point => point).ToList()
         };
+
+    public bool HasSameState(SymbolDrawCommand other) =>
+        Kind == other.Kind
+        && Start == other.Start
+        && End == other.End
+        && Control1 == other.Control1
+        && Control2 == other.Control2
+        && Radius.Equals(other.Radius)
+        && FontSize.Equals(other.FontSize)
+        && StrokeWidth.Equals(other.StrokeWidth)
+        && Text == other.Text
+        && Filled == other.Filled
+        && Points.SequenceEqual(other.Points);
+
+    public SymbolDrawCommand WithStrokeWidth(float strokeWidth)
+    {
+        if (UsesStroke)
+            StrokeWidth = Math.Clamp(strokeWidth, 0.5f, 12f);
+        return this;
+    }
 
     public void Move(SymbolPoint delta)
     {
@@ -2262,36 +2974,37 @@ internal sealed class SymbolDrawCommand
 
     public void Draw(Graphics graphics, RectangleF frame, Pen pen, Brush brush)
     {
+        using var commandPen = CreateStrokePen(pen);
         switch (Kind)
         {
             case SymbolDrawCommandKind.Line:
-                graphics.DrawLine(pen, ToAbsolute(frame, Start), ToAbsolute(frame, End));
+                graphics.DrawLine(commandPen, ToAbsolute(frame, Start), ToAbsolute(frame, End));
                 break;
             case SymbolDrawCommandKind.Rectangle:
                 if (Filled)
                     graphics.FillRectangle(brush, ToRectangle(frame));
-                graphics.DrawRectangle(pen, System.Drawing.Rectangle.Round(ToRectangle(frame)));
+                graphics.DrawRectangle(commandPen, System.Drawing.Rectangle.Round(ToRectangle(frame)));
                 break;
             case SymbolDrawCommandKind.Ellipse:
                 if (Filled)
                     graphics.FillEllipse(brush, ToRectangle(frame));
-                graphics.DrawEllipse(pen, ToRectangle(frame));
+                graphics.DrawEllipse(commandPen, ToRectangle(frame));
                 break;
             case SymbolDrawCommandKind.Circle:
                 var circle = ToCircleRectangle(frame);
                 if (Filled)
                     graphics.FillEllipse(brush, circle);
-                graphics.DrawEllipse(pen, circle);
+                graphics.DrawEllipse(commandPen, circle);
                 break;
             case SymbolDrawCommandKind.Capsule:
-                DrawCapsule(graphics, pen, brush, ToRectangle(frame), Filled);
+                DrawCapsule(graphics, commandPen, brush, ToRectangle(frame), Filled);
                 break;
             case SymbolDrawCommandKind.Path:
                 using (var path = CreateGraphicsPath(frame))
                 {
                     if (Filled)
                         graphics.FillPath(brush, path);
-                    graphics.DrawPath(pen, path);
+                    graphics.DrawPath(commandPen, path);
                 }
                 break;
             case SymbolDrawCommandKind.Dot:
@@ -2312,12 +3025,24 @@ internal sealed class SymbolDrawCommand
             case SymbolDrawCommandKind.Arc:
                 var arcBounds = ToRectangle(frame);
                 if (arcBounds.Width > 0f && arcBounds.Height > 0f)
-                    graphics.DrawArc(pen, arcBounds, 200f, 140f);
+                    graphics.DrawArc(commandPen, arcBounds, 200f, 140f);
                 break;
             case SymbolDrawCommandKind.Bezier:
-                graphics.DrawBezier(pen, ToAbsolute(frame, Start), ToAbsolute(frame, Control1), ToAbsolute(frame, Control2), ToAbsolute(frame, End));
+                graphics.DrawBezier(commandPen, ToAbsolute(frame, Start), ToAbsolute(frame, Control1), ToAbsolute(frame, Control2), ToAbsolute(frame, End));
                 break;
         }
+    }
+
+    private Pen CreateStrokePen(Pen basePen)
+    {
+        var selectedOffset = Math.Max(0f, basePen.Width - 2f);
+        return new Pen(basePen.Color, Math.Max(0.5f, StrokeWidth + selectedOffset))
+        {
+            DashStyle = basePen.DashStyle,
+            StartCap = basePen.StartCap,
+            EndCap = basePen.EndCap,
+            LineJoin = basePen.LineJoin
+        };
     }
 
     public string GetSummary()
@@ -2346,37 +3071,46 @@ internal sealed class SymbolDrawCommand
 
     public string ToCSharp(string graphics, string pen, string brush, string bounds, string icon)
     {
-        return Kind switch
+        var strokePen = UsesStroke ? "strokePen" : pen;
+        var commandCode = Kind switch
         {
             SymbolDrawCommandKind.Line =>
-                $"{graphics}.DrawLine({pen}, {PointCode(bounds, Start)}, {PointCode(bounds, End)});",
+                $"{graphics}.DrawLine({strokePen}, {PointCode(bounds, Start)}, {PointCode(bounds, End)});",
             SymbolDrawCommandKind.Rectangle =>
                 Filled
-                    ? $"{graphics}.FillRectangle({brush}, {RectCode(bounds)});\r\n{graphics}.DrawRectangle({pen}, Rectangle.Round({RectCode(bounds)}));"
-                    : $"{graphics}.DrawRectangle({pen}, Rectangle.Round({RectCode(bounds)}));",
+                    ? $"{graphics}.FillRectangle({brush}, {RectCode(bounds)});\r\n{graphics}.DrawRectangle({strokePen}, Rectangle.Round({RectCode(bounds)}));"
+                    : $"{graphics}.DrawRectangle({strokePen}, Rectangle.Round({RectCode(bounds)}));",
             SymbolDrawCommandKind.Ellipse =>
                 Filled
-                    ? $"{graphics}.FillEllipse({brush}, {RectCode(bounds)});\r\n{graphics}.DrawEllipse({pen}, {RectCode(bounds)});"
-                    : $"{graphics}.DrawEllipse({pen}, {RectCode(bounds)});",
+                    ? $"{graphics}.FillEllipse({brush}, {RectCode(bounds)});\r\n{graphics}.DrawEllipse({strokePen}, {RectCode(bounds)});"
+                    : $"{graphics}.DrawEllipse({strokePen}, {RectCode(bounds)});",
             SymbolDrawCommandKind.Circle =>
                 Filled
-                    ? $"{{\r\n    var circleBounds = {CircleRectCode(bounds)};\r\n    {graphics}.FillEllipse({brush}, circleBounds);\r\n    {graphics}.DrawEllipse({pen}, circleBounds);\r\n}}"
-                    : $"{graphics}.DrawEllipse({pen}, {CircleRectCode(bounds)});",
+                    ? $"{{\r\n    var circleBounds = {CircleRectCode(bounds)};\r\n    {graphics}.FillEllipse({brush}, circleBounds);\r\n    {graphics}.DrawEllipse({strokePen}, circleBounds);\r\n}}"
+                    : $"{graphics}.DrawEllipse({strokePen}, {CircleRectCode(bounds)});",
             SymbolDrawCommandKind.Capsule =>
-                CapsuleCode(graphics, pen, brush, bounds),
+                CapsuleCode(graphics, strokePen, brush, bounds),
             SymbolDrawCommandKind.Path =>
-                PathCode(graphics, pen, brush, bounds),
+                PathCode(graphics, strokePen, brush, bounds),
             SymbolDrawCommandKind.Dot =>
                 $"{graphics}.FillEllipse({brush}, {PointCode(bounds, Start)}.X - {RadiusCode(bounds)}, {PointCode(bounds, Start)}.Y - {RadiusCode(bounds)}, {RadiusCode(bounds)} * 2f, {RadiusCode(bounds)} * 2f);",
             SymbolDrawCommandKind.Text =>
                 $"{{\r\n    var textValue = \"{EscapeCSharpString(Text)}\";\r\n    var textLocation = {PointCode(bounds, Start)};\r\n    var textSize = {bounds}.Height * {Format(FontSize / 100f)}f;\r\n    var textWidth = Math.Min({bounds}.Width, Math.Max({bounds}.Width * 0.45f, Math.Max(1, textValue.Length) * textSize * 1.15f));\r\n    var textHeight = textSize * 1.6f;\r\n    using var textFont = new Font(font.FontFamily, textSize, FontStyle.Bold, GraphicsUnit.Pixel);\r\n    using var textFormat = new StringFormat {{ Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap }};\r\n    {graphics}.DrawString(textValue, textFont, {brush}, new RectangleF(textLocation.X - textWidth / 2f, textLocation.Y - textHeight / 2f, textWidth, textHeight), textFormat);\r\n}}",
             SymbolDrawCommandKind.Arc =>
-                $"{graphics}.DrawArc({pen}, {RectCode(bounds)}, 200f, 140f);",
+                $"{graphics}.DrawArc({strokePen}, {RectCode(bounds)}, 200f, 140f);",
             SymbolDrawCommandKind.Bezier =>
-                $"{graphics}.DrawBezier({pen}, {PointCode(bounds, Start)}, {PointCode(bounds, Control1)}, {PointCode(bounds, Control2)}, {PointCode(bounds, End)});",
+                $"{graphics}.DrawBezier({strokePen}, {PointCode(bounds, Start)}, {PointCode(bounds, Control1)}, {PointCode(bounds, Control2)}, {PointCode(bounds, End)});",
             _ => string.Empty
         };
+
+        if (!UsesStroke || Math.Abs(StrokeWidth - 2f) < 0.001f)
+            return commandCode;
+
+        return $"{{\r\n    using var strokePen = (Pen){pen}.Clone();\r\n    strokePen.Width = {Format(StrokeWidth)}f;\r\n    {IndentCode(commandCode, 4)}\r\n}}";
     }
+
+    [JsonIgnore]
+    public bool UsesStroke => Kind is not SymbolDrawCommandKind.Dot and not SymbolDrawCommandKind.Text;
 
     private static void DrawCapsule(Graphics graphics, Pen pen, Brush brush, RectangleF rect, bool filled)
     {
@@ -2560,6 +3294,12 @@ internal sealed class SymbolDrawCommand
 
     private static string EscapeCSharpString(string value) =>
         value.Replace("\\", "\\\\").Replace("\"", "\\\"");
+
+    private static string IndentCode(string code, int spaces)
+    {
+        var indent = new string(' ', spaces);
+        return string.Join("\r\n", code.Split(["\r\n", "\n"], StringSplitOptions.None).Select(line => indent + line));
+    }
 
     private static float Distance(Point first, PointF second)
     {

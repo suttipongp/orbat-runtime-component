@@ -25,6 +25,8 @@ partial class MainForm
     private Button _resetOrbatButton = null!;
     private Button _openSymbolDesignerButton = null!;
     private Button _viewSymbolLibraryButton = null!;
+    private Button _openSymbolOverlayDemoButton = null!;
+    private ToolTip _symbolsToolTip = null!;
     private ContextMenuStrip _orbatContextMenu = null!;
     private Panel _orbatOptionsPanel = null!;
     private Panel _symbolsHeaderPanel = null!;
@@ -67,6 +69,8 @@ partial class MainForm
         _resetOrbatButton = new Button();
         _openSymbolDesignerButton = new Button();
         _viewSymbolLibraryButton = new Button();
+        _openSymbolOverlayDemoButton = new Button();
+        _symbolsToolTip = new ToolTip(components);
         _orbatContextMenu = new ContextMenuStrip(components);
         _orbatOptionsPanel = new Panel();
         _symbolsHeaderPanel = new Panel();
@@ -272,6 +276,7 @@ partial class MainForm
         _openSymbolDesignerButton.Size = new Size(142, 28);
         _openSymbolDesignerButton.TabIndex = 0;
         _openSymbolDesignerButton.Text = "Open symbol designer";
+        _symbolsToolTip.SetToolTip(_openSymbolDesignerButton, "Draw editable ORBAT symbols with Undo, Redo, copy, paste, and library save/load.");
         _openSymbolDesignerButton.UseVisualStyleBackColor = true;
         // 
         // _viewSymbolLibraryButton
@@ -282,7 +287,19 @@ partial class MainForm
         _viewSymbolLibraryButton.Size = new Size(96, 28);
         _viewSymbolLibraryButton.TabIndex = 1;
         _viewSymbolLibraryButton.Text = "View library";
+        _symbolsToolTip.SetToolTip(_viewSymbolLibraryButton, "Browse saved ORBAT symbols and reopen them in the designer for editing.");
         _viewSymbolLibraryButton.UseVisualStyleBackColor = true;
+        // 
+        // _openSymbolOverlayDemoButton
+        // 
+        _openSymbolOverlayDemoButton.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+        _openSymbolOverlayDemoButton.Location = new Point(260, 8);
+        _openSymbolOverlayDemoButton.Name = "_openSymbolOverlayDemoButton";
+        _openSymbolOverlayDemoButton.Size = new Size(132, 28);
+        _openSymbolOverlayDemoButton.TabIndex = 2;
+        _openSymbolOverlayDemoButton.Text = "Overlay demo";
+        _symbolsToolTip.SetToolTip(_openSymbolOverlayDemoButton, "Preview map overlay symbols with unit/equipment amplifier boxes.");
+        _openSymbolOverlayDemoButton.UseVisualStyleBackColor = true;
         // 
         // _orbatOptionsPanel
         // 
@@ -309,6 +326,7 @@ partial class MainForm
         // 
         // _symbolsHeaderPanel
         // 
+        _symbolsHeaderPanel.Controls.Add(_openSymbolOverlayDemoButton);
         _symbolsHeaderPanel.Controls.Add(_viewSymbolLibraryButton);
         _symbolsHeaderPanel.Controls.Add(_openSymbolDesignerButton);
         _symbolsHeaderPanel.Dock = DockStyle.Top;

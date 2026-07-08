@@ -22,7 +22,8 @@ public static class OrbatDataTableMapper
         string reinforcedColumn,
         string reducedColumn,
         string sortColumn,
-        bool sidcOverridesFields = true)
+        bool sidcOverridesFields = true,
+        string symbolDomainColumn = "SymbolDomain")
     {
         if (table == null)
             throw new ArgumentNullException(nameof(table));
@@ -55,6 +56,7 @@ public static class OrbatDataTableMapper
             var unitType = useSidc && sidcParts.UnitType.HasValue
                 ? sidcParts.UnitType.Value
                 : ReadUnitType(unitTypeText, sidcParts.UnitType ?? OrbatUnitType.Unspecified);
+            var symbolDomain = ReadEnum(ReadString(row, symbolDomainColumn), OrbatSymbolDomain.LandUnit);
             var headquarters = useSidc && sidcParts.Headquarters.HasValue
                 ? sidcParts.Headquarters.Value
                 : ReadBoolean(row, headquartersColumn) || sidcParts.Headquarters == true;
@@ -66,7 +68,7 @@ public static class OrbatDataTableMapper
                 : ReadBoolean(row, plannedAnticipatedColumn) || sidcParts.PlannedAnticipated == true;
             sidc ??= OrbatSidcParser.Compose(affiliation, echelon, unitType, headquarters, taskForce, plannedAnticipated);
 
-            records.Add(new OrbatUnitRecord
+            var record = new OrbatUnitRecord
             {
                 Id = id,
                 ParentId = ReadOptionalString(row, parentIdColumn),
@@ -74,6 +76,7 @@ public static class OrbatDataTableMapper
                 ShortName = ReadOptionalString(row, shortNameColumn),
                 UniqueDesignation = ReadOptionalString(row, uniqueDesignationColumn),
                 Affiliation = affiliation,
+                SymbolDomain = symbolDomain,
                 Echelon = echelon,
                 UnitType = unitType,
                 Sidc = sidc,
@@ -86,7 +89,9 @@ public static class OrbatDataTableMapper
                 Reinforced = reinforcedReduced == OrbatReinforcedReduced.Reinforced || reinforcedReduced == OrbatReinforcedReduced.ReinforcedAndReduced,
                 Reduced = reinforcedReduced == OrbatReinforcedReduced.Reduced || reinforcedReduced == OrbatReinforcedReduced.ReinforcedAndReduced,
                 SortOrder = ReadInteger(row, sortColumn)
-            });
+            };
+            ReadAmplifiers(row, record);
+            records.Add(record);
         }
 
         return records;
@@ -124,6 +129,39 @@ public static class OrbatDataTableMapper
             return OrbatUnitType.Unspecified;
 
         return Enum.TryParse(value, true, out OrbatUnitType parsed) ? parsed : fallback;
+    }
+
+    private static void ReadAmplifiers(DataRow row, OrbatUnitRecord record)
+    {
+        var layout = OrbatSymbolAmplifierLayouts.GetLayout(record.SymbolDomain);
+        foreach (var field in layout.Fields)
+        {
+            var value = ReadAmplifierValue(row, field);
+            if (!string.IsNullOrWhiteSpace(value))
+                record.Amplifiers[field.Key] = value;
+        }
+    }
+
+    private static string ReadAmplifierValue(DataRow row, OrbatSymbolAmplifierField field)
+    {
+        var sanitized = SanitizeAmplifierKey(field.Key);
+        foreach (DataColumn column in row.Table.Columns)
+        {
+            var columnName = column.ColumnName;
+            if (columnName.Equals(field.Key, StringComparison.OrdinalIgnoreCase)
+                || columnName.Equals(sanitized, StringComparison.OrdinalIgnoreCase)
+                || columnName.Equals("Amplifier_" + sanitized, StringComparison.OrdinalIgnoreCase))
+            {
+                return ReadString(row, columnName);
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private static string SanitizeAmplifierKey(string value)
+    {
+        return new string(value.Where(char.IsLetterOrDigit).ToArray());
     }
 
     private static bool ReadBoolean(DataRow row, string columnName)

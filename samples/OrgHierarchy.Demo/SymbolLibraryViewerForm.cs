@@ -35,7 +35,7 @@ public sealed class SymbolLibraryViewerForm : Form
         Text = "ORBAT Symbol Library";
         StartPosition = FormStartPosition.CenterParent;
         MinimumSize = new Size(980, 680);
-        Size = new Size(1120, 760);
+        Size = new Size(1280, 820);
 
         _thumbnailImages.ImageSize = new Size(180, 120);
         _thumbnailImages.ColorDepth = ColorDepth.Depth32Bit;
@@ -51,6 +51,7 @@ public sealed class SymbolLibraryViewerForm : Form
 
         _preview.Dock = DockStyle.Fill;
         _preview.BackColor = Color.White;
+        _preview.PreviewScale = 1.5f;
 
         _browseFolderButton.Click += (_, _) => BrowseFolder();
         _openFilesButton.Click += (_, _) => OpenFiles();
@@ -79,7 +80,7 @@ public sealed class SymbolLibraryViewerForm : Form
         var split = new SplitContainer
         {
             Dock = DockStyle.Fill,
-            SplitterDistance = 620
+            SplitterDistance = 560
         };
         split.Panel1.Controls.Add(_symbolListView);
         split.Panel2.Controls.Add(CreateDetailPanel());
@@ -132,8 +133,8 @@ public sealed class SymbolLibraryViewerForm : Form
             ColumnCount = 1,
             RowCount = 2
         };
-        panel.RowStyles.Add(new RowStyle(SizeType.Percent, 58));
-        panel.RowStyles.Add(new RowStyle(SizeType.Percent, 42));
+        panel.RowStyles.Add(new RowStyle(SizeType.Percent, 72));
+        panel.RowStyles.Add(new RowStyle(SizeType.Percent, 28));
         panel.Controls.Add(_preview, 0, 0);
         panel.Controls.Add(CreateMetadataPanel(), 0, 1);
         return panel;
@@ -340,7 +341,7 @@ public sealed class SymbolLibraryViewerForm : Form
                     Tag = item,
                     ToolTipText = file
                 };
-                listItem.Group = groups[GetGroupKey(item.Definition.FrameShape)];
+                listItem.Group = groups[GetGroupKey(item.Definition.GetEffectiveFrameShape())];
                 listItem.SubItems.Add(item.Definition.UnitType);
                 _symbolListView.Items.Add(listItem);
             }
@@ -413,11 +414,12 @@ public sealed class SymbolLibraryViewerForm : Form
             return;
 
         var definition = item.Definition;
-        _preview.SetFrame(definition.FrameShape, definition.FrameStatus);
+        _preview.SetFrame(definition.GetEffectiveFrameShape(), definition.FrameStatus);
+        _preview.PhysicalDomain = definition.GetEffectivePhysicalDomain();
         _preview.SetCommands(definition.Commands);
         _nameLabel.Text = item.DisplayName;
         _unitTypeLabel.Text = definition.UnitType;
-        _frameLabel.Text = definition.FrameShape.ToString();
+        _frameLabel.Text = $"{definition.GetEffectiveAffiliation()} / {definition.GetEffectivePhysicalDomain()}";
         _statusValueLabel.Text = definition.FrameStatus.ToString();
         _commandCountLabel.Text = definition.Commands.Count.ToString();
         _fileTextBox.Text = item.FileName;
@@ -454,11 +456,13 @@ public sealed class SymbolLibraryViewerForm : Form
         graphics.Clear(Color.White);
 
         var contentBounds = new RectangleF(12, 8, 156, 104);
-        var frame = SymbolFrameRenderer.GetFittedFrame(contentBounds, definition.FrameShape, definition.Commands, IconGuideShape.FlatTopBottom);
+        var frameShape = definition.GetEffectiveFrameShape();
+        var frame = SymbolFrameRenderer.GetFittedFrame(contentBounds, frameShape, definition.Commands, IconGuideShape.FlatTopBottom);
+        var drawingFrame = SymbolFrameRenderer.GetInteriorFrame(frame, frameShape, IconGuideShape.FlatTopBottom);
         using var pen = new Pen(Color.Black, 2f);
-        SymbolFrameRenderer.DrawFrame(graphics, frame, definition.FrameShape, definition.FrameStatus, fillFrame: true, IconGuideShape.FlatTopBottom);
+        SymbolFrameRenderer.DrawFrame(graphics, frame, frameShape, definition.FrameStatus, fillFrame: true, IconGuideShape.FlatTopBottom);
         foreach (var command in definition.Commands)
-            command.Draw(graphics, frame, pen, Brushes.Black);
+            SymbolFrameRenderer.DrawCommand(graphics, frame, SymbolFrameRenderer.GetCommandFrame(drawingFrame, frameShape, command), frameShape, command, pen, Brushes.Black, IconGuideShape.FlatTopBottom);
 
         return bitmap;
     }
