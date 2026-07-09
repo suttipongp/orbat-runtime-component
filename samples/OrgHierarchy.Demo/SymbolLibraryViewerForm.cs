@@ -16,13 +16,14 @@ public sealed class SymbolLibraryViewerForm : Form
     private readonly Button _openFilesButton = new() { Text = "Open files", AutoSize = true };
     private readonly Button _reloadButton = new() { Text = "Reload", AutoSize = true };
     private readonly Button _editInDesignerButton = new() { Text = "Edit in designer", AutoSize = true };
+    private readonly Button _deleteFileButton = new() { Text = "Delete file", AutoSize = true };
     private readonly Label _statusLabel = new() { Dock = DockStyle.Fill, ForeColor = SystemColors.GrayText, TextAlign = ContentAlignment.MiddleLeft };
     private readonly ListView _symbolListView = new();
     private readonly ImageList _thumbnailImages = new();
     private readonly SymbolPreviewControl _preview = new();
     private readonly Label _nameLabel = CreateValueLabel();
+    private readonly Label _symbolKindLabel = new() { Text = "Unit type", AutoSize = true, Margin = new Padding(0, 6, 8, 0) };
     private readonly Label _unitTypeLabel = CreateValueLabel();
-    private readonly Label _equipmentFunctionLabel = CreateValueLabel();
     private readonly Label _frameLabel = CreateValueLabel();
     private readonly Label _statusValueLabel = CreateValueLabel();
     private readonly Label _commandCountLabel = CreateValueLabel();
@@ -58,6 +59,7 @@ public sealed class SymbolLibraryViewerForm : Form
         _openFilesButton.Click += (_, _) => OpenFiles();
         _reloadButton.Click += (_, _) => ReloadCurrentLibrary();
         _editInDesignerButton.Click += (_, _) => EditSelectedInDesigner();
+        _deleteFileButton.Click += (_, _) => DeleteSelectedFile();
 
         Controls.Add(CreateMainLayout());
         Load += (_, _) => LoadRecentLibrary();
@@ -95,7 +97,7 @@ public sealed class SymbolLibraryViewerForm : Form
         var toolbar = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            ColumnCount = 6
+            ColumnCount = 7
         };
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 94));
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -103,6 +105,7 @@ public sealed class SymbolLibraryViewerForm : Form
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90));
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 76));
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 126));
+        toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 102));
 
         toolbar.Controls.Add(new Label { Text = "Library", AutoSize = true, TextAlign = ContentAlignment.MiddleLeft, Margin = new Padding(0, 7, 8, 0) }, 0, 0);
         toolbar.Controls.Add(_libraryPathTextBox, 1, 0);
@@ -110,6 +113,7 @@ public sealed class SymbolLibraryViewerForm : Form
         toolbar.Controls.Add(_openFilesButton, 3, 0);
         toolbar.Controls.Add(_reloadButton, 4, 0);
         toolbar.Controls.Add(_editInDesignerButton, 5, 0);
+        toolbar.Controls.Add(_deleteFileButton, 6, 0);
         return toolbar;
     }
 
@@ -147,26 +151,30 @@ public sealed class SymbolLibraryViewerForm : Form
         {
             Dock = DockStyle.Fill,
             ColumnCount = 2,
-            RowCount = 7,
+            RowCount = 6,
             Padding = new Padding(0, 8, 0, 0)
         };
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 96));
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
         AddMetadataRow(panel, 0, "Name", _nameLabel);
-        AddMetadataRow(panel, 1, "Unit type", _unitTypeLabel);
-        AddMetadataRow(panel, 2, "Equipment fn", _equipmentFunctionLabel);
-        AddMetadataRow(panel, 3, "Frame", _frameLabel);
-        AddMetadataRow(panel, 4, "Status", _statusValueLabel);
-        AddMetadataRow(panel, 5, "Commands", _commandCountLabel);
-        AddMetadataRow(panel, 6, "File", _fileTextBox);
+        AddMetadataRow(panel, 1, _symbolKindLabel, _unitTypeLabel);
+        AddMetadataRow(panel, 2, "Frame", _frameLabel);
+        AddMetadataRow(panel, 3, "Status", _statusValueLabel);
+        AddMetadataRow(panel, 4, "Commands", _commandCountLabel);
+        AddMetadataRow(panel, 5, "File", _fileTextBox);
         return panel;
     }
 
     private static void AddMetadataRow(TableLayoutPanel panel, int row, string label, Control value)
     {
-        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, row == 6 ? 56 : 30));
-        panel.Controls.Add(new Label { Text = label, AutoSize = true, Margin = new Padding(0, 6, 8, 0) }, 0, row);
+        AddMetadataRow(panel, row, new Label { Text = label, AutoSize = true, Margin = new Padding(0, 6, 8, 0) }, value);
+    }
+
+    private static void AddMetadataRow(TableLayoutPanel panel, int row, Control label, Control value)
+    {
+        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, row == 5 ? 56 : 30));
+        panel.Controls.Add(label, 0, row);
         panel.Controls.Add(value, 1, row);
     }
 
@@ -234,6 +242,39 @@ public sealed class SymbolLibraryViewerForm : Form
         using var form = new SymbolDesignerForm(item.FileName);
         form.ShowDialog(this);
         ReloadCurrentLibrary();
+    }
+
+    private void DeleteSelectedFile()
+    {
+        if (_symbolListView.SelectedItems.Count == 0 || _symbolListView.SelectedItems[0].Tag is not SymbolLibraryItem item)
+        {
+            MessageBox.Show(this, "Please select a symbol file to delete.", "Symbol Library", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        if (!File.Exists(item.FileName))
+        {
+            MessageBox.Show(this, "The selected file no longer exists.", "Symbol Library", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            ReloadCurrentLibrary();
+            return;
+        }
+
+        var message = $"Delete this symbol library file?\n\n{item.DisplayName}\n{item.FileName}";
+        var result = MessageBox.Show(this, message, "Delete symbol library file", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+        if (result != DialogResult.Yes)
+            return;
+
+        try
+        {
+            File.Delete(item.FileName);
+            _loadedFiles = _loadedFiles.Where(file => !file.Equals(item.FileName, StringComparison.OrdinalIgnoreCase)).ToArray();
+            _statusLabel.Text = $"Deleted {Path.GetFileName(item.FileName)}.";
+            ReloadCurrentLibrary();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Could not delete the selected file.\n\n{ex.Message}", "Symbol Library", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
     private void LoadRecentLibrary()
@@ -328,6 +369,7 @@ public sealed class SymbolLibraryViewerForm : Form
 
             var groups = CreateSymbolGroups();
             var skipped = 0;
+            var items = new List<SymbolLibraryItem>();
             foreach (var file in files)
             {
                 if (!TryLoadItem(file, out var item))
@@ -336,15 +378,25 @@ public sealed class SymbolLibraryViewerForm : Form
                     continue;
                 }
 
-                var imageKey = file;
+                items.Add(item);
+            }
+
+            foreach (var item in items
+            .OrderBy(item => item.DomainSortOrder)
+            .ThenBy(item => item.PrimarySortText, StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(item => item.SecondarySortText, StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(item => item.DisplayName, StringComparer.CurrentCultureIgnoreCase)
+                .ThenBy(item => Path.GetFileName(item.FileName), StringComparer.CurrentCultureIgnoreCase))
+            {
+                var imageKey = item.FileName;
                 _thumbnailImages.Images.Add(imageKey, RenderThumbnail(item.Definition));
                 var listItem = new ListViewItem(item.DisplayName, imageKey)
                 {
                     Tag = item,
-                    ToolTipText = file
+                    ToolTipText = item.FileName
                 };
-                listItem.Group = groups[GetGroupKey(item.Definition.GetEffectiveFrameShape())];
-                listItem.SubItems.Add(item.Definition.UnitType);
+                listItem.Group = groups[GetGroupKey(item.Definition.GetEffectivePhysicalDomain())];
+                listItem.SubItems.Add(item.PrimarySortText);
                 _symbolListView.Items.Add(listItem);
             }
 
@@ -365,10 +417,8 @@ public sealed class SymbolLibraryViewerForm : Form
     private Dictionary<string, ListViewGroup> CreateSymbolGroups()
     {
         var groups = new Dictionary<string, ListViewGroup>(StringComparer.OrdinalIgnoreCase);
-        AddSymbolGroup(groups, "Friendly", "Friendly");
-        AddSymbolGroup(groups, "Hostile", "Hostile");
-        AddSymbolGroup(groups, "Unknown", "Unknown");
-        AddSymbolGroup(groups, "Neutral", "Neutral");
+        AddSymbolGroup(groups, "LandUnit", "Land Unit");
+        AddSymbolGroup(groups, "Equipment", "Equipment");
         AddSymbolGroup(groups, "Other", "Other");
         return groups;
     }
@@ -380,14 +430,12 @@ public sealed class SymbolLibraryViewerForm : Form
         _symbolListView.Groups.Add(group);
     }
 
-    private static string GetGroupKey(SymbolFrameShape frameShape)
+    private static string GetGroupKey(SymbolPhysicalDomain domain)
     {
-        return frameShape switch
+        return domain switch
         {
-            SymbolFrameShape.FriendlyUnit or SymbolFrameShape.FriendlyEquipment => "Friendly",
-            SymbolFrameShape.Hostile => "Hostile",
-            SymbolFrameShape.Unknown => "Unknown",
-            SymbolFrameShape.Neutral => "Neutral",
+            SymbolPhysicalDomain.LandUnit => "LandUnit",
+            SymbolPhysicalDomain.Equipment => "Equipment",
             _ => "Other"
         };
     }
@@ -420,8 +468,18 @@ public sealed class SymbolLibraryViewerForm : Form
         _preview.PhysicalDomain = definition.GetEffectivePhysicalDomain();
         _preview.SetCommands(definition.Commands);
         _nameLabel.Text = item.DisplayName;
-        _unitTypeLabel.Text = definition.UnitType;
-        _equipmentFunctionLabel.Text = definition.EquipmentFunction;
+        if (definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment)
+        {
+            _symbolKindLabel.Text = "Equipment";
+            _unitTypeLabel.Text = string.IsNullOrWhiteSpace(definition.Variant)
+                ? definition.EquipmentFunction
+                : $"{definition.EquipmentFunction} / {definition.Variant}";
+        }
+        else
+        {
+            _symbolKindLabel.Text = "Unit type";
+            _unitTypeLabel.Text = definition.UnitType;
+        }
         _frameLabel.Text = $"{definition.GetEffectiveAffiliation()} / {definition.GetEffectivePhysicalDomain()}";
         _statusValueLabel.Text = definition.FrameStatus.ToString();
         _commandCountLabel.Text = definition.Commands.Count.ToString();
@@ -445,7 +503,6 @@ public sealed class SymbolLibraryViewerForm : Form
         _preview.SetCommands(Array.Empty<SymbolDrawCommand>());
         _nameLabel.Text = string.Empty;
         _unitTypeLabel.Text = string.Empty;
-        _equipmentFunctionLabel.Text = string.Empty;
         _frameLabel.Text = string.Empty;
         _statusValueLabel.Text = string.Empty;
         _commandCountLabel.Text = string.Empty;
@@ -488,21 +545,53 @@ public sealed class SymbolLibraryViewerForm : Form
 
     private sealed record SymbolLibraryItem(string FileName, SymbolLibraryDefinition Definition)
     {
+        public int DomainSortOrder =>
+            Definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment ? 1 : 0;
+
+        public string PrimarySortText =>
+            Definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
+                ? !string.IsNullOrWhiteSpace(Definition.EquipmentFunction)
+                    ? Definition.EquipmentFunction
+                    : GetLibraryNameFromFileName()
+                : !string.IsNullOrWhiteSpace(Definition.UnitType)
+                    ? Definition.UnitType
+                    : GetLibraryNameFromFileName();
+
+        public string SecondarySortText =>
+            Definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
+                ? Definition.Variant
+                : string.Empty;
+
         public string DisplayName =>
             ShouldPreferFileName()
                 ? GetLibraryNameFromFileName()
                 : !string.IsNullOrWhiteSpace(Definition.Name)
                     ? Definition.Name
+                    : Definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
+                        ? GetDefaultEquipmentDisplayName()
                     : !string.IsNullOrWhiteSpace(Definition.UnitType)
                         ? Definition.UnitType
                         : GetLibraryNameFromFileName();
 
+        private string GetDefaultEquipmentDisplayName()
+        {
+            if (!string.IsNullOrWhiteSpace(Definition.Variant))
+                return Definition.Variant;
+
+            return !string.IsNullOrWhiteSpace(Definition.EquipmentFunction)
+                ? Definition.EquipmentFunction
+                : GetLibraryNameFromFileName();
+        }
+
         private bool ShouldPreferFileName()
         {
             var fileName = GetLibraryNameFromFileName();
+            var defaultKindName = Definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
+                ? Definition.EquipmentFunction
+                : Definition.UnitType;
             return !string.IsNullOrWhiteSpace(fileName)
                 && !fileName.Equals(Definition.Name, StringComparison.OrdinalIgnoreCase)
-                && Definition.Name.Equals(Definition.UnitType, StringComparison.OrdinalIgnoreCase);
+                && Definition.Name.Equals(defaultKindName, StringComparison.OrdinalIgnoreCase);
         }
 
         private string GetLibraryNameFromFileName()
@@ -513,7 +602,12 @@ public sealed class SymbolLibraryViewerForm : Form
             else
                 name = Path.GetFileNameWithoutExtension(name);
 
-            return string.IsNullOrWhiteSpace(name) ? Definition.UnitType : name;
+            if (!string.IsNullOrWhiteSpace(name))
+                return name;
+
+            return Definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
+                ? Definition.EquipmentFunction
+                : Definition.UnitType;
         }
     }
 

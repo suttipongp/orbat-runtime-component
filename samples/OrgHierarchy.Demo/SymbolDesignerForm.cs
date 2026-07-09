@@ -12,6 +12,7 @@ public sealed class SymbolDesignerForm : Form
     private readonly ComboBox _toolComboBox = new();
     private readonly ComboBox _unitTypeComboBox = new();
     private readonly ComboBox _equipmentFunctionComboBox = new();
+    private readonly TextBox _equipmentVariantTextBox = new() { Width = 110 };
     private readonly ComboBox _affiliationComboBox = new();
     private readonly ComboBox _physicalDomainComboBox = new();
     private readonly ComboBox _frameStatusComboBox = new();
@@ -69,6 +70,7 @@ public sealed class SymbolDesignerForm : Form
         _equipmentFunctionComboBox.Items.AddRange(Enum.GetNames<Components.OrbatEquipmentFunction>().Cast<object>().ToArray());
         _equipmentFunctionComboBox.SelectedItem = Components.OrbatEquipmentFunction.Unspecified.ToString();
         _equipmentFunctionComboBox.SelectedIndexChanged += (_, _) => RefreshOutput();
+        _equipmentVariantTextBox.TextChanged += (_, _) => RefreshOutput();
 
         _affiliationComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         _affiliationComboBox.Width = 92;
@@ -193,6 +195,8 @@ public sealed class SymbolDesignerForm : Form
         toolbar.Controls.Add(_unitTypeComboBox);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Equipment function", Margin = new Padding(8, 6, 4, 0) });
         toolbar.Controls.Add(_equipmentFunctionComboBox);
+        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Variant", Margin = new Padding(8, 6, 4, 0) });
+        toolbar.Controls.Add(_equipmentVariantTextBox);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Affiliation", Margin = new Padding(14, 6, 4, 0) });
         toolbar.Controls.Add(_affiliationComboBox);
         toolbar.Controls.Add(new Label { AutoSize = true, Text = "Status", Margin = new Padding(8, 6, 4, 0) });
@@ -494,6 +498,7 @@ public sealed class SymbolDesignerForm : Form
         var equipment = GetSelectedPhysicalDomain() == SymbolPhysicalDomain.Equipment;
         _unitTypeComboBox.Enabled = !equipment;
         _equipmentFunctionComboBox.Enabled = equipment;
+        _equipmentVariantTextBox.Enabled = equipment;
     }
 
     private void SelectTool(SymbolDesignerTool tool)
@@ -589,7 +594,7 @@ public sealed class SymbolDesignerForm : Form
         {
             Title = "Save symbol library",
             Filter = "ORBAT symbol library|*.orbatsymbol.json|JSON files|*.json|All files|*.*",
-            FileName = $"{_unitTypeComboBox.SelectedItem}.orbatsymbol.json"
+            FileName = $"{GetDefaultLibraryFileBaseName()}.orbatsymbol.json"
         };
 
         if (dialog.ShowDialog(this) != DialogResult.OK)
@@ -603,6 +608,7 @@ public sealed class SymbolDesignerForm : Form
             Name = libraryName,
             UnitType = libraryUnitType,
             EquipmentFunction = Convert.ToString(_equipmentFunctionComboBox.SelectedItem) ?? Components.OrbatEquipmentFunction.Unspecified.ToString(),
+            Variant = _equipmentVariantTextBox.Text.Trim(),
             Affiliation = GetSelectedAffiliation(),
             PhysicalDomain = GetSelectedPhysicalDomain(),
             FrameShape = GetSelectedFrameShape(),
@@ -614,6 +620,33 @@ public sealed class SymbolDesignerForm : Form
         var options = new JsonSerializerOptions { WriteIndented = true };
         options.Converters.Add(new JsonStringEnumConverter());
         File.WriteAllText(dialog.FileName, JsonSerializer.Serialize(definition, options), Encoding.UTF8);
+    }
+
+    private string GetDefaultLibraryFileBaseName()
+    {
+        if (GetSelectedPhysicalDomain() == SymbolPhysicalDomain.Equipment)
+        {
+            var equipmentFunction = Convert.ToString(_equipmentFunctionComboBox.SelectedItem);
+            var baseName = string.IsNullOrWhiteSpace(equipmentFunction)
+                ? Components.OrbatEquipmentFunction.Unspecified.ToString()
+                : equipmentFunction;
+            var variant = _equipmentVariantTextBox.Text.Trim();
+            return string.IsNullOrWhiteSpace(variant)
+                ? baseName
+                : $"{baseName}.{SanitizeFileNamePart(variant)}";
+        }
+
+        var unitType = Convert.ToString(_unitTypeComboBox.SelectedItem);
+        return string.IsNullOrWhiteSpace(unitType)
+            ? Components.OrbatUnitType.Unspecified.ToString()
+            : unitType;
+    }
+
+    private static string SanitizeFileNamePart(string value)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        var sanitized = new string(value.Select(ch => invalid.Contains(ch) ? '_' : ch).ToArray()).Trim();
+        return string.IsNullOrWhiteSpace(sanitized) ? "Variant" : sanitized;
     }
 
     private static string GetLibraryNameFromFileName(string fileName)
@@ -672,6 +705,7 @@ public sealed class SymbolDesignerForm : Form
             _unitTypeComboBox.SelectedItem = unitType.ToString();
         if (Enum.TryParse(definition.EquipmentFunction, out Components.OrbatEquipmentFunction equipmentFunction))
             _equipmentFunctionComboBox.SelectedItem = equipmentFunction.ToString();
+        _equipmentVariantTextBox.Text = definition.Variant;
         _affiliationComboBox.SelectedItem = definition.GetEffectiveAffiliation().ToString();
         _physicalDomainComboBox.SelectedItem = definition.GetEffectivePhysicalDomain().ToString();
         UpdateFunctionSelectorState();
@@ -1544,13 +1578,12 @@ internal sealed class SymbolDesignerCanvas : Control
         var workspace = GetWorkspaceBounds();
         var frame = GetFrameBounds();
         var drawingFrame = GetDrawingFrameBounds(frame);
-        var guideFrame = GetGuideFrameBounds(frame);
         e.Graphics.FillRectangle(Brushes.White, workspace);
         DrawReference(e.Graphics, drawingFrame);
         if (ShowGrid)
-            DrawGrid(e.Graphics, guideFrame, guideFrame);
+            DrawGrid(e.Graphics, drawingFrame, drawingFrame);
         if (ShowIconGuide)
-            DrawIconGuide(e.Graphics, guideFrame);
+            DrawIconGuide(e.Graphics, FrameShape == SymbolFrameShape.FriendlyEquipment ? frame : drawingFrame);
         SymbolFrameRenderer.DrawFrame(e.Graphics, frame, FrameShape, FrameStatus, fillFrame: false, IconGuideShape);
         DrawDrawingBounds(e.Graphics, drawingFrame);
 
@@ -1804,7 +1837,7 @@ internal sealed class SymbolDesignerCanvas : Control
 
     private void DrawDrawingBounds(Graphics graphics, RectangleF drawingFrame)
     {
-        if (FrameShape == SymbolFrameShape.FriendlyUnit)
+        if (FrameShape is SymbolFrameShape.FriendlyUnit or SymbolFrameShape.FriendlyEquipment)
             return;
 
         using var pen = new Pen(Color.FromArgb(170, 40, 120, 220), 1f) { DashStyle = DashStyle.Dash };
@@ -2105,7 +2138,9 @@ internal sealed class SymbolDesignerCanvas : Control
     private IEnumerable<float> GetVerticalGridCoordinates()
     {
         var divisions = Math.Max(1, GridDivisions);
-        var horizontalStepInFrame = 1f / divisions / StandardFrameAspectRatio;
+        var frame = GetDrawingFrameBounds();
+        var aspectRatio = frame.Width / Math.Max(1f, frame.Height);
+        var horizontalStepInFrame = 1f / divisions / aspectRatio;
         return GetCenteredGridCoordinates(horizontalStepInFrame);
     }
 
@@ -2309,7 +2344,9 @@ internal sealed class SymbolPreviewControl : Control
 
         var contentBounds = new RectangleF(tile.Left + 6, tile.Top + 26, Math.Max(1, tile.Width - 12), Math.Max(1, tile.Height - 34));
         var frame = GetPreviewFrame(contentBounds, shape);
-        var symbolFrame = SymbolFrameRenderer.GetInteriorFrame(frame, shape, IconGuideShape.FlatTopBottom);
+        var symbolFrame = PhysicalDomain == SymbolPhysicalDomain.Equipment
+            ? GetEquipmentPreviewGuide(contentBounds)
+            : SymbolFrameRenderer.GetInteriorFrame(frame, shape, IconGuideShape.FlatTopBottom);
 
         using var pen = new Pen(Color.Black, 2f);
         SymbolFrameRenderer.DrawFrame(graphics, frame, shape, _frameStatus, fillFrame: true, IconGuideShape.FlatTopBottom);
@@ -2326,12 +2363,72 @@ internal sealed class SymbolPreviewControl : Control
 
     private RectangleF GetPreviewFrame(RectangleF contentBounds, SymbolFrameShape shape)
     {
-        var frame = SymbolFrameRenderer.GetFittedFrame(contentBounds, shape, Array.Empty<SymbolDrawCommand>(), IconGuideShape.FlatTopBottom);
-        if (PreviewScale <= 1f)
-            return frame;
+        if (PhysicalDomain == SymbolPhysicalDomain.Equipment)
+            return GetEquipmentPreviewFrame(contentBounds, shape);
 
-        return SymbolFrameRenderer.ScaleFrameToFitVisualBounds(frame, contentBounds, shape, IconGuideShape.FlatTopBottom, PreviewScale);
+        return GetLandUnitPreviewFrame(contentBounds, shape);
     }
+
+    private RectangleF GetLandUnitPreviewFrame(RectangleF contentBounds, SymbolFrameShape shape)
+    {
+        var baseWidth = Math.Min(contentBounds.Width, contentBounds.Height);
+        baseWidth = Math.Min(baseWidth * PreviewScale, Math.Min(contentBounds.Width, contentBounds.Height));
+        var friendlyHeight = baseWidth / StandardFrameAspectRatio;
+        var center = new PointF(contentBounds.Left + contentBounds.Width / 2f, contentBounds.Top + contentBounds.Height / 2f);
+
+        return shape switch
+        {
+            SymbolFrameShape.Hostile => new RectangleF(
+                center.X - baseWidth / 2f,
+                center.Y - baseWidth / 2f,
+                baseWidth,
+                baseWidth),
+            SymbolFrameShape.Neutral => new RectangleF(
+                center.X - friendlyHeight / 2f,
+                center.Y - friendlyHeight / 2f,
+                friendlyHeight,
+                friendlyHeight),
+            SymbolFrameShape.Unknown => new RectangleF(
+                center.X - baseWidth / 2f,
+                center.Y - friendlyHeight / 2f,
+                baseWidth,
+                friendlyHeight),
+            _ => new RectangleF(
+                center.X - baseWidth / 2f,
+                center.Y - friendlyHeight / 2f,
+                baseWidth,
+                friendlyHeight)
+        };
+
+    }
+
+    private RectangleF GetEquipmentPreviewFrame(RectangleF contentBounds, SymbolFrameShape shape)
+    {
+        var guide = GetEquipmentPreviewGuide(contentBounds);
+        var center = new PointF(guide.Left + guide.Width / 2f, guide.Top + guide.Height / 2f);
+
+        return shape switch
+        {
+            SymbolFrameShape.Hostile => CenteredFrame(center, guide.Width * 1.18f, guide.Height * 1.18f),
+            SymbolFrameShape.Unknown => CenteredFrame(center, guide.Width * 1.42f, guide.Height * 0.96f),
+            _ => guide
+        };
+    }
+
+    private RectangleF GetEquipmentPreviewGuide(RectangleF contentBounds)
+    {
+        var maxByWidth = contentBounds.Width / 1.5f;
+        var maxByHeight = contentBounds.Height / 1.5f;
+        var side = Math.Min(maxByWidth, maxByHeight);
+        side = Math.Min(side * PreviewScale, Math.Min(maxByWidth, maxByHeight));
+        return CenteredFrame(
+            new PointF(contentBounds.Left + contentBounds.Width / 2f, contentBounds.Top + contentBounds.Height / 2f),
+            side,
+            side);
+    }
+
+    private static RectangleF CenteredFrame(PointF center, float width, float height) =>
+        new(center.X - width / 2f, center.Y - height / 2f, width, height);
 
 }
 
@@ -2341,6 +2438,7 @@ internal sealed class SymbolLibraryDefinition
     public string Name { get; set; } = string.Empty;
     public string UnitType { get; set; } = string.Empty;
     public string EquipmentFunction { get; set; } = Components.OrbatEquipmentFunction.Unspecified.ToString();
+    public string Variant { get; set; } = string.Empty;
     public SymbolAffiliation Affiliation { get; set; } = SymbolAffiliation.Friendly;
     public SymbolPhysicalDomain PhysicalDomain { get; set; } = SymbolPhysicalDomain.LandUnit;
     public SymbolFrameShape FrameShape { get; set; } = SymbolFrameShape.FriendlyUnit;
@@ -2581,13 +2679,7 @@ internal static class SymbolFrameRenderer
 
     private static RectangleF GetEquipmentInteriorFrame(RectangleF frame, IconGuideShape guideShape)
     {
-        var circle = GetGuideCircumcircleBounds(frame, guideShape);
-        var side = Math.Min(circle.Width, circle.Height) * 0.68f;
-        return new RectangleF(
-            circle.Left + (circle.Width - side) / 2f,
-            circle.Top + (circle.Height - side) / 2f,
-            side,
-            side);
+        return GetIconGuideBounds(frame);
     }
 
     private static RectangleF GetEquipmentGuideFrame(RectangleF frame, IconGuideShape guideShape)
@@ -3510,6 +3602,13 @@ internal static class BuiltInSymbolLibrary
                 SymbolDrawCommand.Line(new PointF(0.3f, 0.72f), new PointF(0.7f, 0.28f)),
                 SymbolDrawCommand.Line(new PointF(0.7f, 0.28f), new PointF(0.5f, 0.32f)),
                 SymbolDrawCommand.Line(new PointF(0.7f, 0.28f), new PointF(0.66f, 0.48f))
+            },
+            Components.OrbatEquipmentFunction.GrenadeLauncher => new[]
+            {
+                SymbolDrawCommand.Line(new PointF(0.32f, 0.72f), new PointF(0.68f, 0.36f)),
+                SymbolDrawCommand.Line(new PointF(0.68f, 0.36f), new PointF(0.5f, 0.4f)),
+                SymbolDrawCommand.Line(new PointF(0.68f, 0.36f), new PointF(0.64f, 0.54f)),
+                SymbolDrawCommand.Ellipse(new PointF(0.25f, 0.66f), new PointF(0.39f, 0.8f))
             },
             Components.OrbatEquipmentFunction.AirDefenseGun => new[]
             {

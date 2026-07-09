@@ -13,6 +13,7 @@ public enum OrbatEquipmentFunction
     Sensor,
     Launcher,
     MissileLauncher,
+    GrenadeLauncher,
     AirDefenseGun,
     Vehicle,
     ArmoredVehicle,
