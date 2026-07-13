@@ -16,6 +16,7 @@ public sealed partial class MainForm : Form
     public MainForm()
     {
         InitializeComponent();
+        Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath) ?? Icon;
         KeyPreview = true;
 
         _showUniqueDesignationCheckBox.CheckedChanged += (_, _) =>

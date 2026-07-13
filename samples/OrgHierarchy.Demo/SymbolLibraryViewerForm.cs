@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using OrgHierarchy.Components;
 
 namespace OrgHierarchy.Demo;
 
@@ -466,14 +467,17 @@ public sealed class SymbolLibraryViewerForm : Form
         var definition = item.Definition;
         _preview.SetFrame(definition.GetEffectiveFrameShape(), definition.FrameStatus);
         _preview.PhysicalDomain = definition.GetEffectivePhysicalDomain();
+        _preview.SymbolRole = definition.SymbolRole;
+        _preview.CompositionMode = definition.CompositionMode;
+        _preview.SymbolLayout = definition.Layout ?? OrbatEquipmentSymbolLayout.CreateDefault();
         _preview.SetCommands(definition.Commands);
         _nameLabel.Text = item.DisplayName;
         if (definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment)
         {
             _symbolKindLabel.Text = "Equipment";
             _unitTypeLabel.Text = string.IsNullOrWhiteSpace(definition.Variant)
-                ? definition.EquipmentFunction
-                : $"{definition.EquipmentFunction} / {definition.Variant}";
+                ? $"{definition.EquipmentFunction} ({definition.SymbolRole})"
+                : $"{definition.EquipmentFunction} / {definition.Variant} ({definition.SymbolRole})";
         }
         else
         {
@@ -519,11 +523,19 @@ public sealed class SymbolLibraryViewerForm : Form
         var contentBounds = new RectangleF(12, 8, 156, 104);
         var frameShape = definition.GetEffectiveFrameShape();
         var frame = SymbolFrameRenderer.GetFittedFrame(contentBounds, frameShape, definition.Commands, IconGuideShape.FlatTopBottom);
-        var drawingFrame = SymbolFrameRenderer.GetInteriorFrame(frame, frameShape, IconGuideShape.FlatTopBottom);
+        var interiorFrame = SymbolFrameRenderer.GetInteriorFrame(frame, frameShape, IconGuideShape.FlatTopBottom);
+        var drawingFrame = definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
+            ? SymbolFrameRenderer.GetEquipmentComponentFrame(
+                interiorFrame,
+                definition.CompositionMode == OrbatEquipmentCompositionMode.Composite ? OrbatEquipmentSymbolRole.Composite : definition.SymbolRole,
+                definition.Layout,
+                hasModifier1: false,
+                hasModifier2: false)
+            : interiorFrame;
         using var pen = new Pen(Color.Black, 2f);
-        SymbolFrameRenderer.DrawFrame(graphics, frame, frameShape, definition.FrameStatus, fillFrame: true, IconGuideShape.FlatTopBottom);
+        SymbolFrameRenderer.DrawFrame(graphics, frame, frameShape, definition.FrameStatus, fillFrame: true, IconGuideShape.FlatTopBottom, strokeScale: 1f);
         foreach (var command in definition.Commands)
-            SymbolFrameRenderer.DrawCommand(graphics, frame, SymbolFrameRenderer.GetCommandFrame(drawingFrame, frameShape, command), frameShape, command, pen, Brushes.Black, IconGuideShape.FlatTopBottom);
+            SymbolFrameRenderer.DrawCommand(graphics, frame, SymbolFrameRenderer.GetCommandFrame(drawingFrame, frameShape, command), frameShape, command, pen, Brushes.Black, IconGuideShape.FlatTopBottom, strokeScale: 1f);
 
         return bitmap;
     }

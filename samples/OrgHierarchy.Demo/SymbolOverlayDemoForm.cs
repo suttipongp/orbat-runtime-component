@@ -12,8 +12,10 @@ public sealed class SymbolOverlayDemoForm : Form
     private readonly ComboBox _affiliationComboBox = new();
     private readonly ComboBox _statusComboBox = new();
     private readonly ComboBox _unitTypeComboBox = new();
-    private readonly ComboBox _equipmentFunctionComboBox = new();
+    private readonly ComboBox _equipmentFunctionComboBox = new() { Width = 230, DropDownWidth = 250 };
     private readonly ComboBox _equipmentVariantComboBox = new();
+    private readonly ComboBox _modifier1ComboBox = new();
+    private readonly ComboBox _modifier2ComboBox = new();
     private readonly TableLayoutPanel _fieldsPanel = new();
     private readonly ToolTip _fieldToolTip = new();
     private readonly Dictionary<string, Control> _fieldInputs = new(StringComparer.OrdinalIgnoreCase);
@@ -79,6 +81,9 @@ public sealed class SymbolOverlayDemoForm : Form
             ApplyModelToCanvas();
         };
 
+        ConfigureModifierComboBox(_modifier1ComboBox);
+        ConfigureModifierComboBox(_modifier2ComboBox);
+
         var resetButton = new Button { Text = "Load sample", AutoSize = true };
         resetButton.Click += (_, _) => RebuildFieldEditor(loadSample: true);
 
@@ -130,6 +135,8 @@ public sealed class SymbolOverlayDemoForm : Form
         AddRow(panel, "Unit type", _unitTypeComboBox);
         AddRow(panel, "Equipment fn", _equipmentFunctionComboBox);
         AddRow(panel, "Variant", _equipmentVariantComboBox);
+        AddRow(panel, "Modifier 1", _modifier1ComboBox);
+        AddRow(panel, "Modifier 2", _modifier2ComboBox);
         panel.Controls.Add(resetButton, 1, panel.RowCount);
         panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
         panel.RowCount++;
@@ -143,6 +150,12 @@ public sealed class SymbolOverlayDemoForm : Form
         panel.Controls.Add(new Label { Text = label, AutoSize = true, Margin = new Padding(0, 7, 8, 0) }, 0, row);
         panel.Controls.Add(control, 1, row);
         panel.RowCount++;
+    }
+
+    private void ConfigureModifierComboBox(ComboBox comboBox)
+    {
+        comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        comboBox.SelectedIndexChanged += (_, _) => ApplyModelToCanvas();
     }
 
     private void RebuildFieldEditor(bool loadSample)
@@ -179,6 +192,9 @@ public sealed class SymbolOverlayDemoForm : Form
 
     private void ApplyModelToCanvas()
     {
+        var mainSymbol = GetSelectedDomain() == SymbolPhysicalDomain.Equipment
+            ? LoadEquipmentLibrarySymbol(GetSelectedEquipmentFunction(), GetSelectedEquipmentVariant())
+            : LoadedEquipmentSymbol.Empty;
         _canvas.Model = new OverlaySymbolModel
         {
             Domain = GetSelectedDomain(),
@@ -187,9 +203,12 @@ public sealed class SymbolOverlayDemoForm : Form
             UnitType = GetSelectedUnitType(),
             EquipmentFunction = GetSelectedEquipmentFunction(),
             EquipmentVariant = GetSelectedEquipmentVariant(),
-            EquipmentCommands = GetSelectedDomain() == SymbolPhysicalDomain.Equipment
-                ? LoadEquipmentLibraryCommands(GetSelectedEquipmentFunction(), GetSelectedEquipmentVariant())
-                : Array.Empty<SymbolDrawCommand>(),
+            EquipmentCommands = mainSymbol.Commands,
+            EquipmentSymbolRole = mainSymbol.Role,
+            EquipmentCompositionMode = mainSymbol.CompositionMode,
+            EquipmentLayout = mainSymbol.Layout,
+            Modifier1Commands = LoadSelectedModifierCommands(_modifier1ComboBox),
+            Modifier2Commands = LoadSelectedModifierCommands(_modifier2ComboBox),
             Amplifiers = _fieldInputs.ToDictionary(pair => pair.Key, pair => GetInputText(pair.Value), StringComparer.OrdinalIgnoreCase)
         };
         _canvas.Invalidate();
@@ -297,8 +316,13 @@ public sealed class SymbolOverlayDemoForm : Form
         _unitTypeComboBox.Enabled = !equipment;
         _equipmentFunctionComboBox.Enabled = equipment;
         _equipmentVariantComboBox.Enabled = equipment;
+        _modifier1ComboBox.Enabled = equipment;
+        _modifier2ComboBox.Enabled = equipment;
         if (equipment)
+        {
             RefreshEquipmentVariants();
+            RefreshEquipmentModifierOptions();
+        }
     }
 
     private static OrbatSymbolDomain ToComponentDomain(SymbolPhysicalDomain domain) =>
@@ -320,7 +344,8 @@ public sealed class SymbolOverlayDemoForm : Form
 
         var currentText = GetSelectedEquipmentVariant();
         var variants = LoadLibraryVariants(GetSelectedEquipmentFunction());
-        if (!variants.Contains(currentText, StringComparer.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(currentText))
+        var canonicalVariant = variants.FirstOrDefault(variant => EquipmentVariantsMatch(variant, currentText));
+        if (canonicalVariant == null && !string.IsNullOrWhiteSpace(currentText))
             variants.Insert(0, currentText);
         if (variants.Count == 0)
             variants.AddRange(new[] { "ShortRange", "MediumRange", "LongRange" });
@@ -331,7 +356,8 @@ public sealed class SymbolOverlayDemoForm : Form
             _equipmentVariantComboBox.BeginUpdate();
             _equipmentVariantComboBox.Items.Clear();
             _equipmentVariantComboBox.Items.AddRange(variants.Cast<object>().ToArray());
-            _equipmentVariantComboBox.Text = string.IsNullOrWhiteSpace(currentText) ? variants[0] : currentText;
+            _equipmentVariantComboBox.Text = canonicalVariant
+                ?? (string.IsNullOrWhiteSpace(currentText) ? variants[0] : currentText);
         }
         finally
         {
@@ -365,9 +391,10 @@ public sealed class SymbolOverlayDemoForm : Form
         return variants.ToList();
     }
 
-    private static IReadOnlyList<SymbolDrawCommand> LoadEquipmentLibraryCommands(OrbatEquipmentFunction equipmentFunction, string equipmentVariant)
+    private static LoadedEquipmentSymbol LoadEquipmentLibrarySymbol(OrbatEquipmentFunction equipmentFunction, string equipmentVariant)
     {
-        var fallbackCommands = Array.Empty<SymbolDrawCommand>();
+        LoadedEquipmentSymbol? fallback = null;
+        LoadedEquipmentSymbol? exactComposite = null;
         foreach (var file in GetRecentLibraryFiles())
         {
             try
@@ -377,14 +404,26 @@ public sealed class SymbolOverlayDemoForm : Form
                     continue;
                 if (!Enum.TryParse(definition.EquipmentFunction, out OrbatEquipmentFunction fileFunction) || fileFunction != equipmentFunction)
                     continue;
-                if (definition.Commands.Count == 0)
+                if (definition.Commands.Count == 0 || definition.SymbolRole is OrbatEquipmentSymbolRole.Modifier1 or OrbatEquipmentSymbolRole.Modifier2)
                     continue;
 
-                if (string.Equals(definition.Variant?.Trim(), equipmentVariant.Trim(), StringComparison.OrdinalIgnoreCase))
-                    return definition.Commands;
+                var loaded = new LoadedEquipmentSymbol(
+                    definition.Commands,
+                    definition.SymbolRole,
+                    definition.CompositionMode,
+                    definition.Layout ?? OrbatEquipmentSymbolLayout.CreateDefault());
 
-                if (fallbackCommands.Length == 0 && string.IsNullOrWhiteSpace(definition.Variant))
-                    fallbackCommands = definition.Commands.ToArray();
+                if (EquipmentVariantsMatch(definition.Variant, equipmentVariant))
+                {
+                    if (definition.SymbolRole == OrbatEquipmentSymbolRole.MainFunction)
+                        return loaded;
+                    exactComposite ??= loaded;
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(definition.Variant)
+                    && (fallback == null || definition.SymbolRole == OrbatEquipmentSymbolRole.MainFunction))
+                    fallback = loaded;
             }
             catch
             {
@@ -392,7 +431,102 @@ public sealed class SymbolOverlayDemoForm : Form
             }
         }
 
-        return fallbackCommands;
+        return exactComposite ?? fallback ?? LoadedEquipmentSymbol.Empty;
+    }
+
+    private static bool EquipmentVariantsMatch(string? left, string? right)
+    {
+        var normalizedLeft = NormalizeEquipmentVariant(left);
+        return normalizedLeft.Length > 0
+            && normalizedLeft.Equals(NormalizeEquipmentVariant(right), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizeEquipmentVariant(string? value) =>
+        string.Concat((value ?? string.Empty).Where(char.IsLetterOrDigit));
+
+    private void RefreshEquipmentModifierOptions()
+    {
+        RefreshModifierOptions(_modifier1ComboBox, OrbatEquipmentSymbolRole.Modifier1);
+        RefreshModifierOptions(_modifier2ComboBox, OrbatEquipmentSymbolRole.Modifier2);
+    }
+
+    private static void RefreshModifierOptions(ComboBox comboBox, OrbatEquipmentSymbolRole role)
+    {
+        var selectedFile = (comboBox.SelectedItem as EquipmentModifierOption)?.FileName;
+        var selectedModifier1 = (comboBox.SelectedItem as EquipmentModifierOption)?.Modifier1;
+        var selectedModifier2 = (comboBox.SelectedItem as EquipmentModifierOption)?.Modifier2;
+        var options = new List<EquipmentModifierOption> { new("None", string.Empty, null, null) };
+        if (role == OrbatEquipmentSymbolRole.Modifier1)
+        {
+            options.AddRange(Enum.GetValues<OrbatEquipmentModifier1>()
+                .Where(value => value != OrbatEquipmentModifier1.Unspecified)
+                .Select(value => new EquipmentModifierOption(value.GetDisplayName(), string.Empty, value, null)));
+        }
+        else if (role == OrbatEquipmentSymbolRole.Modifier2)
+        {
+            options.AddRange(Enum.GetValues<OrbatEquipmentModifier2>()
+                .Where(value => value != OrbatEquipmentModifier2.Unspecified)
+                .Select(value => new EquipmentModifierOption(value.GetDisplayName(), string.Empty, null, value)));
+        }
+        foreach (var file in GetRecentLibraryFiles())
+        {
+            try
+            {
+                var definition = JsonSerializer.Deserialize<SymbolLibraryDefinition>(File.ReadAllText(file, Encoding.UTF8), LibraryJsonOptions);
+                if (definition == null || definition.GetEffectivePhysicalDomain() != SymbolPhysicalDomain.Equipment || definition.SymbolRole != role)
+                    continue;
+                var modifierType = role == OrbatEquipmentSymbolRole.Modifier1
+                    ? definition.Modifier1Type
+                    : definition.Modifier2Type;
+                var label = !string.IsNullOrWhiteSpace(modifierType)
+                    && !modifierType.Equals("Unspecified", StringComparison.OrdinalIgnoreCase)
+                        ? SplitPascalCase(modifierType)
+                        : string.IsNullOrWhiteSpace(definition.Name) ? Path.GetFileNameWithoutExtension(file) : definition.Name;
+                options.Add(new EquipmentModifierOption(label, file, null, null));
+            }
+            catch
+            {
+                // Ignore unreadable modifier definitions.
+            }
+        }
+
+        comboBox.BeginUpdate();
+        try
+        {
+            comboBox.Items.Clear();
+            comboBox.Items.Add(options[0]);
+            comboBox.Items.AddRange(options.Skip(1).OrderBy(option => option.Label, StringComparer.CurrentCultureIgnoreCase).Cast<object>().ToArray());
+            comboBox.SelectedItem = options.FirstOrDefault(option =>
+                !string.IsNullOrWhiteSpace(selectedFile)
+                    ? string.Equals(option.FileName, selectedFile, StringComparison.OrdinalIgnoreCase)
+                    : selectedModifier1.HasValue && option.Modifier1 == selectedModifier1
+                        || selectedModifier2.HasValue && option.Modifier2 == selectedModifier2) ?? options[0];
+        }
+        finally
+        {
+            comboBox.EndUpdate();
+        }
+    }
+
+    private static IReadOnlyList<SymbolDrawCommand> LoadSelectedModifierCommands(ComboBox comboBox)
+    {
+        if (comboBox.SelectedItem is not EquipmentModifierOption option)
+            return Array.Empty<SymbolDrawCommand>();
+        if (option.Modifier1 is { } modifier1)
+            return BuiltInSymbolLibrary.Create(modifier1);
+        if (option.Modifier2 is { } modifier2)
+            return BuiltInSymbolLibrary.Create(modifier2);
+        if (string.IsNullOrWhiteSpace(option.FileName))
+            return Array.Empty<SymbolDrawCommand>();
+        try
+        {
+            return JsonSerializer.Deserialize<SymbolLibraryDefinition>(File.ReadAllText(option.FileName, Encoding.UTF8), LibraryJsonOptions)?.Commands
+                ?? (IReadOnlyList<SymbolDrawCommand>)Array.Empty<SymbolDrawCommand>();
+        }
+        catch
+        {
+            return Array.Empty<SymbolDrawCommand>();
+        }
     }
 
     private static IReadOnlyList<string> GetRecentLibraryFiles()
@@ -517,7 +651,34 @@ internal sealed class OverlaySymbolModel
     public OrbatEquipmentFunction EquipmentFunction { get; set; } = OrbatEquipmentFunction.Mortar;
     public string EquipmentVariant { get; set; } = string.Empty;
     public IReadOnlyList<SymbolDrawCommand> EquipmentCommands { get; set; } = Array.Empty<SymbolDrawCommand>();
+    public OrbatEquipmentSymbolRole EquipmentSymbolRole { get; set; } = OrbatEquipmentSymbolRole.MainFunction;
+    public OrbatEquipmentCompositionMode EquipmentCompositionMode { get; set; } = OrbatEquipmentCompositionMode.Composable;
+    public OrbatEquipmentSymbolLayout EquipmentLayout { get; set; } = OrbatEquipmentSymbolLayout.CreateDefault();
+    public IReadOnlyList<SymbolDrawCommand> Modifier1Commands { get; set; } = Array.Empty<SymbolDrawCommand>();
+    public IReadOnlyList<SymbolDrawCommand> Modifier2Commands { get; set; } = Array.Empty<SymbolDrawCommand>();
     public Dictionary<string, string> Amplifiers { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+}
+
+internal sealed record LoadedEquipmentSymbol(
+    IReadOnlyList<SymbolDrawCommand> Commands,
+    OrbatEquipmentSymbolRole Role,
+    OrbatEquipmentCompositionMode CompositionMode,
+    OrbatEquipmentSymbolLayout Layout)
+{
+    public static LoadedEquipmentSymbol Empty { get; } = new(
+        Array.Empty<SymbolDrawCommand>(),
+        OrbatEquipmentSymbolRole.MainFunction,
+        OrbatEquipmentCompositionMode.Composable,
+        OrbatEquipmentSymbolLayout.CreateDefault());
+}
+
+internal sealed record EquipmentModifierOption(
+    string Label,
+    string FileName,
+    OrbatEquipmentModifier1? Modifier1,
+    OrbatEquipmentModifier2? Modifier2)
+{
+    public override string ToString() => Label;
 }
 
 internal sealed class OverlayLibrarySettings
@@ -634,9 +795,58 @@ internal sealed class OverlayCanvas : Control
         }
 
         var interiorFrame = SymbolFrameRenderer.GetInteriorFrame(symbolBounds, frameShape, IconGuideShape.FlatTopBottom);
-        var drawingFrame = Model.Domain == SymbolPhysicalDomain.Equipment && Model.EquipmentCommands.Count == 0
-            ? RectangleF.Inflate(interiorFrame, -42f, -42f)
-            : interiorFrame;
+        if (Model.Domain != SymbolPhysicalDomain.Equipment)
+        {
+            DrawCommands(graphics, symbolBounds, interiorFrame, frameShape, commands, pen);
+            return;
+        }
+
+
+        var hasModifier1 = Model.Modifier1Commands.Count > 0;
+        var hasModifier2 = Model.Modifier2Commands.Count > 0;
+        var hasSelectedModifier = hasModifier1 || hasModifier2;
+        var compositionMode = Model.EquipmentCommands.Count == 0 || hasSelectedModifier
+            ? OrbatEquipmentCompositionMode.Composable
+            : Model.EquipmentCompositionMode;
+        var role = compositionMode == OrbatEquipmentCompositionMode.Composite
+            ? OrbatEquipmentSymbolRole.Composite
+            : Model.EquipmentSymbolRole == OrbatEquipmentSymbolRole.Composite
+                ? OrbatEquipmentSymbolRole.MainFunction
+                : Model.EquipmentSymbolRole;
+        var mainFrame = SymbolFrameRenderer.GetEquipmentComponentFrame(
+            interiorFrame,
+            role,
+            Model.EquipmentLayout,
+            hasModifier1,
+            hasModifier2);
+        DrawCommands(graphics, symbolBounds, mainFrame, frameShape, commands, pen);
+
+        if (compositionMode != OrbatEquipmentCompositionMode.Composable)
+            return;
+
+        if (hasModifier1)
+        {
+            var modifierFrame = SymbolFrameRenderer.GetEquipmentComponentFrame(
+                interiorFrame, OrbatEquipmentSymbolRole.Modifier1, Model.EquipmentLayout, hasModifier1, hasModifier2);
+            DrawCommands(graphics, symbolBounds, modifierFrame, frameShape, Model.Modifier1Commands, pen);
+        }
+
+        if (hasModifier2)
+        {
+            var modifierFrame = SymbolFrameRenderer.GetEquipmentComponentFrame(
+                interiorFrame, OrbatEquipmentSymbolRole.Modifier2, Model.EquipmentLayout, hasModifier1, hasModifier2);
+            DrawCommands(graphics, symbolBounds, modifierFrame, frameShape, Model.Modifier2Commands, pen);
+        }
+    }
+
+    private static void DrawCommands(
+        Graphics graphics,
+        RectangleF symbolBounds,
+        RectangleF drawingFrame,
+        SymbolFrameShape frameShape,
+        IReadOnlyList<SymbolDrawCommand> commands,
+        Pen pen)
+    {
         foreach (var command in commands)
         {
             SymbolFrameRenderer.DrawCommand(

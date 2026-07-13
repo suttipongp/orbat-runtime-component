@@ -22,5 +22,14 @@ public enum OrbatEquipmentFunction
     EngineerEquipment,
     CommunicationsEquipment,
     MedicalEquipment,
-    LogisticsEquipment
+    LogisticsEquipment,
+    Rifle,
+    MachineGun,
+    RecoillessGun,
+    AirDefenseMissile,
+    AntiTankMissileLauncher,
+    SurfaceToSurfaceMissileLauncher,
+    AntiTankRocketLauncher,
+    SingleRocketLauncher,
+    MultipleRocketLauncher
 }
