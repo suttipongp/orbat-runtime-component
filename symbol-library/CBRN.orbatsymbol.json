@@ -1,0 +1,111 @@
+﻿{
+  "Version": 1,
+  "Name": "CBRN",
+  "UnitType": "CBRN",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "Commands": [
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.27673337,
+        "Y": 0.41451237
+      },
+      "End": {
+        "X": 0.35546425,
+        "Y": 0.49206814
+      },
+      "Control1": {
+        "X": 0.039953083,
+        "Y": 0.102232695
+      },
+      "Control2": {
+        "X": 0.039953083,
+        "Y": 0.102232695
+      },
+      "Radius": 0.11051448,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.72331387,
+        "Y": 0.41397184
+      },
+      "End": {
+        "X": 0.8020447,
+        "Y": 0.49152762
+      },
+      "Control1": {
+        "X": 0.48653355,
+        "Y": 0.10169217
+      },
+      "Control2": {
+        "X": 0.48653355,
+        "Y": 0.10169217
+      },
+      "Radius": 0.11051448,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.27790174,
+        "Y": 0.30576572
+      },
+      "End": {
+        "X": 0.6525332,
+        "Y": 0.6921408
+      },
+      "Control1": {
+        "X": 0.46960053,
+        "Y": 0.30401292
+      },
+      "Control2": {
+        "X": 0.58709764,
+        "Y": 0.43314332
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 4,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.72440153,
+        "Y": 0.30522504
+      },
+      "End": {
+        "X": 0.34976986,
+        "Y": 0.69160026
+      },
+      "Control1": {
+        "X": 0.5327026,
+        "Y": 0.30347237
+      },
+      "Control2": {
+        "X": 0.41520554,
+        "Y": 0.43260276
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 3.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

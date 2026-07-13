@@ -1,0 +1,36 @@
+﻿{
+  "Version": 1,
+  "Name": "MilitaryPolice",
+  "UnitType": "MilitaryPolice",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "Commands": [
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.50491744,
+        "Y": 0.54021776
+      },
+      "End": {
+        "X": 0.50491744,
+        "Y": 0.54021776
+      },
+      "Control1": {
+        "X": 0.21004564,
+        "Y": 0.19406393
+      },
+      "Control2": {
+        "X": 0.21004564,
+        "Y": 0.19406393
+      },
+      "Radius": 0,
+      "FontSize": 35,
+      "StrokeWidth": 2,
+      "Text": "MP",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

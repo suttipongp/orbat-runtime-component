@@ -1,0 +1,61 @@
+﻿{
+  "Version": 1,
+  "Name": "Infantry",
+  "UnitType": "Infantry",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "Commands": [
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0,
+        "Y": 0
+      },
+      "End": {
+        "X": 1,
+        "Y": 1
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0,
+        "Y": 1
+      },
+      "End": {
+        "X": 1,
+        "Y": 0
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

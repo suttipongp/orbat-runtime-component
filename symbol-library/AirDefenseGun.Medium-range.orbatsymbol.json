@@ -1,0 +1,204 @@
+﻿{
+  "Version": 2,
+  "Name": "AirDefenseGun.Medium-range",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "AirDefenseGun",
+  "Variant": "Long-range",
+  "SymbolRole": "MainFunction",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "Commands": [
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.5,
+        "Y": 0.08333331
+      },
+      "End": {
+        "X": 0.49999997,
+        "Y": 0.727169
+      },
+      "Control1": {
+        "X": -2.9802322E-08,
+        "Y": 0.022831082
+      },
+      "Control2": {
+        "X": -2.9802322E-08,
+        "Y": 0.022831082
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.3333333,
+        "Y": 0.3333333
+      },
+      "End": {
+        "X": 0.3333333,
+        "Y": 0.6666667
+      },
+      "Control1": {
+        "X": -0.159726,
+        "Y": 0.1576256
+      },
+      "Control2": {
+        "X": -0.159726,
+        "Y": 0.1576256
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.6655707,
+        "Y": 0.3299543
+      },
+      "End": {
+        "X": 0.6655707,
+        "Y": 0.6632876
+      },
+      "Control1": {
+        "X": 0.1725114,
+        "Y": 0.1542466
+      },
+      "Control2": {
+        "X": 0.1725114,
+        "Y": 0.1542466
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.3333333,
+        "Y": 0.9166667
+      },
+      "End": {
+        "X": 0.6666667,
+        "Y": 0.9166667
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.3333333,
+        "Y": 0.9166667
+      },
+      "End": {
+        "X": 0.6666667,
+        "Y": 0.9166667
+      },
+      "Control1": {
+        "X": 0.3333333,
+        "Y": 0.6666667
+      },
+      "Control2": {
+        "X": 0.6655707,
+        "Y": 0.6632876
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.3310502,
+        "Y": 0.44634697
+      },
+      "End": {
+        "X": 0.6643836,
+        "Y": 0.44520542
+      },
+      "Control1": {
+        "X": -0.002283126,
+        "Y": -0.05479458
+      },
+      "Control2": {
+        "X": -0.002283126,
+        "Y": -0.05479458
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.33223742,
+        "Y": 0.55255705
+      },
+      "End": {
+        "X": 0.66557086,
+        "Y": 0.5514155
+      },
+      "Control1": {
+        "X": -0.0010958835,
+        "Y": 0.05141551
+      },
+      "Control2": {
+        "X": -0.0010958835,
+        "Y": 0.05141551
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

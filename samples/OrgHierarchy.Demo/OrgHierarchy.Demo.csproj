@@ -9,5 +9,10 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\OrgHierarchy.Components\OrgHierarchy.Components.csproj" />
+    <Content Include="..\..\symbol-library\*.orbatsymbol.json">
+      <Link>symbol-library\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 </Project>

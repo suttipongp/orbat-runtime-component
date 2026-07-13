@@ -1,0 +1,57 @@
+﻿{
+  "Version": 1,
+  "Name": "RotaryWingAviation",
+  "UnitType": "Aviation",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "Commands": [
+    {
+      "Kind": "Path",
+      "Start": {
+        "X": 0.22000481,
+        "Y": 0.31268266
+      },
+      "End": {
+        "X": 0.22000481,
+        "Y": 0.31268266
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": true,
+      "Points": [
+        {
+          "X": 0.22000481,
+          "Y": 0.31268266
+        },
+        {
+          "X": 0.78131443,
+          "Y": 0.6922262
+        },
+        {
+          "X": 0.77785385,
+          "Y": 0.30028138
+        },
+        {
+          "X": 0.22374429,
+          "Y": 0.6997717
+        },
+        {
+          "X": 0.22000481,
+          "Y": 0.31268266
+        }
+      ]
+    }
+  ]
+}

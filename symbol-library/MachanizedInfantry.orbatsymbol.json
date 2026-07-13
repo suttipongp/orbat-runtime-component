@@ -1,0 +1,86 @@
+﻿{
+  "Version": 1,
+  "Name": "MachanizedInfantry",
+  "UnitType": "Infantry",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "Commands": [
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0,
+        "Y": 0
+      },
+      "End": {
+        "X": 1,
+        "Y": 1
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0,
+        "Y": 1
+      },
+      "End": {
+        "X": 1,
+        "Y": 0
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Capsule",
+      "Start": {
+        "X": 0.16666667,
+        "Y": 0.2929
+      },
+      "End": {
+        "X": 0.83069766,
+        "Y": 0.71697676
+      },
+      "Control1": {
+        "X": -0.21860462,
+        "Y": -0.16325578
+      },
+      "Control2": {
+        "X": -0.21860462,
+        "Y": -0.16325578
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

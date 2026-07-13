@@ -283,6 +283,9 @@ public sealed class SymbolLibraryViewerForm : Form
         var settings = LoadSettings();
         if (settings == null)
         {
+            if (TryLoadDefaultLibrary())
+                return;
+
             _statusLabel.Text = "Choose a symbol library folder or open symbol files.";
             return;
         }
@@ -306,7 +309,19 @@ public sealed class SymbolLibraryViewerForm : Form
             return;
         }
 
-        _statusLabel.Text = "Recent library was not found. Choose a folder or open symbol files.";
+        if (!TryLoadDefaultLibrary())
+            _statusLabel.Text = "Recent library was not found. Choose a folder or open symbol files.";
+    }
+
+    private bool TryLoadDefaultLibrary()
+    {
+        var folder = SymbolLibraryLocator.FindDefaultFolder();
+        if (string.IsNullOrWhiteSpace(folder))
+            return false;
+
+        LoadFolder(folder);
+        SaveRecentLibrary(SymbolLibraryLoadMode.Folder, folder, Array.Empty<string>());
+        return true;
     }
 
     private void LoadFolder(string folder)

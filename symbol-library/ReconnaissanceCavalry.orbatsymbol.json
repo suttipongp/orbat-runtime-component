@@ -1,0 +1,61 @@
+﻿{
+  "Version": 1,
+  "Name": "ReconnaissanceCavalry",
+  "UnitType": "Armor",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "Commands": [
+    {
+      "Kind": "Capsule",
+      "Start": {
+        "X": 0.1780822,
+        "Y": 0.2865297
+      },
+      "End": {
+        "X": 0.8219179,
+        "Y": 0.7248858
+      },
+      "Control1": {
+        "X": -0.21860462,
+        "Y": -0.16325578
+      },
+      "Control2": {
+        "X": -0.21860462,
+        "Y": -0.16325578
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0,
+        "Y": 1
+      },
+      "End": {
+        "X": 1,
+        "Y": 0
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

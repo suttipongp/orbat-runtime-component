@@ -1,0 +1,61 @@
+﻿{
+  "Version": 1,
+  "Name": "Quartermaster",
+  "UnitType": "Quartermaster",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "Commands": [
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0,
+        "Y": 0.049086757
+      },
+      "End": {
+        "X": 0,
+        "Y": 0.067351595
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.4977169,
+        "Y": 0.5239724
+      },
+      "End": {
+        "X": 0.4977169,
+        "Y": 0.5239724
+      },
+      "Control1": {
+        "X": 0.019786924,
+        "Y": -0.18264842
+      },
+      "Control2": {
+        "X": 0.019786924,
+        "Y": -0.18264842
+      },
+      "Radius": 0,
+      "FontSize": 35,
+      "StrokeWidth": 2,
+      "Text": "QM",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

@@ -1,0 +1,254 @@
+﻿{
+  "Version": 2,
+  "Name": "AirDefenseMissile.Long-Range",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "AirDefenseMissile",
+  "Variant": "Long-Range",
+  "SymbolRole": "MainFunction",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "Commands": [
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.4977169,
+        "Y": 0.09246573
+      },
+      "End": {
+        "X": 0.49843484,
+        "Y": 0.79174495
+      },
+      "Control1": {
+        "X": -0.0022830665,
+        "Y": -0.036529705
+      },
+      "Control2": {
+        "X": -0.0022830665,
+        "Y": -0.036529705
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.3333333,
+        "Y": 0.25
+      },
+      "End": {
+        "X": 0.6666667,
+        "Y": 0.25
+      },
+      "Control1": {
+        "X": 0.3333333,
+        "Y": 0.041666716
+      },
+      "Control2": {
+        "X": 0.6666667,
+        "Y": 0.041666716
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.3333333,
+        "Y": 0.25
+      },
+      "End": {
+        "X": 0.3333333,
+        "Y": 0.7477169
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.6666667,
+        "Y": 0.25
+      },
+      "End": {
+        "X": 0.6666667,
+        "Y": 0.7454338
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.375,
+        "Y": 0.9166666
+      },
+      "End": {
+        "X": 0.625,
+        "Y": 0.9166666
+      },
+      "Control1": {
+        "X": -0.0068493187,
+        "Y": 0.041095912
+      },
+      "Control2": {
+        "X": -0.0068493187,
+        "Y": 0.041095912
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.375,
+        "Y": 0.9166666
+      },
+      "End": {
+        "X": 0.625,
+        "Y": 0.9166666
+      },
+      "Control1": {
+        "X": 0.375,
+        "Y": 0.75
+      },
+      "Control2": {
+        "X": 0.625,
+        "Y": 0.75
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.3333333,
+        "Y": 0.49987316
+      },
+      "End": {
+        "X": 0.6666667,
+        "Y": 0.49885845
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.3333333,
+        "Y": 0.58561635
+      },
+      "End": {
+        "X": 0.6666667,
+        "Y": 0.5856164
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.3299543,
+        "Y": 0.41886863
+      },
+      "End": {
+        "X": 0.6632877,
+        "Y": 0.41785392
+      },
+      "Control1": {
+        "X": -0.0033790097,
+        "Y": -0.08100455
+      },
+      "Control2": {
+        "X": -0.0033790097,
+        "Y": -0.08100455
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

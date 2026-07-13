@@ -814,7 +814,8 @@ public sealed class SymbolDesignerForm : Form
         {
             Title = "Save symbol library",
             Filter = "ORBAT symbol library|*.orbatsymbol.json|JSON files|*.json|All files|*.*",
-            FileName = $"{GetDefaultLibraryFileBaseName()}.orbatsymbol.json"
+            FileName = $"{GetDefaultLibraryFileBaseName()}.orbatsymbol.json",
+            InitialDirectory = SymbolLibraryLocator.FindDefaultFolder() ?? string.Empty
         };
 
         if (dialog.ShowDialog(this) != DialogResult.OK)
@@ -920,7 +921,8 @@ public sealed class SymbolDesignerForm : Form
         using var dialog = new OpenFileDialog
         {
             Title = "Load symbol library",
-            Filter = "ORBAT symbol library|*.orbatsymbol.json;*.json|All files|*.*"
+            Filter = "ORBAT symbol library|*.orbatsymbol.json;*.json|All files|*.*",
+            InitialDirectory = SymbolLibraryLocator.FindDefaultFolder() ?? string.Empty
         };
 
         if (dialog.ShowDialog(this) != DialogResult.OK)

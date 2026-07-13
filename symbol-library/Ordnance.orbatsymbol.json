@@ -1,0 +1,136 @@
+﻿{
+  "Version": 1,
+  "Name": "Ordnance",
+  "UnitType": "Ordnance",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "Commands": [
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.5,
+        "Y": 0.5
+      },
+      "End": {
+        "X": 0.5748837,
+        "Y": 0.62348837
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0.16693236,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.3427907,
+        "Y": 0.31775194
+      },
+      "End": {
+        "X": 0.5509572,
+        "Y": 0.64602363
+      },
+      "Control1": {
+        "X": -0.025116324,
+        "Y": 0.032092985
+      },
+      "Control2": {
+        "X": -0.025116324,
+        "Y": 0.032092985
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 4,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.6595707,
+        "Y": 0.32268932
+      },
+      "End": {
+        "X": 0.4436959,
+        "Y": 0.6388752
+      },
+      "Control1": {
+        "X": 0.020465195,
+        "Y": 0.023720892
+      },
+      "Control2": {
+        "X": 0.020465195,
+        "Y": 0.023720892
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 4,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.61694133,
+        "Y": 0.26146075
+      },
+      "End": {
+        "X": 0.40227616,
+        "Y": 0.57861286
+      },
+      "Control1": {
+        "X": -0.006913006,
+        "Y": -0.002571431
+      },
+      "Control2": {
+        "X": -0.006913006,
+        "Y": -0.002571431
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 4,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.3878078,
+        "Y": 0.26401186
+      },
+      "End": {
+        "X": 0.5962374,
+        "Y": 0.5779271
+      },
+      "Control1": {
+        "X": 0.0046512485,
+        "Y": -0.011162758
+      },
+      "Control2": {
+        "X": 0.0046512485,
+        "Y": -0.011162758
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 4,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}
