@@ -95,10 +95,22 @@ public enum OrbatUnitMainFunction
 
 public static class OrbatUnitMainFunctionCatalog
 {
-    private sealed record Entry(
-        OrbatUnitMainFunction Function,
-        OrbatUnitMainFunctionCategory Category,
-        string DisplayName);
+    private sealed class Entry
+    {
+        public Entry(
+            OrbatUnitMainFunction function,
+            OrbatUnitMainFunctionCategory category,
+            string displayName)
+        {
+            Function = function;
+            Category = category;
+            DisplayName = displayName;
+        }
+
+        public OrbatUnitMainFunction Function { get; }
+        public OrbatUnitMainFunctionCategory Category { get; }
+        public string DisplayName { get; }
+    }
 
     private static readonly Entry[] Entries =
     {
