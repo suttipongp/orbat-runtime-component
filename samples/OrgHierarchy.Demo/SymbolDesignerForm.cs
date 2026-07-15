@@ -828,6 +828,8 @@ public sealed class SymbolDesignerForm : Form
         try
         {
             _unitMainFunctionComboBox.BeginUpdate();
+            _unitMainFunctionComboBox.AutoCompleteMode = AutoCompleteMode.None;
+            _unitMainFunctionComboBox.SelectedIndex = -1;
             _unitMainFunctionComboBox.Items.Clear();
             _unitMainFunctionComboBox.Items.AddRange(functions
                 .Select(value => new UnitMainFunctionSelection(value)).Cast<object>().ToArray());
@@ -837,6 +839,7 @@ public sealed class SymbolDesignerForm : Form
         }
         finally
         {
+            _unitMainFunctionComboBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
             _unitMainFunctionComboBox.EndUpdate();
             _updatingUnitMainFunctionOptions = false;
         }
@@ -1669,8 +1672,12 @@ public sealed class SymbolDesignerForm : Form
             if (command.CanFill)
                 _fillCheckBox.Checked = command.Filled;
 
-            if (_commandListBox.SelectedIndex != _canvas.SelectedIndex)
-                _commandListBox.SelectedIndex = _canvas.SelectedIndex;
+            var selectedIndex = _canvas.SelectedIndex >= 0
+                && _canvas.SelectedIndex < _commandListBox.Items.Count
+                    ? _canvas.SelectedIndex
+                    : -1;
+            if (_commandListBox.SelectedIndex != selectedIndex)
+                _commandListBox.SelectedIndex = selectedIndex;
         }
         finally
         {

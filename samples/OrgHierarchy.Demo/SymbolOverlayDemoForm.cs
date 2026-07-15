@@ -387,6 +387,8 @@ public sealed class SymbolOverlayDemoForm : Form
         try
         {
             _unitMainFunctionComboBox.BeginUpdate();
+            _unitMainFunctionComboBox.AutoCompleteMode = AutoCompleteMode.None;
+            _unitMainFunctionComboBox.SelectedIndex = -1;
             _unitMainFunctionComboBox.Items.Clear();
             _unitMainFunctionComboBox.Items.AddRange(functions
                 .Select(value => new UnitMainFunctionSelection(value)).Cast<object>().ToArray());
@@ -396,6 +398,7 @@ public sealed class SymbolOverlayDemoForm : Form
         }
         finally
         {
+            _unitMainFunctionComboBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
             _unitMainFunctionComboBox.EndUpdate();
             _updatingUnitMainFunctionOptions = false;
         }
