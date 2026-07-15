@@ -441,8 +441,8 @@ public sealed class SymbolLibraryViewerForm : Form
                 $"LandUnitMain.{category}",
                 $"Land Unit - {OrbatUnitMainFunctionCatalog.GetCategoryDisplayName(category)}");
         }
-        AddSymbolGroup(groups, "LandUnitModifier1", "Land Unit - Modifier 1");
-        AddSymbolGroup(groups, "LandUnitModifier2", "Land Unit - Modifier 2");
+        AddSymbolGroup(groups, "LandUnitModifier1", "Land Unit - Sector 1 (Modifier 1)");
+        AddSymbolGroup(groups, "LandUnitModifier2", "Land Unit - Sector 2 (Modifier 2)");
         AddSymbolGroup(groups, "EquipmentMain", "Equipment - Main symbols");
         AddSymbolGroup(groups, "EquipmentComposite", "Equipment - Composite symbols");
         AddSymbolGroup(groups, "EquipmentModifier1", "Equipment - Modifier 1");
@@ -691,6 +691,18 @@ public sealed class SymbolLibraryViewerForm : Form
                 && Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier2
                 && Enum.TryParse(Definition.LandUnitModifier2Type, out OrbatLandUnitModifier2 landModifier2))
                 return landModifier2.GetDisplayName();
+
+            if (domain == SymbolPhysicalDomain.LandUnit
+                && Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier1
+                && !string.IsNullOrWhiteSpace(Definition.LandUnitModifier1Type)
+                && !Definition.LandUnitModifier1Type.Equals(OrbatLandUnitModifier1.Unspecified.ToString(), StringComparison.OrdinalIgnoreCase))
+                return Definition.LandUnitModifier1Type;
+
+            if (domain == SymbolPhysicalDomain.LandUnit
+                && Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier2
+                && !string.IsNullOrWhiteSpace(Definition.LandUnitModifier2Type)
+                && !Definition.LandUnitModifier2Type.Equals(OrbatLandUnitModifier2.Unspecified.ToString(), StringComparison.OrdinalIgnoreCase))
+                return Definition.LandUnitModifier2Type;
 
             if (domain == SymbolPhysicalDomain.Equipment
                 && Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier1

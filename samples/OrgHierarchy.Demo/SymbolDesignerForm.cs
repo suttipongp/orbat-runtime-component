@@ -197,17 +197,20 @@ public sealed class SymbolDesignerForm : Form
         _modifier2TypeComboBox.SelectedIndex = 0;
         _modifier2TypeComboBox.SelectedIndexChanged += (_, _) => RefreshOutput();
 
-        _landUnitModifier1TypeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        ConfigureEditableLandUnitModifierComboBox(_landUnitModifier1TypeComboBox);
         _landUnitModifier1TypeComboBox.Items.AddRange(Enum.GetValues<OrbatLandUnitModifier1>()
             .Select(value => new LandUnitModifier1Selection(value)).Cast<object>().ToArray());
         _landUnitModifier1TypeComboBox.SelectedIndex = 0;
         _landUnitModifier1TypeComboBox.SelectedIndexChanged += (_, _) => RefreshOutput();
+        _landUnitModifier1TypeComboBox.TextChanged += (_, _) => RefreshOutput();
 
-        _landUnitModifier2TypeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        ConfigureEditableLandUnitModifierComboBox(_landUnitModifier2TypeComboBox);
         _landUnitModifier2TypeComboBox.Items.AddRange(Enum.GetValues<OrbatLandUnitModifier2>()
             .Select(value => new LandUnitModifier2Selection(value)).Cast<object>().ToArray());
         _landUnitModifier2TypeComboBox.SelectedIndex = 0;
         _landUnitModifier2TypeComboBox.SelectedIndexChanged += (_, _) => RefreshOutput();
+        _landUnitModifier2TypeComboBox.TextChanged += (_, _) => RefreshOutput();
+        RefreshLandUnitModifierOptions();
 
         _mobilityTypeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         _mobilityTypeComboBox.Items.AddRange(Enum.GetValues<OrbatEquipmentMobilityMode>()
@@ -341,8 +344,8 @@ public sealed class SymbolDesignerForm : Form
         _compositionModeField = CreateLabeledField("Composition", _compositionModeComboBox);
         _modifier1TypeField = CreateLabeledField("Modifier 1", _modifier1TypeComboBox);
         _modifier2TypeField = CreateLabeledField("Modifier 2", _modifier2TypeComboBox);
-        _landUnitModifier1TypeField = CreateLabeledField("Modifier 1", _landUnitModifier1TypeComboBox);
-        _landUnitModifier2TypeField = CreateLabeledField("Modifier 2", _landUnitModifier2TypeComboBox);
+        _landUnitModifier1TypeField = CreateLabeledField("Sector 1", _landUnitModifier1TypeComboBox);
+        _landUnitModifier2TypeField = CreateLabeledField("Sector 2", _landUnitModifier2TypeComboBox);
         _mobilityTypeField = CreateLabeledField("Mobility", _mobilityTypeComboBox);
         metadataBar.Controls.Add(_unitCategoryField);
         metadataBar.Controls.Add(_unitMainFunctionField);
@@ -1063,6 +1066,63 @@ public sealed class SymbolDesignerForm : Form
             ? mode
             : OrbatEquipmentCompositionMode.Composable;
 
+    private void RefreshLandUnitModifierOptions()
+    {
+        var sector1Names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var sector2Names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var file in SymbolOverlayDemoForm.GetRecentLibraryFiles())
+        {
+            try
+            {
+                var definition = JsonSerializer.Deserialize<SymbolLibraryDefinition>(
+                    File.ReadAllText(file, Encoding.UTF8),
+                    SymbolOverlayDemoForm.LibraryJsonOptions);
+                if (definition == null
+                    || definition.GetEffectivePhysicalDomain() != SymbolPhysicalDomain.LandUnit)
+                    continue;
+
+                if (definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier1
+                    && !Enum.TryParse(definition.LandUnitModifier1Type, ignoreCase: true, out OrbatLandUnitModifier1 _))
+                    AddCustomModifierName(sector1Names, definition.LandUnitModifier1Type, OrbatLandUnitModifier1.Unspecified.ToString());
+                else if (definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier2
+                    && !Enum.TryParse(definition.LandUnitModifier2Type, ignoreCase: true, out OrbatLandUnitModifier2 _))
+                    AddCustomModifierName(sector2Names, definition.LandUnitModifier2Type, OrbatLandUnitModifier2.Unspecified.ToString());
+            }
+            catch
+            {
+                // An unreadable library file must not prevent the designer from opening.
+            }
+        }
+
+        AddCustomModifierItems(_landUnitModifier1TypeComboBox, sector1Names);
+        AddCustomModifierItems(_landUnitModifier2TypeComboBox, sector2Names);
+    }
+
+    private static void AddCustomModifierName(ISet<string> names, string? value, string unspecified)
+    {
+        if (!string.IsNullOrWhiteSpace(value)
+            && !value.Equals(unspecified, StringComparison.OrdinalIgnoreCase))
+            names.Add(value.Trim());
+    }
+
+    private static void AddCustomModifierItems(ComboBox comboBox, IEnumerable<string> names)
+    {
+        var existing = comboBox.Items.Cast<object>()
+            .Select(item => item.ToString() ?? string.Empty)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var name in names.OrderBy(value => value, StringComparer.CurrentCultureIgnoreCase))
+        {
+            if (existing.Add(name))
+                comboBox.Items.Add(name);
+        }
+    }
+    private static void ConfigureEditableLandUnitModifierComboBox(ComboBox comboBox)
+    {
+        comboBox.DropDownStyle = ComboBoxStyle.DropDown;
+        comboBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+        comboBox.AutoCompleteSource = AutoCompleteSource.ListItems;
+    }
     private OrbatEquipmentModifier1 GetSelectedModifier1Type() =>
         _modifier1TypeComboBox.SelectedItem is EquipmentModifier1Selection selection
             ? selection.Value
@@ -1073,17 +1133,73 @@ public sealed class SymbolDesignerForm : Form
             ? selection.Value
             : OrbatEquipmentModifier2.Unspecified;
 
-    private OrbatLandUnitModifier1 GetSelectedLandUnitModifier1Type() =>
-        _landUnitModifier1TypeComboBox.SelectedItem is LandUnitModifier1Selection selection
-            ? selection.Value
+    private OrbatLandUnitModifier1 GetSelectedLandUnitModifier1Type()
+    {
+        if (_landUnitModifier1TypeComboBox.SelectedItem is LandUnitModifier1Selection selection)
+            return selection.Value;
+
+        return Enum.TryParse(_landUnitModifier1TypeComboBox.Text.Trim(), ignoreCase: true, out OrbatLandUnitModifier1 value)
+            ? value
             : OrbatLandUnitModifier1.Unspecified;
+    }
 
-    private OrbatLandUnitModifier2 GetSelectedLandUnitModifier2Type() =>
-        _landUnitModifier2TypeComboBox.SelectedItem is LandUnitModifier2Selection selection
-            ? selection.Value
+    private string GetSelectedLandUnitModifier1Name() =>
+        _landUnitModifier1TypeComboBox.SelectedItem is LandUnitModifier1Selection selection
+            ? selection.Value.ToString()
+            : NormalizeCustomModifierName(_landUnitModifier1TypeComboBox.Text, OrbatLandUnitModifier1.Unspecified.ToString());
+
+    private OrbatLandUnitModifier2 GetSelectedLandUnitModifier2Type()
+    {
+        if (_landUnitModifier2TypeComboBox.SelectedItem is LandUnitModifier2Selection selection)
+            return selection.Value;
+
+        return Enum.TryParse(_landUnitModifier2TypeComboBox.Text.Trim(), ignoreCase: true, out OrbatLandUnitModifier2 value)
+            ? value
             : OrbatLandUnitModifier2.Unspecified;
+    }
 
-    private OrbatEquipmentMobilityMode GetSelectedMobilityType() =>
+    private string GetSelectedLandUnitModifier2Name() =>
+        _landUnitModifier2TypeComboBox.SelectedItem is LandUnitModifier2Selection selection
+            ? selection.Value.ToString()
+            : NormalizeCustomModifierName(_landUnitModifier2TypeComboBox.Text, OrbatLandUnitModifier2.Unspecified.ToString());
+
+    private static string NormalizeCustomModifierName(string? value, string fallback) =>
+        string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
+
+    private void SelectLandUnitModifier1(string? value)
+    {
+        if (Enum.TryParse(value, ignoreCase: true, out OrbatLandUnitModifier1 modifier))
+        {
+            var item = _landUnitModifier1TypeComboBox.Items.OfType<LandUnitModifier1Selection>()
+                .FirstOrDefault(candidate => candidate.Value == modifier);
+            if (item != null)
+            {
+                _landUnitModifier1TypeComboBox.SelectedItem = item;
+                return;
+            }
+        }
+
+        _landUnitModifier1TypeComboBox.SelectedIndex = -1;
+        _landUnitModifier1TypeComboBox.Text = NormalizeCustomModifierName(value, OrbatLandUnitModifier1.Unspecified.ToString());
+    }
+
+    private void SelectLandUnitModifier2(string? value)
+    {
+        if (Enum.TryParse(value, ignoreCase: true, out OrbatLandUnitModifier2 modifier))
+        {
+            var item = _landUnitModifier2TypeComboBox.Items.OfType<LandUnitModifier2Selection>()
+                .FirstOrDefault(candidate => candidate.Value == modifier);
+            if (item != null)
+            {
+                _landUnitModifier2TypeComboBox.SelectedItem = item;
+                return;
+            }
+        }
+
+        _landUnitModifier2TypeComboBox.SelectedIndex = -1;
+        _landUnitModifier2TypeComboBox.Text = NormalizeCustomModifierName(value, OrbatLandUnitModifier2.Unspecified.ToString());
+    }
+private OrbatEquipmentMobilityMode GetSelectedMobilityType() =>
         _mobilityTypeComboBox.SelectedItem is EquipmentMobilitySelection selection
             ? selection.Value
             : OrbatEquipmentMobilityMode.Unspecified;
@@ -1372,8 +1488,8 @@ public sealed class SymbolDesignerForm : Form
             Layout = OrbatEquipmentSymbolLayout.CreateDefault(),
             Modifier1Type = GetSelectedModifier1Type().ToString(),
             Modifier2Type = GetSelectedModifier2Type().ToString(),
-            LandUnitModifier1Type = GetSelectedLandUnitModifier1Type().ToString(),
-            LandUnitModifier2Type = GetSelectedLandUnitModifier2Type().ToString(),
+            LandUnitModifier1Type = GetSelectedLandUnitModifier1Name(),
+            LandUnitModifier2Type = GetSelectedLandUnitModifier2Name(),
             MobilityType = GetSelectedMobilityType().ToString(),
             Affiliation = GetSelectedAffiliation(),
             PhysicalDomain = GetSelectedPhysicalDomain(),
@@ -1388,6 +1504,7 @@ public sealed class SymbolDesignerForm : Form
         options.Converters.Add(new JsonStringEnumConverter());
         File.WriteAllText(dialog.FileName, JsonSerializer.Serialize(definition, options), Encoding.UTF8);
         RefreshEquipmentVariantOptions();
+        RefreshLandUnitModifierOptions();
     }
 
     private string GetDefaultLibraryFileBaseName()
@@ -1414,18 +1531,39 @@ public sealed class SymbolDesignerForm : Form
                 : $"Equipment.{baseName}.{SanitizeFileNamePart(variant)}{roleSuffix}";
         }
 
+        var sector1Name = GetSelectedLandUnitModifier1Name();
         if (GetSelectedSymbolRole() == OrbatEquipmentSymbolRole.Modifier1
-            && GetSelectedLandUnitModifier1Type() != OrbatLandUnitModifier1.Unspecified)
-            return $"LandUnit.Modifier1.{GetSelectedLandUnitModifier1Type()}";
+            && !sector1Name.Equals(OrbatLandUnitModifier1.Unspecified.ToString(), StringComparison.OrdinalIgnoreCase))
+            return $"LandUnit.Modifier1.{ToPascalCaseFileNamePart(sector1Name)}";
+
+        var sector2Name = GetSelectedLandUnitModifier2Name();
         if (GetSelectedSymbolRole() == OrbatEquipmentSymbolRole.Modifier2
-            && GetSelectedLandUnitModifier2Type() != OrbatLandUnitModifier2.Unspecified)
-            return $"LandUnit.Modifier2.{GetSelectedLandUnitModifier2Type()}";
+            && !sector2Name.Equals(OrbatLandUnitModifier2.Unspecified.ToString(), StringComparison.OrdinalIgnoreCase))
+            return $"LandUnit.Modifier2.{ToPascalCaseFileNamePart(sector2Name)}";
 
         var mainFunction = GetSelectedUnitMainFunction();
         return $"LandUnit.{mainFunction}";
     }
 
-    private static string SanitizeFileNamePart(string value)
+    private static string ToPascalCaseFileNamePart(string value)
+    {
+        var result = new StringBuilder();
+        var capitalizeNext = true;
+        foreach (var character in value.Trim())
+        {
+            if (!char.IsLetterOrDigit(character))
+            {
+                capitalizeNext = true;
+                continue;
+            }
+
+            result.Append(capitalizeNext ? char.ToUpperInvariant(character) : character);
+            capitalizeNext = false;
+        }
+
+        return result.Length == 0 ? "Custom" : result.ToString();
+    }
+private static string SanitizeFileNamePart(string value)
     {
         var invalid = Path.GetInvalidFileNameChars();
         var sanitized = new string(value.Select(ch => invalid.Contains(ch) ? '_' : ch).ToArray()).Trim();
@@ -1563,12 +1701,8 @@ public sealed class SymbolDesignerForm : Form
         if (Enum.TryParse(definition.Modifier2Type, out OrbatEquipmentModifier2 modifier2Type))
             _modifier2TypeComboBox.SelectedItem = _modifier2TypeComboBox.Items.Cast<EquipmentModifier2Selection>()
                 .FirstOrDefault(item => item.Value == modifier2Type);
-        if (Enum.TryParse(definition.LandUnitModifier1Type, out OrbatLandUnitModifier1 landUnitModifier1Type))
-            _landUnitModifier1TypeComboBox.SelectedItem = _landUnitModifier1TypeComboBox.Items.Cast<LandUnitModifier1Selection>()
-                .FirstOrDefault(item => item.Value == landUnitModifier1Type);
-        if (Enum.TryParse(definition.LandUnitModifier2Type, out OrbatLandUnitModifier2 landUnitModifier2Type))
-            _landUnitModifier2TypeComboBox.SelectedItem = _landUnitModifier2TypeComboBox.Items.Cast<LandUnitModifier2Selection>()
-                .FirstOrDefault(item => item.Value == landUnitModifier2Type);
+        SelectLandUnitModifier1(definition.LandUnitModifier1Type);
+        SelectLandUnitModifier2(definition.LandUnitModifier2Type);
         if (Enum.TryParse(definition.MobilityType, out OrbatEquipmentMobilityMode mobilityType))
             _mobilityTypeComboBox.SelectedItem = _mobilityTypeComboBox.Items.Cast<EquipmentMobilitySelection>()
                 .FirstOrDefault(item => item.Value == mobilityType);
@@ -1587,6 +1721,7 @@ public sealed class SymbolDesignerForm : Form
         using var form = new SymbolLibraryViewerForm();
         form.ShowDialog(this);
         RefreshEquipmentVariantOptions();
+        RefreshLandUnitModifierOptions();
     }
 
     private void AddAirDefenseArc()
@@ -6086,15 +6221,111 @@ internal static class BuiltInSymbolLibrary
             Control2 = new SymbolPoint(control2)
         };
 
-    public static IReadOnlyList<SymbolDrawCommand> Create(OrbatLandUnitModifier1 modifier) =>
-        Enum.TryParse<OrbatEquipmentModifier1>(modifier.ToString(), out var equipmentModifier)
-            ? Create(equipmentModifier).Select(command => command.Clone()).ToList()
-            : Array.Empty<SymbolDrawCommand>();
+    public static IReadOnlyList<SymbolDrawCommand> Create(OrbatLandUnitModifier1 modifier)
+    {
+        var text = modifier.GetSymbolText();
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            var fontSize = text.Length switch
+            {
+                1 => 108f,
+                2 => 93f,
+                _ => 81f
+            };
+            return new[] { SymbolDrawCommand.TextCommand(new PointF(0.5f, 0.5f), text, fontSize) };
+        }
 
-    public static IReadOnlyList<SymbolDrawCommand> Create(OrbatLandUnitModifier2 modifier) =>
-        Enum.TryParse<OrbatEquipmentModifier2>(modifier.ToString(), out var equipmentModifier)
-            ? Create(equipmentModifier).Select(command => command.Clone()).ToList()
-            : Array.Empty<SymbolDrawCommand>();
+        return modifier switch
+        {
+            OrbatLandUnitModifier1.ArmoredProtection => new[] { SymbolDrawCommand.Capsule(new PointF(0.08f, 0.24f), new PointF(0.92f, 0.76f)) },
+            OrbatLandUnitModifier1.EchelonOfSupport => new[]
+            {
+                SymbolDrawCommand.Line(new PointF(0.42f, 0.18f), new PointF(0.42f, 0.82f)),
+                SymbolDrawCommand.Line(new PointF(0.58f, 0.18f), new PointF(0.58f, 0.82f))
+            },
+            OrbatLandUnitModifier1.Cargo => new[]
+            {
+                SymbolDrawCommand.Rectangle(new PointF(0.12f, 0.24f), new PointF(0.88f, 0.76f)),
+                SymbolDrawCommand.Line(new PointF(0.5f, 0.24f), new PointF(0.5f, 0.76f))
+            },
+            OrbatLandUnitModifier1.MedicalEvacuation => new[]
+            {
+                SymbolDrawCommand.Path(new[]
+                {
+                    new SymbolPoint(0.38f, 0.08f), new SymbolPoint(0.62f, 0.08f),
+                    new SymbolPoint(0.62f, 0.38f), new SymbolPoint(0.92f, 0.38f),
+                    new SymbolPoint(0.92f, 0.62f), new SymbolPoint(0.62f, 0.62f),
+                    new SymbolPoint(0.62f, 0.92f), new SymbolPoint(0.38f, 0.92f),
+                    new SymbolPoint(0.38f, 0.62f), new SymbolPoint(0.08f, 0.62f),
+                    new SymbolPoint(0.08f, 0.38f), new SymbolPoint(0.38f, 0.38f)
+                }, filled: true)
+            },
+            OrbatLandUnitModifier1.PetroleumOilsAndLubricants => new[]
+            {
+                SymbolDrawCommand.Line(new PointF(0.18f, 0.18f), new PointF(0.5f, 0.62f)),
+                SymbolDrawCommand.Line(new PointF(0.82f, 0.18f), new PointF(0.5f, 0.62f)),
+                SymbolDrawCommand.Line(new PointF(0.18f, 0.18f), new PointF(0.82f, 0.18f)),
+                SymbolDrawCommand.Line(new PointF(0.5f, 0.62f), new PointF(0.5f, 0.92f))
+            },
+            OrbatLandUnitModifier1.RecoveryAndMaintenance => new[]
+            {
+                Curve(new PointF(0.12f, 0.22f), new PointF(0.12f, 0.78f), new PointF(0.42f, 0.22f), new PointF(0.42f, 0.78f)),
+                SymbolDrawCommand.Line(new PointF(0.31f, 0.5f), new PointF(0.69f, 0.5f)),
+                Curve(new PointF(0.88f, 0.22f), new PointF(0.88f, 0.78f), new PointF(0.58f, 0.22f), new PointF(0.58f, 0.78f))
+            },
+            OrbatLandUnitModifier1.RoboticGuidedAndAutonomous => new[]
+            {
+                SymbolDrawCommand.Line(new PointF(0.5f, 0.2f), new PointF(0.18f, 0.7f)),
+                SymbolDrawCommand.Line(new PointF(0.5f, 0.2f), new PointF(0.82f, 0.7f)),
+                SymbolDrawCommand.Line(new PointF(0.5f, 0.2f), new PointF(0.5f, 0.78f)),
+                SymbolDrawCommand.Dot(new PointF(0.18f, 0.7f), 0.07f),
+                SymbolDrawCommand.Dot(new PointF(0.5f, 0.78f), 0.07f),
+                SymbolDrawCommand.Dot(new PointF(0.82f, 0.7f), 0.07f)
+            },
+            OrbatLandUnitModifier1.Water => new[]
+            {
+                SymbolDrawCommand.Line(new PointF(0.08f, 0.54f), new PointF(0.58f, 0.54f)),
+                SymbolDrawCommand.Line(new PointF(0.48f, 0.54f), new PointF(0.48f, 0.34f)),
+                SymbolDrawCommand.Line(new PointF(0.34f, 0.34f), new PointF(0.72f, 0.34f)),
+                Curve(new PointF(0.58f, 0.54f), new PointF(0.9f, 0.88f), new PointF(0.78f, 0.54f), new PointF(0.9f, 0.66f))
+            },
+            _ => Array.Empty<SymbolDrawCommand>()
+        };
+    }
+
+    public static IReadOnlyList<SymbolDrawCommand> Create(OrbatLandUnitModifier2 modifier)
+    {
+        var text = modifier.GetSymbolText();
+        if (!string.IsNullOrWhiteSpace(text))
+            return new[] { SymbolDrawCommand.TextCommand(new PointF(0.5f, 0.5f), text, 108f) };
+
+        return modifier switch
+        {
+            OrbatLandUnitModifier2.ArmoredTracked => new[] { SymbolDrawCommand.Capsule(new PointF(0.08f, 0.24f), new PointF(0.92f, 0.76f)) },
+            OrbatLandUnitModifier2.Amphibious => new[] { SymbolDrawCommand.SineWave() },
+            OrbatLandUnitModifier2.Launcher => new[] { SymbolDrawCommand.Line(new PointF(0.3f, 0.5f), new PointF(0.7f, 0.5f)).WithStrokeWidth(6f) },
+            OrbatLandUnitModifier2.PackAnimal => new[]
+            {
+                SymbolDrawCommand.Line(new PointF(0.12f, 0.82f), new PointF(0.32f, 0.18f)),
+                SymbolDrawCommand.Line(new PointF(0.32f, 0.18f), new PointF(0.5f, 0.78f)),
+                SymbolDrawCommand.Line(new PointF(0.5f, 0.78f), new PointF(0.68f, 0.18f)),
+                SymbolDrawCommand.Line(new PointF(0.68f, 0.18f), new PointF(0.88f, 0.82f))
+            },
+            OrbatLandUnitModifier2.Rail => new[]
+            {
+                SymbolDrawCommand.Line(new PointF(0.08f, 0.34f), new PointF(0.92f, 0.34f)).WithStrokeWidth(4f),
+                Wheel(0.18f), Wheel(0.29f), Wheel(0.71f), Wheel(0.82f)
+            },
+            OrbatLandUnitModifier2.TractorTrailer => new[]
+            {
+                SymbolDrawCommand.Line(new PointF(0.08f, 0.34f), new PointF(0.92f, 0.34f)).WithStrokeWidth(4f),
+                Wheel(0.18f), Wheel(0.29f), Wheel(0.82f)
+            },
+            OrbatLandUnitModifier2.WheeledHighMobility => new[] { LargeWheel(0.22f), LargeWheel(0.5f), LargeWheel(0.78f) },
+            OrbatLandUnitModifier2.WheeledStandardMobility => new[] { LargeWheel(0.24f), LargeWheel(0.76f) },
+            _ => Array.Empty<SymbolDrawCommand>()
+        };
+    }
 
     public static IReadOnlyList<SymbolDrawCommand> Create(OrbatEquipmentModifier2 modifier)
     {
