@@ -381,10 +381,11 @@ public sealed class SymbolDesignerForm : Form
         previewTab.Controls.Add(_preview);
         commandsTab.Controls.Add(_commandListBox);
         codeTab.Controls.Add(_codeTextBox);
-        rightTabs.Controls.Add(propertiesTab);
         rightTabs.Controls.Add(previewTab);
+        rightTabs.Controls.Add(propertiesTab);
         rightTabs.Controls.Add(commandsTab);
         rightTabs.Controls.Add(codeTab);
+        rightTabs.SelectedTab = previewTab;
 
         var split = new SplitContainer
         {
