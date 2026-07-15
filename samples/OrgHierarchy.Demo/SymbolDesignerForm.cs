@@ -600,6 +600,7 @@ public sealed class SymbolDesignerForm : Form
             BackColor = SystemColors.ControlLight
         };
         AddToolGroup(toolbox, "SELECT", (SymbolDesignerTool.SelectMove, "Select / Move"));
+        AddToolGroup(toolbox, "EDIT", (SymbolDesignerTool.TrimSegment, "Trim segment"));
         AddToolGroup(toolbox, "LINES",
             (SymbolDesignerTool.Line, "Line"),
             (SymbolDesignerTool.ParallelLine, "Parallel"),
@@ -1177,6 +1178,7 @@ public sealed class SymbolDesignerForm : Form
         _statusLabel.Text = tool switch
         {
             SymbolDesignerTool.SelectMove => "SelectMove: Ctrl+click selects multiple shapes; drag to move the selection or group.",
+            SymbolDesignerTool.TrimSegment => "Trim segment: select one line or curve, then drag between the two cut points.",
             SymbolDesignerTool.ParallelLine => "ParallelLine: select an existing line or segment, then drag a new line parallel to it.",
             SymbolDesignerTool.PerpendicularLine => "PerpendicularLine: select an existing line or segment, then drag a new line perpendicular to it.",
             SymbolDesignerTool.Arc => "Arc: click start, click highest point, click end.",
@@ -1837,6 +1839,7 @@ public sealed class SymbolDesignerForm : Form
 internal enum SymbolDesignerTool
 {
     SelectMove,
+    TrimSegment,
     Line,
     ParallelLine,
     PerpendicularLine,
@@ -2444,6 +2447,170 @@ internal sealed class SymbolDesignerCanvas : Control
         return new SymbolPoint(bounds.Left + bounds.Width / 2f, bounds.Top + bounds.Height / 2f);
     }
 
+    public bool TrimSelectedSegment(PointF firstCutPoint, PointF secondCutPoint)
+    {
+        var command = SelectedCommand;
+        if (command?.Kind is not (SymbolDrawCommandKind.Line or SymbolDrawCommandKind.Bezier))
+            return false;
+
+        var replacements = CreateTrimmedSegments(command, new SymbolPoint(firstCutPoint), new SymbolPoint(secondCutPoint));
+        if (replacements == null)
+            return false;
+
+        SaveHistory();
+        var commandIndex = SelectedIndex;
+        _commands.RemoveAt(commandIndex);
+        _commands.InsertRange(commandIndex, replacements);
+        var nextIndex = replacements.Count > 0
+            ? commandIndex
+            : Math.Min(commandIndex, _commands.Count - 1);
+        SetSelection(nextIndex >= 0 ? new[] { nextIndex } : Array.Empty<int>(), nextIndex);
+        NotifyCommandsChanged(includeSelection: true);
+        return true;
+    }
+
+    private static List<SymbolDrawCommand>? CreateTrimmedSegments(
+        SymbolDrawCommand command,
+        SymbolPoint firstCutPoint,
+        SymbolPoint secondCutPoint)
+    {
+        var firstParameter = FindNearestParameter(command, firstCutPoint);
+        var secondParameter = FindNearestParameter(command, secondCutPoint);
+        var trimStart = Math.Min(firstParameter, secondParameter);
+        var trimEnd = Math.Max(firstParameter, secondParameter);
+        if (trimEnd - trimStart < 0.01f)
+            return null;
+
+        var segments = new List<SymbolDrawCommand>(2);
+        if (trimStart > 0.005f)
+            segments.Add(CreateCommandRange(command, 0f, trimStart));
+        if (trimEnd < 0.995f)
+            segments.Add(CreateCommandRange(command, trimEnd, 1f));
+        return segments;
+    }
+
+    private static float FindNearestParameter(SymbolDrawCommand command, SymbolPoint target)
+    {
+        if (command.Kind == SymbolDrawCommandKind.Line)
+        {
+            var delta = new SymbolPoint(command.End.X - command.Start.X, command.End.Y - command.Start.Y);
+            var lengthSquared = delta.X * delta.X + delta.Y * delta.Y;
+            if (lengthSquared < 0.000001f)
+                return 0f;
+            return Math.Clamp(
+                ((target.X - command.Start.X) * delta.X + (target.Y - command.Start.Y) * delta.Y) / lengthSquared,
+                0f,
+                1f);
+        }
+
+        const int samples = 160;
+        var bestParameter = 0f;
+        var bestDistance = float.MaxValue;
+        for (var index = 0; index <= samples; index++)
+        {
+            var parameter = index / (float)samples;
+            var point = EvaluateBezierPoint(command, parameter);
+            var distance = DistanceSquared(point, target);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                bestParameter = parameter;
+            }
+        }
+
+        var left = Math.Max(0f, bestParameter - 1f / samples);
+        var right = Math.Min(1f, bestParameter + 1f / samples);
+        for (var iteration = 0; iteration < 14; iteration++)
+        {
+            var first = left + (right - left) / 3f;
+            var second = right - (right - left) / 3f;
+            if (DistanceSquared(EvaluateBezierPoint(command, first), target)
+                <= DistanceSquared(EvaluateBezierPoint(command, second), target))
+                right = second;
+            else
+                left = first;
+        }
+        return (left + right) / 2f;
+    }
+
+    private static SymbolDrawCommand CreateCommandRange(SymbolDrawCommand command, float start, float end)
+    {
+        if (command.Kind == SymbolDrawCommandKind.Line)
+        {
+            var segment = command.Clone();
+            segment.Start = Lerp(command.Start, command.End, start);
+            segment.End = Lerp(command.Start, command.End, end);
+            segment.GroupId = null;
+            return segment;
+        }
+
+        SplitBezier(command, end, out var leftToEnd, out _);
+        if (start <= 0f)
+            return leftToEnd;
+        SplitBezier(leftToEnd, start / end, out _, out var range);
+        return range;
+    }
+
+    private static void SplitBezier(
+        SymbolDrawCommand source,
+        float parameter,
+        out SymbolDrawCommand left,
+        out SymbolDrawCommand right)
+    {
+        parameter = Math.Clamp(parameter, 0f, 1f);
+        var p01 = Lerp(source.Start, source.Control1, parameter);
+        var p12 = Lerp(source.Control1, source.Control2, parameter);
+        var p23 = Lerp(source.Control2, source.End, parameter);
+        var p012 = Lerp(p01, p12, parameter);
+        var p123 = Lerp(p12, p23, parameter);
+        var split = Lerp(p012, p123, parameter);
+        left = CreateBezierSegment(source, source.Start, p01, p012, split);
+        right = CreateBezierSegment(source, split, p123, p23, source.End);
+    }
+
+    private static SymbolDrawCommand CreateBezierSegment(
+        SymbolDrawCommand source,
+        SymbolPoint start,
+        SymbolPoint control1,
+        SymbolPoint control2,
+        SymbolPoint end) =>
+        new()
+        {
+            Kind = SymbolDrawCommandKind.Bezier,
+            Start = start,
+            End = end,
+            Control1 = control1,
+            Control2 = control2,
+            StrokeWidth = source.StrokeWidth,
+            RotationDegrees = source.RotationDegrees
+        };
+
+    private static SymbolPoint EvaluateBezierPoint(SymbolDrawCommand command, float parameter)
+    {
+        var inverse = 1f - parameter;
+        var inverseSquared = inverse * inverse;
+        var parameterSquared = parameter * parameter;
+        return new SymbolPoint(
+            inverseSquared * inverse * command.Start.X
+                + 3f * inverseSquared * parameter * command.Control1.X
+                + 3f * inverse * parameterSquared * command.Control2.X
+                + parameterSquared * parameter * command.End.X,
+            inverseSquared * inverse * command.Start.Y
+                + 3f * inverseSquared * parameter * command.Control1.Y
+                + 3f * inverse * parameterSquared * command.Control2.Y
+                + parameterSquared * parameter * command.End.Y);
+    }
+
+    private static SymbolPoint Lerp(SymbolPoint start, SymbolPoint end, float parameter) =>
+        new(start.X + (end.X - start.X) * parameter, start.Y + (end.Y - start.Y) * parameter);
+
+    private static float DistanceSquared(SymbolPoint first, SymbolPoint second)
+    {
+        var x = first.X - second.X;
+        var y = first.Y - second.Y;
+        return x * x + y * y;
+    }
+
     public void DeleteSelected()
     {
         if (_selectedIndices.Count == 0)
@@ -2646,6 +2813,10 @@ internal sealed class SymbolDesignerCanvas : Control
             return;
         }
 
+        if (Tool == SymbolDesignerTool.TrimSegment
+            && SelectedCommand?.Kind is not (SymbolDrawCommandKind.Line or SymbolDrawCommandKind.Bezier))
+            return;
+
         _dragStart = symbolPoint;
         _dragCurrent = symbolPoint;
         Invalidate();
@@ -2723,11 +2894,18 @@ internal sealed class SymbolDesignerCanvas : Control
         if (!_dragStart.HasValue)
             return;
 
+        var start = _dragStart.Value;
         var end = ToSymbolPoint(e.Location, true);
-        var command = CreateCommand(_dragStart.Value, end);
         _dragStart = null;
         _dragCurrent = null;
 
+        if (Tool == SymbolDesignerTool.TrimSegment)
+        {
+            TrimSelectedSegment(start, end);
+            return;
+        }
+
+        var command = CreateCommand(start, end);
         if (command != null)
             AddCommand(command);
         else
@@ -2792,7 +2970,10 @@ internal sealed class SymbolDesignerCanvas : Control
         if (_dragStart.HasValue && _dragCurrent.HasValue)
         {
             using var previewPen = new Pen(Color.FromArgb(190, Color.Goldenrod), 1.5f) { DashStyle = DashStyle.Dash };
-            CreateCommand(_dragStart.Value, _dragCurrent.Value)?.Draw(e.Graphics, drawingFrame, previewPen, Brushes.Goldenrod);
+            if (Tool == SymbolDesignerTool.TrimSegment)
+                e.Graphics.DrawLine(previewPen, ToAbsolute(drawingFrame, _dragStart.Value), ToAbsolute(drawingFrame, _dragCurrent.Value));
+            else
+                CreateCommand(_dragStart.Value, _dragCurrent.Value)?.Draw(e.Graphics, drawingFrame, previewPen, Brushes.Goldenrod);
         }
 
         DrawArcPreview(e.Graphics, drawingFrame);
