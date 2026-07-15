@@ -49,6 +49,21 @@ public sealed class SymbolDesignerForm : Form
     private readonly TextBox _drawTextInput = new() { Text = "TXT", Width = 80 };
     private readonly NumericUpDown _drawTextSizeInput = CreateFontSizeInput();
     private readonly NumericUpDown _drawStrokeWidthInput = CreateStrokeWidthInput();
+    private readonly Dictionary<SymbolDesignerTool, Button> _toolButtons = new();
+    private readonly FlowLayoutPanel _contextOptionsPanel = new();
+    private Control? _unitTypeField;
+    private Control? _equipmentCategoryField;
+    private Control? _equipmentFunctionField;
+    private Control? _equipmentVariantField;
+    private Control? _equipmentOperatingStateField;
+    private Control? _symbolRoleField;
+    private Control? _compositionModeField;
+    private Control? _modifier1TypeField;
+    private Control? _modifier2TypeField;
+    private Control? _mobilityTypeField;
+    private Control? _textOptionsField;
+    private Control? _fillOptionsField;
+    private Control? _rotateOptionsField;
     private bool _updatingSelectionControls;
     private bool _updatingEquipmentVariantOptions;
     private bool _updatingEquipmentFunctionOptions;
@@ -245,19 +260,6 @@ public sealed class SymbolDesignerForm : Form
             ApplyToolbarStrokeToSelection();
         };
 
-        var loadButton = CreateButton("Load reference", LoadReferenceImage);
-        var loadClipboardButton = CreateButton("Load clipboard", LoadReferenceFromClipboard);
-        var resetReferenceButton = CreateButton("Reset ref", () => _canvas.ResetReferenceTransform());
-        var loadBaseButton = CreateButton("Load base", LoadBaseSymbol);
-        var saveLibraryButton = CreateButton("Save library", SaveLibrary);
-        var loadLibraryButton = CreateButton("Load library", LoadLibrary);
-        var viewLibraryButton = CreateButton("View library", ViewLibrary);
-        var undoButton = CreateButton("Undo", () => _canvas.Undo());
-        var redoButton = CreateButton("Redo", () => _canvas.Redo());
-        var duplicateButton = CreateButton("Duplicate", () => _canvas.DuplicateSelected());
-        var copyButton = CreateButton("Copy", () => _canvas.CopySelected());
-        var pasteButton = CreateButton("Paste", () => _canvas.PasteCopied());
-        var rotateButton = CreateButton("Rotate 90", () => _canvas.RotateSelectedClockwise());
         var rotateAngleInput = new NumericUpDown
         {
             Minimum = -360m,
@@ -267,110 +269,43 @@ public sealed class SymbolDesignerForm : Form
             Value = 15m,
             Width = 64
         };
-        var rotateAngleButton = CreateButton("Rotate", () => _canvas.RotateSelected((float)rotateAngleInput.Value));
-        var joinLinesButton = CreateButton("Join lines", () => _canvas.JoinSelectedLines());
-        var groupButton = CreateButton("Group", () => _canvas.GroupSelected());
-        var ungroupButton = CreateButton("Ungroup", () => _canvas.UngroupSelected());
-        var alignTopButton = CreateButton("Align top", () => _canvas.AlignSelectedTop());
-        var alignBottomButton = CreateButton("Align bottom", () => _canvas.AlignSelectedBottom());
-        var sizeSmallestButton = CreateButton("Size to smallest", () => _canvas.SizeSelectedToSmallest());
-        var sizeLargestButton = CreateButton("Size to largest", () => _canvas.SizeSelectedToLargest());
-        var fitContentButton = CreateButton("Fit content", () => _canvas.FitContentToFrame());
-        var mirrorHorizontalButton = CreateButton("Mirror H", () => _canvas.MirrorSelectedHorizontal());
-        var mirrorVerticalButton = CreateButton("Mirror V", () => _canvas.MirrorSelectedVertical());
-        var deleteButton = CreateButton("Delete", DeleteSelectedCommand);
-        var clearButton = CreateButton("Clear", () => _canvas.ClearCanvas());
-        var closePathButton = CreateButton("Close path", CloseLinePath);
-        var airDefenseButton = CreateButton("Air defense arc", AddAirDefenseArc);
-        var copyCodeButton = CreateButton("Copy C# code", CopyCode);
+        var menu = CreateMainMenu(rotateAngleInput);
+        MainMenuStrip = menu;
 
-        var toolbar = new FlowLayoutPanel
+        var metadataBar = new FlowLayoutPanel
         {
             Dock = DockStyle.Top,
-            AutoScroll = true,
-            Height = 172,
-            Padding = new Padding(8, 8, 8, 4),
-            WrapContents = true
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            Padding = new Padding(8, 6, 8, 3),
+            WrapContents = true,
+            BackColor = SystemColors.ControlLight
         };
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Domain", Margin = new Padding(0, 6, 4, 0) });
-        toolbar.Controls.Add(_physicalDomainComboBox);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Unit type", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(_unitTypeComboBox);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Equipment category", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(_equipmentCategoryComboBox);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Equipment function", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(_equipmentFunctionComboBox);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Variant", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(_equipmentVariantComboBox);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Operating state", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(_equipmentOperatingStateComboBox);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Symbol role", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(_symbolRoleComboBox);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Composition", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(_compositionModeComboBox);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Modifier 1 type", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(_modifier1TypeComboBox);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Modifier 2 type", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(_modifier2TypeComboBox);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Mobility type", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(_mobilityTypeComboBox);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Affiliation", Margin = new Padding(14, 6, 4, 0) });
-        toolbar.Controls.Add(_affiliationComboBox);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Status", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(_frameStatusComboBox);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Tool", Margin = new Padding(14, 6, 4, 0) });
-        toolbar.Controls.Add(_toolComboBox);
-        toolbar.Controls.Add(loadButton);
-        toolbar.Controls.Add(loadClipboardButton);
-        toolbar.Controls.Add(resetReferenceButton);
-        toolbar.Controls.Add(loadBaseButton);
-        toolbar.Controls.Add(saveLibraryButton);
-        toolbar.Controls.Add(loadLibraryButton);
-        toolbar.Controls.Add(viewLibraryButton);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Reference", Margin = new Padding(14, 6, 4, 0) });
-        toolbar.Controls.Add(_referenceOpacityTrackBar);
-        toolbar.Controls.Add(_showGridCheckBox);
-        toolbar.Controls.Add(_showIconGuideCheckBox);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Guide shape", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(_iconGuideShapeComboBox);
-        toolbar.Controls.Add(_snapCheckBox);
-        toolbar.Controls.Add(_fillCheckBox);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Grid", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(_gridDivisionsInput);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Text", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(_drawTextInput);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Size %", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(_drawTextSizeInput);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Stroke", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(_drawStrokeWidthInput);
-        toolbar.Controls.Add(undoButton);
-        toolbar.Controls.Add(redoButton);
-        toolbar.Controls.Add(duplicateButton);
-        toolbar.Controls.Add(copyButton);
-        toolbar.Controls.Add(pasteButton);
-        toolbar.Controls.Add(rotateButton);
-        toolbar.Controls.Add(new Label { AutoSize = true, Text = "Angle", Margin = new Padding(8, 6, 4, 0) });
-        toolbar.Controls.Add(rotateAngleInput);
-        toolbar.Controls.Add(rotateAngleButton);
-        toolbar.Controls.Add(joinLinesButton);
-        toolbar.Controls.Add(groupButton);
-        toolbar.Controls.Add(ungroupButton);
-        toolbar.Controls.Add(alignTopButton);
-        toolbar.Controls.Add(alignBottomButton);
-        toolbar.Controls.Add(sizeSmallestButton);
-        toolbar.Controls.Add(sizeLargestButton);
-        toolbar.Controls.Add(fitContentButton);
-        toolbar.Controls.Add(mirrorHorizontalButton);
-        toolbar.Controls.Add(mirrorVerticalButton);
-        toolbar.Controls.Add(deleteButton);
-        toolbar.Controls.Add(clearButton);
-        toolbar.Controls.Add(closePathButton);
-        toolbar.Controls.Add(airDefenseButton);
-        toolbar.Controls.Add(copyCodeButton);
-        void UpdateToolbarHeight() => toolbar.Height = ClientSize.Width < 1400 ? 230 : 172;
-        UpdateToolbarHeight();
-        Resize += (_, _) => UpdateToolbarHeight();
+        metadataBar.Controls.Add(CreateLabeledField("Domain", _physicalDomainComboBox, leadingMargin: 0));
+        _unitTypeField = CreateLabeledField("Unit type", _unitTypeComboBox);
+        _equipmentCategoryField = CreateLabeledField("Category", _equipmentCategoryComboBox);
+        _equipmentFunctionField = CreateLabeledField("Equipment function", _equipmentFunctionComboBox);
+        _equipmentVariantField = CreateLabeledField("Variant", _equipmentVariantComboBox);
+        _equipmentOperatingStateField = CreateLabeledField("Operating state", _equipmentOperatingStateComboBox);
+        _symbolRoleField = CreateLabeledField("Symbol role", _symbolRoleComboBox);
+        _compositionModeField = CreateLabeledField("Composition", _compositionModeComboBox);
+        _modifier1TypeField = CreateLabeledField("Modifier 1", _modifier1TypeComboBox);
+        _modifier2TypeField = CreateLabeledField("Modifier 2", _modifier2TypeComboBox);
+        _mobilityTypeField = CreateLabeledField("Mobility", _mobilityTypeComboBox);
+        metadataBar.Controls.Add(_unitTypeField);
+        metadataBar.Controls.Add(_equipmentCategoryField);
+        metadataBar.Controls.Add(_equipmentFunctionField);
+        metadataBar.Controls.Add(_equipmentVariantField);
+        metadataBar.Controls.Add(_equipmentOperatingStateField);
+        metadataBar.Controls.Add(_symbolRoleField);
+        metadataBar.Controls.Add(_compositionModeField);
+        metadataBar.Controls.Add(_modifier1TypeField);
+        metadataBar.Controls.Add(_modifier2TypeField);
+        metadataBar.Controls.Add(_mobilityTypeField);
+        metadataBar.Controls.Add(CreateLabeledField("Affiliation", _affiliationComboBox));
+        metadataBar.Controls.Add(CreateLabeledField("Status", _frameStatusComboBox));
 
+        ConfigureContextOptions(rotateAngleInput);
         var statusPanel = new Panel
         {
             Dock = DockStyle.Top,
@@ -422,12 +357,15 @@ public sealed class SymbolDesignerForm : Form
         _codeTextBox.Font = new Font(FontFamily.GenericMonospace, 9f);
 
         var rightTabs = new TabControl { Dock = DockStyle.Fill };
+        var propertiesTab = new TabPage("Properties") { Padding = new Padding(8) };
         var previewTab = new TabPage("Preview") { Padding = new Padding(8) };
         var commandsTab = new TabPage("Commands") { Padding = new Padding(8) };
         var codeTab = new TabPage("C# code") { Padding = new Padding(8) };
+        propertiesTab.Controls.Add(CreateSelectionEditor());
         previewTab.Controls.Add(_preview);
-        commandsTab.Controls.Add(CreateCommandsPanel());
+        commandsTab.Controls.Add(_commandListBox);
         codeTab.Controls.Add(_codeTextBox);
+        rightTabs.Controls.Add(propertiesTab);
         rightTabs.Controls.Add(previewTab);
         rightTabs.Controls.Add(commandsTab);
         rightTabs.Controls.Add(codeTab);
@@ -435,14 +373,23 @@ public sealed class SymbolDesignerForm : Form
         var split = new SplitContainer
         {
             Dock = DockStyle.Fill,
-            SplitterDistance = 780
+            FixedPanel = FixedPanel.Panel2,
+            Panel1MinSize = 480,
+            Panel2MinSize = 340,
+            SplitterDistance = 760
         };
         split.Panel1.Controls.Add(_canvas);
         split.Panel2.Controls.Add(rightTabs);
 
-        Controls.Add(split);
+        var workspace = new Panel { Dock = DockStyle.Fill };
+        workspace.Controls.Add(split);
+        workspace.Controls.Add(CreateToolbox());
+
+        Controls.Add(workspace);
         Controls.Add(statusPanel);
-        Controls.Add(toolbar);
+        Controls.Add(_contextOptionsPanel);
+        Controls.Add(metadataBar);
+        Controls.Add(menu);
 
         UpdateFunctionSelectorState();
         RefreshOutput();
@@ -454,6 +401,179 @@ public sealed class SymbolDesignerForm : Form
         : this()
     {
         LoadLibraryFile(libraryFileName);
+    }
+
+    private MenuStrip CreateMainMenu(NumericUpDown rotateAngleInput)
+    {
+        var menu = new MenuStrip { Dock = DockStyle.Top };
+        var file = new ToolStripMenuItem("File");
+        file.DropDownItems.Add(CreateMenuItem("Load reference...", LoadReferenceImage));
+        file.DropDownItems.Add(CreateMenuItem("Load from clipboard", LoadReferenceFromClipboard));
+        file.DropDownItems.Add(CreateMenuItem("Reset reference", () => _canvas.ResetReferenceTransform()));
+        file.DropDownItems.Add(new ToolStripSeparator());
+        file.DropDownItems.Add(CreateMenuItem("Load base symbol...", LoadBaseSymbol));
+        file.DropDownItems.Add(CreateMenuItem("Load library...", LoadLibrary));
+        file.DropDownItems.Add(CreateMenuItem("Save to library...", SaveLibrary, Keys.Control | Keys.S));
+        file.DropDownItems.Add(CreateMenuItem("View library", ViewLibrary));
+
+        var edit = new ToolStripMenuItem("Edit");
+        edit.DropDownItems.Add(CreateMenuItem("Undo", () => _canvas.Undo(), Keys.Control | Keys.Z));
+        edit.DropDownItems.Add(CreateMenuItem("Redo", () => _canvas.Redo(), Keys.Control | Keys.Y));
+        edit.DropDownItems.Add(new ToolStripSeparator());
+        edit.DropDownItems.Add(CreateMenuItem("Duplicate", () => _canvas.DuplicateSelected(), Keys.Control | Keys.D));
+        edit.DropDownItems.Add(CreateMenuItem("Copy", () => _canvas.CopySelected(), Keys.Control | Keys.C));
+        edit.DropDownItems.Add(CreateMenuItem("Paste", () => _canvas.PasteCopied(), Keys.Control | Keys.V));
+        edit.DropDownItems.Add(CreateMenuItem("Delete", DeleteSelectedCommand, Keys.Delete));
+        edit.DropDownItems.Add(CreateMenuItem("Clear canvas", () => _canvas.ClearCanvas()));
+
+        var arrange = new ToolStripMenuItem("Arrange");
+        arrange.DropDownItems.Add(CreateMenuItem("Rotate 90 degrees", () => _canvas.RotateSelectedClockwise()));
+        arrange.DropDownItems.Add(CreateMenuItem("Rotate by angle", () => _canvas.RotateSelected((float)rotateAngleInput.Value)));
+        arrange.DropDownItems.Add(CreateMenuItem("Mirror horizontally", () => _canvas.MirrorSelectedHorizontal()));
+        arrange.DropDownItems.Add(CreateMenuItem("Mirror vertically", () => _canvas.MirrorSelectedVertical()));
+        arrange.DropDownItems.Add(new ToolStripSeparator());
+        arrange.DropDownItems.Add(CreateMenuItem("Group", () => _canvas.GroupSelected(), Keys.Control | Keys.G));
+        arrange.DropDownItems.Add(CreateMenuItem("Ungroup", () => _canvas.UngroupSelected(), Keys.Control | Keys.Shift | Keys.G));
+        arrange.DropDownItems.Add(CreateMenuItem("Join lines", () => _canvas.JoinSelectedLines()));
+        arrange.DropDownItems.Add(new ToolStripSeparator());
+        arrange.DropDownItems.Add(CreateMenuItem("Align top", () => _canvas.AlignSelectedTop()));
+        arrange.DropDownItems.Add(CreateMenuItem("Align bottom", () => _canvas.AlignSelectedBottom()));
+        arrange.DropDownItems.Add(CreateMenuItem("Size to smallest", () => _canvas.SizeSelectedToSmallest()));
+        arrange.DropDownItems.Add(CreateMenuItem("Size to largest", () => _canvas.SizeSelectedToLargest()));
+        arrange.DropDownItems.Add(CreateMenuItem("Fit content to frame", () => _canvas.FitContentToFrame()));
+
+        var draw = new ToolStripMenuItem("Draw");
+        draw.DropDownItems.Add(CreateMenuItem("Close line path", CloseLinePath));
+        draw.DropDownItems.Add(CreateMenuItem("Add air defense arc", AddAirDefenseArc));
+
+        var view = new ToolStripMenuItem("View");
+        view.DropDownItems.Add(CreateToggleMenuItem("Grid", _showGridCheckBox));
+        view.DropDownItems.Add(CreateToggleMenuItem("Icon guide", _showIconGuideCheckBox));
+        view.DropDownItems.Add(CreateToggleMenuItem("Snap", _snapCheckBox));
+
+        var export = new ToolStripMenuItem("Export");
+        export.DropDownItems.Add(CreateMenuItem("Copy C# code", CopyCode));
+
+        menu.Items.AddRange(new ToolStripItem[] { file, edit, arrange, draw, view, export });
+        return menu;
+    }
+
+    private static ToolStripMenuItem CreateMenuItem(string text, Action action, Keys shortcut = Keys.None)
+    {
+        var item = new ToolStripMenuItem(text) { ShortcutKeys = shortcut };
+        item.Click += (_, _) => action();
+        return item;
+    }
+
+    private static ToolStripMenuItem CreateToggleMenuItem(string text, CheckBox checkBox)
+    {
+        var item = new ToolStripMenuItem(text) { Checked = checkBox.Checked, CheckOnClick = true };
+        item.CheckedChanged += (_, _) => checkBox.Checked = item.Checked;
+        checkBox.CheckedChanged += (_, _) => item.Checked = checkBox.Checked;
+        return item;
+    }
+
+    private static Control CreateLabeledField(string label, Control control, int leadingMargin = 8)
+    {
+        var panel = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            WrapContents = false,
+            Margin = new Padding(leadingMargin, 0, 0, 0)
+        };
+        panel.Controls.Add(new Label { AutoSize = true, Text = label, Margin = new Padding(0, 6, 4, 0) });
+        panel.Controls.Add(control);
+        return panel;
+    }
+
+    private void ConfigureContextOptions(NumericUpDown rotateAngleInput)
+    {
+        _contextOptionsPanel.Dock = DockStyle.Top;
+        _contextOptionsPanel.Height = 38;
+        _contextOptionsPanel.AutoScroll = true;
+        _contextOptionsPanel.WrapContents = false;
+        _contextOptionsPanel.Padding = new Padding(8, 4, 8, 2);
+
+        _contextOptionsPanel.Controls.Add(CreateLabeledField("Tool", _toolComboBox, leadingMargin: 0));
+        _contextOptionsPanel.Controls.Add(CreateLabeledField("Stroke", _drawStrokeWidthInput));
+        _textOptionsField = CreateLabeledField("Text", _drawTextInput);
+        var textSizeField = CreateLabeledField("Size %", _drawTextSizeInput, leadingMargin: 4);
+        ((FlowLayoutPanel)_textOptionsField).Controls.Add(textSizeField);
+        _contextOptionsPanel.Controls.Add(_textOptionsField);
+        _fillOptionsField = CreateLabeledField(string.Empty, _fillCheckBox);
+        _contextOptionsPanel.Controls.Add(_fillOptionsField);
+        _rotateOptionsField = CreateLabeledField("Angle", rotateAngleInput);
+        ((FlowLayoutPanel)_rotateOptionsField).Controls.Add(CreateButton("Rotate", () => _canvas.RotateSelected((float)rotateAngleInput.Value)));
+        _contextOptionsPanel.Controls.Add(_rotateOptionsField);
+        _contextOptionsPanel.Controls.Add(CreateLabeledField(string.Empty, _snapCheckBox));
+        _contextOptionsPanel.Controls.Add(CreateLabeledField(string.Empty, _showGridCheckBox));
+        _contextOptionsPanel.Controls.Add(CreateLabeledField("Grid", _gridDivisionsInput, leadingMargin: 2));
+        _contextOptionsPanel.Controls.Add(CreateLabeledField(string.Empty, _showIconGuideCheckBox));
+        _contextOptionsPanel.Controls.Add(CreateLabeledField("Guide", _iconGuideShapeComboBox, leadingMargin: 2));
+        _contextOptionsPanel.Controls.Add(CreateLabeledField("Reference", _referenceOpacityTrackBar));
+    }
+
+    private Control CreateToolbox()
+    {
+        var toolbox = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Left,
+            Width = 144,
+            FlowDirection = FlowDirection.TopDown,
+            WrapContents = false,
+            AutoScroll = true,
+            Padding = new Padding(8, 8, 8, 8),
+            BackColor = SystemColors.ControlLight
+        };
+        AddToolGroup(toolbox, "SELECT", (SymbolDesignerTool.SelectMove, "Select / Move"));
+        AddToolGroup(toolbox, "LINES",
+            (SymbolDesignerTool.Line, "Line"),
+            (SymbolDesignerTool.ParallelLine, "Parallel"),
+            (SymbolDesignerTool.PerpendicularLine, "Perpendicular"));
+        AddToolGroup(toolbox, "SHAPES",
+            (SymbolDesignerTool.Rectangle, "Rectangle"),
+            (SymbolDesignerTool.Ellipse, "Ellipse"),
+            (SymbolDesignerTool.Circle, "Circle"),
+            (SymbolDesignerTool.Capsule, "Capsule"));
+        AddToolGroup(toolbox, "CURVES",
+            (SymbolDesignerTool.Arc, "Arc"),
+            (SymbolDesignerTool.BezierArc, "Bezier"),
+            (SymbolDesignerTool.SineWave, "Wave"));
+        AddToolGroup(toolbox, "CONTENT",
+            (SymbolDesignerTool.Dot, "Dot"),
+            (SymbolDesignerTool.Text, "Text"));
+        return toolbox;
+    }
+
+    private void AddToolGroup(FlowLayoutPanel toolbox, string title, params (SymbolDesignerTool Tool, string Label)[] tools)
+    {
+        toolbox.Controls.Add(new Label
+        {
+            Text = title,
+            AutoSize = false,
+            Width = 122,
+            Height = 22,
+            ForeColor = SystemColors.GrayText,
+            TextAlign = ContentAlignment.BottomLeft,
+            Margin = new Padding(2, 7, 2, 2)
+        });
+        foreach (var entry in tools)
+        {
+            var button = new Button
+            {
+                Text = entry.Label,
+                Width = 122,
+                Height = 29,
+                Margin = new Padding(2, 1, 2, 1),
+                FlatStyle = FlatStyle.Flat,
+                TextAlign = ContentAlignment.MiddleLeft,
+                UseVisualStyleBackColor = false
+            };
+            button.Click += (_, _) => SelectTool(entry.Tool);
+            _toolButtons[entry.Tool] = button;
+            toolbox.Controls.Add(button);
+        }
     }
 
     private static Button CreateButton(string text, Action action)
@@ -837,22 +957,41 @@ public sealed class SymbolDesignerForm : Form
     private void UpdateFunctionSelectorState()
     {
         var equipment = GetSelectedPhysicalDomain() == SymbolPhysicalDomain.Equipment;
+        var role = GetSelectedSymbolRole();
+        var supportsInFlight = equipment
+            && OrbatEquipmentFunctionCatalog.SupportsInFlightOperatingState(GetSelectedEquipmentFunction());
+
+        SetFieldVisible(_unitTypeField, !equipment);
+        SetFieldVisible(_equipmentCategoryField, equipment);
+        SetFieldVisible(_equipmentFunctionField, equipment);
+        SetFieldVisible(_equipmentVariantField, equipment);
+        SetFieldVisible(_equipmentOperatingStateField, supportsInFlight);
+        SetFieldVisible(_symbolRoleField, equipment);
+        SetFieldVisible(_compositionModeField, equipment);
+        SetFieldVisible(_modifier1TypeField, equipment && role == OrbatEquipmentSymbolRole.Modifier1);
+        SetFieldVisible(_modifier2TypeField, equipment && role == OrbatEquipmentSymbolRole.Modifier2);
+        SetFieldVisible(_mobilityTypeField, equipment && role == OrbatEquipmentSymbolRole.MobilityIndicator);
+
         _unitTypeComboBox.Enabled = !equipment;
         _equipmentCategoryComboBox.Enabled = equipment;
         _equipmentFunctionComboBox.Enabled = equipment;
         _equipmentVariantComboBox.Enabled = equipment;
-        var supportsInFlight = equipment
-            && OrbatEquipmentFunctionCatalog.SupportsInFlightOperatingState(GetSelectedEquipmentFunction());
         _equipmentOperatingStateComboBox.Enabled = supportsInFlight;
-        if (!supportsInFlight && GetSelectedEquipmentOperatingState() != OrbatEquipmentOperatingState.Ground)
-            _equipmentOperatingStateComboBox.SelectedItem = OrbatEquipmentOperatingState.Ground.ToString();
         _symbolRoleComboBox.Enabled = equipment;
         _compositionModeComboBox.Enabled = equipment;
-        _modifier1TypeComboBox.Enabled = equipment && GetSelectedSymbolRole() == OrbatEquipmentSymbolRole.Modifier1;
-        _modifier2TypeComboBox.Enabled = equipment && GetSelectedSymbolRole() == OrbatEquipmentSymbolRole.Modifier2;
-        _mobilityTypeComboBox.Enabled = equipment && GetSelectedSymbolRole() == OrbatEquipmentSymbolRole.MobilityIndicator;
+        _modifier1TypeComboBox.Enabled = equipment && role == OrbatEquipmentSymbolRole.Modifier1;
+        _modifier2TypeComboBox.Enabled = equipment && role == OrbatEquipmentSymbolRole.Modifier2;
+        _mobilityTypeComboBox.Enabled = equipment && role == OrbatEquipmentSymbolRole.MobilityIndicator;
+
+        if (!supportsInFlight && GetSelectedEquipmentOperatingState() != OrbatEquipmentOperatingState.Ground)
+            _equipmentOperatingStateComboBox.SelectedItem = OrbatEquipmentOperatingState.Ground.ToString();
     }
 
+    private static void SetFieldVisible(Control? field, bool visible)
+    {
+        if (field is not null)
+            field.Visible = visible;
+    }
     private void SelectTool(SymbolDesignerTool tool)
     {
         var value = tool.ToString();
@@ -865,7 +1004,8 @@ public sealed class SymbolDesignerForm : Form
 
     private void UpdateToolStatus()
     {
-        _statusLabel.Text = GetSelectedTool() switch
+        var tool = GetSelectedTool();
+        _statusLabel.Text = tool switch
         {
             SymbolDesignerTool.SelectMove => "SelectMove: Ctrl+click selects multiple shapes; drag to move the selection or group.",
             SymbolDesignerTool.ParallelLine => "ParallelLine: select an existing line or segment, then drag a new line parallel to it.",
@@ -873,11 +1013,25 @@ public sealed class SymbolDesignerForm : Form
             SymbolDesignerTool.Arc => "Arc: click start, click highest point, click end.",
             SymbolDesignerTool.SineWave => "SineWave: drag a box to set the wave width and height.",
             SymbolDesignerTool.Circle => "Circle: drag from the center outward. Use Fill closed for a solid circle.",
-            SymbolDesignerTool.Text => "Text: enter text in the toolbar, then click the canvas to place it.",
-            _ => "Draw: drag on the canvas. Reference: right-drag to move, mouse wheel to zoom, Reset ref to fit."
+            SymbolDesignerTool.Text => "Text: enter text in the options bar, then click the canvas to place it.",
+            _ => "Draw: drag on the canvas. Reference: right-drag to move, mouse wheel to zoom, or use File > Reset reference."
         };
-    }
 
+        foreach (var entry in _toolButtons)
+        {
+            var selected = entry.Key == tool;
+            entry.Value.BackColor = selected ? Color.FromArgb(210, 232, 255) : SystemColors.Control;
+            entry.Value.FlatAppearance.BorderColor = selected ? Color.FromArgb(0, 120, 215) : SystemColors.ControlDark;
+            entry.Value.FlatAppearance.BorderSize = selected ? 2 : 1;
+        }
+
+        SetFieldVisible(_textOptionsField, tool == SymbolDesignerTool.Text);
+        SetFieldVisible(_fillOptionsField, tool is SymbolDesignerTool.Rectangle
+            or SymbolDesignerTool.Ellipse
+            or SymbolDesignerTool.Circle
+            or SymbolDesignerTool.Capsule);
+        SetFieldVisible(_rotateOptionsField, tool == SymbolDesignerTool.SelectMove);
+    }
     private void LoadReferenceImage()
     {
         using var dialog = new OpenFileDialog
