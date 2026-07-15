@@ -13,6 +13,8 @@ public sealed class SymbolOverlayDemoForm : Form
     private readonly ComboBox _statusComboBox = new();
     private readonly ComboBox _equipmentOperatingStateComboBox = new();
     private readonly ComboBox _unitTypeComboBox = new();
+    private readonly ComboBox _unitCategoryComboBox = new() { Width = 230, DropDownWidth = 280 };
+    private readonly ComboBox _unitMainFunctionComboBox = new() { Width = 230, DropDownWidth = 380 };
     private readonly ComboBox _equipmentCategoryComboBox = new() { Width = 230, DropDownWidth = 250 };
     private readonly ComboBox _equipmentFunctionComboBox = new() { Width = 230, DropDownWidth = 300 };
     private readonly ComboBox _equipmentVariantComboBox = new();
@@ -24,6 +26,7 @@ public sealed class SymbolOverlayDemoForm : Form
     internal static readonly JsonSerializerOptions LibraryJsonOptions = CreateLibraryJsonOptions();
     private bool _updatingVariantList;
     private bool _updatingEquipmentFunctionOptions;
+    private bool _updatingUnitMainFunctionOptions;
     private OrbatEquipmentFunction? _lastVariantFunction;
 
     public SymbolOverlayDemoForm()
@@ -56,6 +59,31 @@ public sealed class SymbolOverlayDemoForm : Form
         _equipmentOperatingStateComboBox.Items.AddRange(Enum.GetNames<OrbatEquipmentOperatingState>().Cast<object>().ToArray());
         _equipmentOperatingStateComboBox.SelectedItem = OrbatEquipmentOperatingState.Ground.ToString();
         _equipmentOperatingStateComboBox.SelectedIndexChanged += (_, _) => ApplyModelToCanvas();
+
+        _unitCategoryComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        _unitCategoryComboBox.Items.AddRange(Enum.GetValues<OrbatUnitMainFunctionCategory>()
+            .Select(value => new UnitMainFunctionCategorySelection(value)).Cast<object>().ToArray());
+        _unitCategoryComboBox.SelectedIndex = 0;
+        _unitCategoryComboBox.SelectedIndexChanged += (_, _) =>
+        {
+            if (!_updatingUnitMainFunctionOptions)
+                RefreshUnitMainFunctionOptions();
+        };
+
+        _unitMainFunctionComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+        _unitMainFunctionComboBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+        _unitMainFunctionComboBox.AutoCompleteSource = AutoCompleteSource.ListItems;
+        RefreshUnitMainFunctionOptions(OrbatUnitMainFunction.Infantry);
+        _unitMainFunctionComboBox.SelectedIndexChanged += (_, _) =>
+        {
+            if (!_updatingUnitMainFunctionOptions)
+                ApplyModelToCanvas();
+        };
+        _unitMainFunctionComboBox.TextChanged += (_, _) =>
+        {
+            if (!_updatingUnitMainFunctionOptions)
+                ApplyModelToCanvas();
+        };
 
         _unitTypeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         _unitTypeComboBox.Items.AddRange(Enum.GetNames<OrbatUnitType>().Cast<object>().ToArray());
@@ -157,7 +185,8 @@ public sealed class SymbolOverlayDemoForm : Form
         AddRow(panel, "Domain", _domainComboBox);
         AddRow(panel, "Affiliation", _affiliationComboBox);
         AddRow(panel, "Status", _statusComboBox);
-        AddRow(panel, "Unit type", _unitTypeComboBox);
+        AddRow(panel, "Unit category", _unitCategoryComboBox);
+        AddRow(panel, "Main function", _unitMainFunctionComboBox);
         AddRow(panel, "Category", _equipmentCategoryComboBox);
         AddRow(panel, "Equipment fn", _equipmentFunctionComboBox);
         AddRow(panel, "Variant", _equipmentVariantComboBox);
@@ -221,7 +250,7 @@ public sealed class SymbolOverlayDemoForm : Form
     {
         var mainSymbol = GetSelectedDomain() == SymbolPhysicalDomain.Equipment
             ? LoadEquipmentLibrarySymbol(GetSelectedEquipmentFunction(), GetSelectedEquipmentVariant())
-            : LoadedEquipmentSymbol.Empty;
+            : LoadLandUnitLibrarySymbol(GetSelectedUnitMainFunction());
         _canvas.Model = new OverlaySymbolModel
         {
             Domain = GetSelectedDomain(),
@@ -229,6 +258,7 @@ public sealed class SymbolOverlayDemoForm : Form
             Status = GetSelectedStatus(),
             OperatingState = GetSelectedEquipmentOperatingState(),
             UnitType = GetSelectedUnitType(),
+            UnitMainFunction = GetSelectedUnitMainFunction(),
             EquipmentFunction = GetSelectedEquipmentFunction(),
             EquipmentVariant = GetSelectedEquipmentVariant(),
             EquipmentCommands = mainSymbol.Commands,
@@ -331,19 +361,58 @@ public sealed class SymbolOverlayDemoForm : Form
             ? state
             : OrbatEquipmentOperatingState.Ground;
 
-    private OrbatUnitType GetSelectedUnitType() =>
-        Enum.TryParse(Convert.ToString(_unitTypeComboBox.SelectedItem), out OrbatUnitType unitType)
-            ? unitType
-            : OrbatUnitType.Unspecified;
+    private OrbatUnitMainFunction GetSelectedUnitMainFunction() =>
+    _unitMainFunctionComboBox.SelectedItem is UnitMainFunctionSelection selection
+        ? selection.Value
+        : OrbatUnitMainFunctionCatalog.TryParseDisplayName(
+            _unitMainFunctionComboBox.Text,
+            out OrbatUnitMainFunction function)
+            ? function
+            : OrbatUnitMainFunction.Unspecified;
 
-    private OrbatEquipmentFunction GetSelectedEquipmentFunction() =>
-        _equipmentFunctionComboBox.SelectedItem is EquipmentFunctionSelection selection
+    private OrbatUnitMainFunctionCategory GetSelectedUnitCategory() =>
+        _unitCategoryComboBox.SelectedItem is UnitMainFunctionCategorySelection selection
             ? selection.Value
-            : OrbatEquipmentFunctionCatalog.TryParseDisplayName(
-                _equipmentFunctionComboBox.Text,
-                out OrbatEquipmentFunction equipmentFunction)
-                ? equipmentFunction
-                : OrbatEquipmentFunction.Unspecified;
+            : OrbatUnitMainFunctionCategory.All;
+
+    private void RefreshUnitMainFunctionOptions(OrbatUnitMainFunction? preferredFunction = null)
+    {
+        var currentFunction = preferredFunction ?? GetSelectedUnitMainFunction();
+        var functions = OrbatUnitMainFunctionCatalog.GetFunctions(GetSelectedUnitCategory());
+        var selectedFunction = functions.Contains(currentFunction)
+            ? currentFunction
+            : functions.FirstOrDefault();
+
+        _updatingUnitMainFunctionOptions = true;
+        try
+        {
+            _unitMainFunctionComboBox.BeginUpdate();
+            _unitMainFunctionComboBox.Items.Clear();
+            _unitMainFunctionComboBox.Items.AddRange(functions
+                .Select(value => new UnitMainFunctionSelection(value)).Cast<object>().ToArray());
+            _unitMainFunctionComboBox.SelectedItem = _unitMainFunctionComboBox.Items
+                .Cast<UnitMainFunctionSelection>()
+                .FirstOrDefault(item => item.Value == selectedFunction);
+        }
+        finally
+        {
+            _unitMainFunctionComboBox.EndUpdate();
+            _updatingUnitMainFunctionOptions = false;
+        }
+
+        ApplyModelToCanvas();
+    }
+
+    private OrbatUnitType GetSelectedUnitType() =>
+        OrbatUnitMainFunctionCatalog.ToLegacyUnitType(GetSelectedUnitMainFunction());
+    private OrbatEquipmentFunction GetSelectedEquipmentFunction() =>
+            _equipmentFunctionComboBox.SelectedItem is EquipmentFunctionSelection selection
+                ? selection.Value
+                : OrbatEquipmentFunctionCatalog.TryParseDisplayName(
+                    _equipmentFunctionComboBox.Text,
+                    out OrbatEquipmentFunction equipmentFunction)
+                    ? equipmentFunction
+                    : OrbatEquipmentFunction.Unspecified;
 
     private OrbatEquipmentFunctionCategory GetSelectedEquipmentCategory() =>
         _equipmentCategoryComboBox.SelectedItem is EquipmentFunctionCategorySelection selection
@@ -392,7 +461,9 @@ public sealed class SymbolOverlayDemoForm : Form
     private void UpdateFunctionSelectorState()
     {
         var equipment = GetSelectedDomain() == SymbolPhysicalDomain.Equipment;
-        _unitTypeComboBox.Enabled = !equipment;
+        _unitTypeComboBox.Enabled = false;
+        _unitCategoryComboBox.Enabled = !equipment;
+        _unitMainFunctionComboBox.Enabled = !equipment;
         _equipmentCategoryComboBox.Enabled = equipment;
         _equipmentFunctionComboBox.Enabled = equipment;
         _equipmentVariantComboBox.Enabled = equipment;
@@ -476,6 +547,47 @@ public sealed class SymbolOverlayDemoForm : Form
         }
 
         return variants.ToList();
+    }
+
+    private static LoadedEquipmentSymbol LoadLandUnitLibrarySymbol(OrbatUnitMainFunction mainFunction)
+    {
+        LoadedEquipmentSymbol? fallback = null;
+        foreach (var file in GetRecentLibraryFiles().OrderBy(File.GetLastWriteTimeUtc))
+        {
+            try
+            {
+                var definition = JsonSerializer.Deserialize<SymbolLibraryDefinition>(
+                    File.ReadAllText(file, Encoding.UTF8), LibraryJsonOptions);
+                if (definition == null
+                    || definition.GetEffectivePhysicalDomain() != SymbolPhysicalDomain.LandUnit
+                    || definition.SymbolRole is OrbatEquipmentSymbolRole.Modifier1 or OrbatEquipmentSymbolRole.Modifier2
+                    || definition.Commands.Count == 0)
+                    continue;
+
+                var fileFunction = OrbatUnitMainFunction.Unspecified;
+                if (!string.IsNullOrWhiteSpace(definition.UnitMainFunction))
+                    OrbatUnitMainFunctionCatalog.TryParseDisplayName(definition.UnitMainFunction, out fileFunction);
+                if (fileFunction == OrbatUnitMainFunction.Unspecified
+                    && Enum.TryParse(definition.UnitType, out OrbatUnitType legacyType))
+                    fileFunction = OrbatUnitMainFunctionCatalog.FromLegacyUnitType(legacyType);
+
+                var loaded = new LoadedEquipmentSymbol(
+                    definition.Commands,
+                    definition.SymbolRole,
+                    definition.CompositionMode,
+                    definition.Layout ?? OrbatEquipmentSymbolLayout.CreateDefault());
+                if (fileFunction == mainFunction)
+                    return loaded;
+                if (fileFunction == OrbatUnitMainFunction.Unspecified)
+                    fallback ??= loaded;
+            }
+            catch
+            {
+                // Ignore unreadable files and fall back to the built-in unit drawing.
+            }
+        }
+
+        return fallback ?? LoadedEquipmentSymbol.Empty;
     }
 
     private static LoadedEquipmentSymbol LoadEquipmentLibrarySymbol(OrbatEquipmentFunction equipmentFunction, string equipmentVariant)
@@ -835,6 +947,7 @@ internal sealed class OverlaySymbolModel
     public SymbolFrameStatus Status { get; set; } = SymbolFrameStatus.Present;
     public OrbatEquipmentOperatingState OperatingState { get; set; } = OrbatEquipmentOperatingState.Ground;
     public OrbatUnitType UnitType { get; set; } = OrbatUnitType.Armor;
+    public OrbatUnitMainFunction UnitMainFunction { get; set; } = OrbatUnitMainFunction.ArmorTracked;
     public OrbatEquipmentFunction EquipmentFunction { get; set; } = OrbatEquipmentFunction.Mortar;
     public string EquipmentVariant { get; set; } = string.Empty;
     public IReadOnlyList<SymbolDrawCommand> EquipmentCommands { get; set; } = Array.Empty<SymbolDrawCommand>();
@@ -982,11 +1095,11 @@ internal sealed class OverlayCanvas : Control
     && Model.OperatingState == OrbatEquipmentOperatingState.InFlight;
         SymbolFrameRenderer.DrawFrame(graphics, symbolBounds, frameShape, Model.Status, fillFrame: true, IconGuideShape.FlatTopBottom, fillUpperCap: fillUpperFrameCap);
 
-        var commands = Model.Domain == SymbolPhysicalDomain.Equipment
-            ? Model.EquipmentCommands.Count > 0
-                ? Model.EquipmentCommands
-                : BuiltInSymbolLibrary.Create(Model.EquipmentFunction)
-            : BuiltInSymbolLibrary.Create(Model.UnitType);
+        var commands = Model.EquipmentCommands.Count > 0
+            ? Model.EquipmentCommands
+            : Model.Domain == SymbolPhysicalDomain.Equipment
+                ? BuiltInSymbolLibrary.Create(Model.EquipmentFunction)
+                : BuiltInSymbolLibrary.Create(Model.UnitType);
         if (commands.Count == 0)
         {
             commands = Model.Domain == SymbolPhysicalDomain.Equipment

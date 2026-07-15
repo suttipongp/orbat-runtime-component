@@ -12,6 +12,8 @@ public sealed class SymbolDesignerForm : Form
     private readonly SymbolPreviewControl _preview = new();
     private readonly ComboBox _toolComboBox = new() { Width = 156, DropDownWidth = 190 };
     private readonly ComboBox _unitTypeComboBox = new() { Width = 150, DropDownWidth = 190 };
+    private readonly ComboBox _unitCategoryComboBox = new() { Width = 220, DropDownWidth = 280 };
+    private readonly ComboBox _unitMainFunctionComboBox = new() { Width = 340, DropDownWidth = 440 };
     private readonly ComboBox _equipmentCategoryComboBox = new() { Width = 180, DropDownWidth = 230 };
     private readonly ComboBox _equipmentFunctionComboBox = new() { Width = 340, DropDownWidth = 440 };
     private readonly ComboBox _equipmentVariantComboBox = new() { Width = 300, DropDownWidth = 440, DropDownStyle = ComboBoxStyle.DropDown };
@@ -54,6 +56,8 @@ public sealed class SymbolDesignerForm : Form
     private readonly Dictionary<SymbolDesignerTool, Button> _toolButtons = new();
     private readonly FlowLayoutPanel _contextOptionsPanel = new();
     private Control? _unitTypeField;
+    private Control? _unitCategoryField;
+    private Control? _unitMainFunctionField;
     private Control? _equipmentCategoryField;
     private Control? _equipmentFunctionField;
     private Control? _equipmentVariantField;
@@ -71,6 +75,7 @@ public sealed class SymbolDesignerForm : Form
     private bool _updatingSelectionControls;
     private bool _updatingEquipmentVariantOptions;
     private bool _updatingEquipmentFunctionOptions;
+    private bool _updatingUnitMainFunctionOptions;
 
     public SymbolDesignerForm()
     {
@@ -88,6 +93,37 @@ public sealed class SymbolDesignerForm : Form
         {
             _canvas.Tool = GetSelectedTool();
             UpdateToolStatus();
+        };
+
+        _unitCategoryComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        _unitCategoryComboBox.Items.AddRange(Enum.GetValues<OrbatUnitMainFunctionCategory>()
+            .Select(value => new UnitMainFunctionCategorySelection(value)).Cast<object>().ToArray());
+        _unitCategoryComboBox.SelectedIndex = 0;
+        _unitCategoryComboBox.SelectedIndexChanged += (_, _) =>
+        {
+            if (!_updatingUnitMainFunctionOptions)
+                RefreshUnitMainFunctionOptions();
+        };
+
+        _unitMainFunctionComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+        _unitMainFunctionComboBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+        _unitMainFunctionComboBox.AutoCompleteSource = AutoCompleteSource.ListItems;
+        RefreshUnitMainFunctionOptions(OrbatUnitMainFunction.Unspecified);
+        _unitMainFunctionComboBox.SelectedIndexChanged += (_, _) =>
+        {
+            if (_updatingUnitMainFunctionOptions)
+                return;
+
+            SyncLegacyUnitType();
+            RefreshOutput();
+        };
+        _unitMainFunctionComboBox.TextChanged += (_, _) =>
+        {
+            if (!_updatingUnitMainFunctionOptions)
+            {
+                SyncLegacyUnitType();
+                RefreshOutput();
+            }
         };
 
         _unitTypeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
@@ -294,7 +330,9 @@ public sealed class SymbolDesignerForm : Form
             BackColor = SystemColors.ControlLight
         };
         metadataBar.Controls.Add(CreateLabeledField("Domain", _physicalDomainComboBox, leadingMargin: 0));
-        _unitTypeField = CreateLabeledField("Unit type", _unitTypeComboBox);
+        _unitTypeField = CreateLabeledField("Legacy unit type", _unitTypeComboBox);
+        _unitCategoryField = CreateLabeledField("Unit category", _unitCategoryComboBox);
+        _unitMainFunctionField = CreateLabeledField("Main function", _unitMainFunctionComboBox);
         _equipmentCategoryField = CreateLabeledField("Category", _equipmentCategoryComboBox);
         _equipmentFunctionField = CreateLabeledField("Equipment function", _equipmentFunctionComboBox);
         _equipmentVariantField = CreateLabeledField("Variant", _equipmentVariantComboBox);
@@ -306,7 +344,8 @@ public sealed class SymbolDesignerForm : Form
         _landUnitModifier1TypeField = CreateLabeledField("Modifier 1", _landUnitModifier1TypeComboBox);
         _landUnitModifier2TypeField = CreateLabeledField("Modifier 2", _landUnitModifier2TypeComboBox);
         _mobilityTypeField = CreateLabeledField("Mobility", _mobilityTypeComboBox);
-        metadataBar.Controls.Add(_unitTypeField);
+        metadataBar.Controls.Add(_unitCategoryField);
+        metadataBar.Controls.Add(_unitMainFunctionField);
         metadataBar.Controls.Add(_equipmentCategoryField);
         metadataBar.Controls.Add(_equipmentFunctionField);
         metadataBar.Controls.Add(_equipmentVariantField);
@@ -763,6 +802,73 @@ public sealed class SymbolDesignerForm : Form
             : SymbolPhysicalDomain.LandUnit;
     }
 
+    private OrbatUnitMainFunction GetSelectedUnitMainFunction() =>
+        _unitMainFunctionComboBox.SelectedItem is UnitMainFunctionSelection selection
+            ? selection.Value
+            : OrbatUnitMainFunctionCatalog.TryParseDisplayName(
+                _unitMainFunctionComboBox.Text,
+                out OrbatUnitMainFunction function)
+                ? function
+                : OrbatUnitMainFunction.Unspecified;
+
+    private OrbatUnitMainFunctionCategory GetSelectedUnitCategory() =>
+        _unitCategoryComboBox.SelectedItem is UnitMainFunctionCategorySelection selection
+            ? selection.Value
+            : OrbatUnitMainFunctionCategory.All;
+
+    private void RefreshUnitMainFunctionOptions(OrbatUnitMainFunction? preferredFunction = null)
+    {
+        var currentFunction = preferredFunction ?? GetSelectedUnitMainFunction();
+        var functions = OrbatUnitMainFunctionCatalog.GetFunctions(GetSelectedUnitCategory());
+        var selectedFunction = functions.Contains(currentFunction)
+            ? currentFunction
+            : functions.FirstOrDefault();
+
+        _updatingUnitMainFunctionOptions = true;
+        try
+        {
+            _unitMainFunctionComboBox.BeginUpdate();
+            _unitMainFunctionComboBox.Items.Clear();
+            _unitMainFunctionComboBox.Items.AddRange(functions
+                .Select(value => new UnitMainFunctionSelection(value)).Cast<object>().ToArray());
+            _unitMainFunctionComboBox.SelectedItem = _unitMainFunctionComboBox.Items
+                .Cast<UnitMainFunctionSelection>()
+                .FirstOrDefault(item => item.Value == selectedFunction);
+        }
+        finally
+        {
+            _unitMainFunctionComboBox.EndUpdate();
+            _updatingUnitMainFunctionOptions = false;
+        }
+
+        SyncLegacyUnitType();
+        RefreshOutput();
+    }
+
+    private void SelectUnitMainFunction(OrbatUnitMainFunction function)
+    {
+        var category = OrbatUnitMainFunctionCatalog.GetCategory(function);
+        _updatingUnitMainFunctionOptions = true;
+        try
+        {
+            _unitCategoryComboBox.SelectedItem = _unitCategoryComboBox.Items
+                .Cast<UnitMainFunctionCategorySelection>()
+                .FirstOrDefault(item => item.Value == category);
+        }
+        finally
+        {
+            _updatingUnitMainFunctionOptions = false;
+        }
+
+        RefreshUnitMainFunctionOptions(function);
+    }
+
+    private void SyncLegacyUnitType()
+    {
+        var legacy = OrbatUnitMainFunctionCatalog.ToLegacyUnitType(GetSelectedUnitMainFunction());
+        _unitTypeComboBox.SelectedItem = legacy.ToString();
+    }
+
     private Components.OrbatEquipmentFunction GetSelectedEquipmentFunction()
     {
         if (_equipmentFunctionComboBox.SelectedItem is EquipmentFunctionSelection selection)
@@ -1010,7 +1116,9 @@ public sealed class SymbolDesignerForm : Form
         var supportsInFlight = equipment
             && OrbatEquipmentFunctionCatalog.SupportsInFlightOperatingState(GetSelectedEquipmentFunction());
 
-        SetFieldVisible(_unitTypeField, !equipment);
+        SetFieldVisible(_unitTypeField, false);
+        SetFieldVisible(_unitCategoryField, !equipment);
+        SetFieldVisible(_unitMainFunctionField, !equipment);
         SetFieldVisible(_equipmentCategoryField, equipment);
         SetFieldVisible(_equipmentFunctionField, equipment);
         SetFieldVisible(_equipmentVariantField, equipment);
@@ -1023,7 +1131,9 @@ public sealed class SymbolDesignerForm : Form
         SetFieldVisible(_landUnitModifier2TypeField, !equipment && role == OrbatEquipmentSymbolRole.Modifier2);
         SetFieldVisible(_mobilityTypeField, equipment && role == OrbatEquipmentSymbolRole.MobilityIndicator);
 
-        _unitTypeComboBox.Enabled = !equipment;
+        _unitTypeComboBox.Enabled = false;
+        _unitCategoryComboBox.Enabled = !equipment;
+        _unitMainFunctionComboBox.Enabled = !equipment;
         _equipmentCategoryComboBox.Enabled = equipment;
         _equipmentFunctionComboBox.Enabled = equipment;
         _equipmentVariantComboBox.Enabled = equipment;
@@ -1228,12 +1338,17 @@ public sealed class SymbolDesignerForm : Form
             return;
 
         var libraryName = SymbolLibraryFileNaming.GetLogicalName(dialog.FileName);
-        var selectedUnitType = Convert.ToString(_unitTypeComboBox.SelectedItem) ?? Components.OrbatUnitType.Unspecified.ToString();
-        var libraryUnitType = InferUnitTypeFromLibraryName(libraryName, selectedUnitType);
+        var selectedMainFunction = GetSelectedUnitMainFunction();
+        var selectedUnitType = OrbatUnitMainFunctionCatalog.ToLegacyUnitType(selectedMainFunction).ToString();
+        var libraryUnitType = selectedMainFunction == OrbatUnitMainFunction.Unspecified
+            ? InferUnitTypeFromLibraryName(libraryName, selectedUnitType)
+            : selectedUnitType;
         var definition = new SymbolLibraryDefinition
         {
             Name = libraryName,
             UnitType = libraryUnitType,
+            UnitCategory = OrbatUnitMainFunctionCatalog.GetCategory(selectedMainFunction).ToString(),
+            UnitMainFunction = selectedMainFunction.ToString(),
             EquipmentFunction = GetSelectedEquipmentFunction().ToString(),
             Variant = GetSelectedEquipmentVariant(),
             SymbolRole = GetSelectedSymbolRole(),
@@ -1249,7 +1364,7 @@ public sealed class SymbolDesignerForm : Form
             FrameShape = GetSelectedFrameShape(),
             FrameStatus = GetSelectedFrameStatus(),
             OperatingState = GetSelectedEquipmentOperatingState(),
-            Version = 5,
+            Version = 6,
             Commands = _canvas.Commands.Select(command => command.Clone()).ToList()
         };
 
@@ -1290,11 +1405,8 @@ public sealed class SymbolDesignerForm : Form
             && GetSelectedLandUnitModifier2Type() != OrbatLandUnitModifier2.Unspecified)
             return $"LandUnit.Modifier2.{GetSelectedLandUnitModifier2Type()}";
 
-        var unitType = Convert.ToString(_unitTypeComboBox.SelectedItem);
-        var unitTypeName = string.IsNullOrWhiteSpace(unitType)
-            ? Components.OrbatUnitType.Unspecified.ToString()
-            : unitType;
-        return $"LandUnit.{unitTypeName}";
+        var mainFunction = GetSelectedUnitMainFunction();
+        return $"LandUnit.{mainFunction}";
     }
 
     private static string SanitizeFileNamePart(string value)
@@ -1415,8 +1527,13 @@ public sealed class SymbolDesignerForm : Form
 
         _affiliationComboBox.SelectedItem = definition.GetEffectiveAffiliation().ToString();
         _physicalDomainComboBox.SelectedItem = definition.GetEffectivePhysicalDomain().ToString();
-        if (Enum.TryParse(definition.UnitType, out Components.OrbatUnitType unitType))
-            _unitTypeComboBox.SelectedItem = unitType.ToString();
+        var mainFunction = OrbatUnitMainFunction.Unspecified;
+        if (!string.IsNullOrWhiteSpace(definition.UnitMainFunction))
+            OrbatUnitMainFunctionCatalog.TryParseDisplayName(definition.UnitMainFunction, out mainFunction);
+        if (mainFunction == OrbatUnitMainFunction.Unspecified
+            && Enum.TryParse(definition.UnitType, out Components.OrbatUnitType unitType))
+            mainFunction = OrbatUnitMainFunctionCatalog.FromLegacyUnitType(unitType);
+        SelectUnitMainFunction(mainFunction);
         if (Enum.TryParse(definition.EquipmentFunction, out Components.OrbatEquipmentFunction equipmentFunction))
             SelectEquipmentFunction(equipmentFunction);
         _equipmentVariantComboBox.SelectedIndex = -1;
@@ -1612,7 +1729,7 @@ public sealed class SymbolDesignerForm : Form
     private string GenerateCode(IReadOnlyList<SymbolDrawCommand> commands)
     {
         var builder = new StringBuilder();
-        builder.AppendLine($"// {_unitTypeComboBox.SelectedItem} symbol");
+        builder.AppendLine($"// {OrbatUnitMainFunctionCatalog.GetDisplayName(GetSelectedUnitMainFunction())} symbol");
         builder.AppendLine("// Paste these lines inside DrawUnitIcon, using the existing graphics, pen, brush, bounds and icon variables.");
         foreach (var command in commands)
             builder.AppendLine(command.ToCSharp("graphics", "pen", "brush", "bounds", "icon"));
@@ -3677,6 +3794,16 @@ internal sealed class SymbolPreviewControl : Control
 
 }
 
+internal sealed record UnitMainFunctionSelection(OrbatUnitMainFunction Value)
+{
+    public override string ToString() => OrbatUnitMainFunctionCatalog.GetDisplayName(Value);
+}
+
+internal sealed record UnitMainFunctionCategorySelection(OrbatUnitMainFunctionCategory Value)
+{
+    public override string ToString() => OrbatUnitMainFunctionCatalog.GetCategoryDisplayName(Value);
+}
+
 internal sealed record EquipmentVariantSelection(string Function, string Variant)
 {
     public override string ToString() => $"{Function}  |  {Variant}";
@@ -3739,6 +3866,8 @@ internal sealed class SymbolLibraryDefinition
     public int Version { get; set; } = 1;
     public string Name { get; set; } = string.Empty;
     public string UnitType { get; set; } = string.Empty;
+    public string UnitCategory { get; set; } = OrbatUnitMainFunctionCategory.All.ToString();
+    public string UnitMainFunction { get; set; } = OrbatUnitMainFunction.Unspecified.ToString();
     public string EquipmentFunction { get; set; } = Components.OrbatEquipmentFunction.Unspecified.ToString();
     public string Variant { get; set; } = string.Empty;
     public OrbatEquipmentSymbolRole SymbolRole { get; set; } = OrbatEquipmentSymbolRole.Composite;
@@ -3758,6 +3887,20 @@ internal sealed class SymbolLibraryDefinition
 
     private bool HasConsistentFrameMetadata() =>
         FrameShape == SymbolFrameMapping.GetFrameShape(Affiliation, PhysicalDomain, OperatingState);
+
+    public OrbatUnitMainFunction GetEffectiveUnitMainFunction()
+    {
+        if (OrbatUnitMainFunctionCatalog.TryParseDisplayName(UnitMainFunction, out var mainFunction)
+            && mainFunction != OrbatUnitMainFunction.Unspecified)
+            return mainFunction;
+
+        return Enum.TryParse(UnitType, true, out Components.OrbatUnitType legacyType)
+            ? OrbatUnitMainFunctionCatalog.FromLegacyUnitType(legacyType)
+            : OrbatUnitMainFunction.Unspecified;
+    }
+
+    public OrbatUnitMainFunctionCategory GetEffectiveUnitCategory() =>
+        OrbatUnitMainFunctionCatalog.GetCategory(GetEffectiveUnitMainFunction());
 
     public SymbolAffiliation GetEffectiveAffiliation() =>
         HasConsistentFrameMetadata()

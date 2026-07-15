@@ -23,7 +23,7 @@ public sealed class SymbolLibraryViewerForm : Form
     private readonly ImageList _thumbnailImages = new();
     private readonly SymbolPreviewControl _preview = new();
     private readonly Label _nameLabel = CreateValueLabel();
-    private readonly Label _symbolKindLabel = new() { Text = "Unit type", AutoSize = true, Margin = new Padding(0, 6, 8, 0) };
+    private readonly Label _symbolKindLabel = new() { Text = "Main function", AutoSize = true, Margin = new Padding(0, 6, 8, 0) };
     private readonly Label _unitTypeLabel = CreateValueLabel();
     private readonly Label _frameLabel = CreateValueLabel();
     private readonly Label _statusValueLabel = CreateValueLabel();
@@ -433,7 +433,14 @@ public sealed class SymbolLibraryViewerForm : Form
     private Dictionary<string, ListViewGroup> CreateSymbolGroups()
     {
         var groups = new Dictionary<string, ListViewGroup>(StringComparer.OrdinalIgnoreCase);
-        AddSymbolGroup(groups, "LandUnitMain", "Land Unit - Main symbols");
+        foreach (var category in Enum.GetValues<OrbatUnitMainFunctionCategory>()
+            .Where(value => value != OrbatUnitMainFunctionCategory.All))
+        {
+            AddSymbolGroup(
+                groups,
+                $"LandUnitMain.{category}",
+                $"Land Unit - {OrbatUnitMainFunctionCatalog.GetCategoryDisplayName(category)}");
+        }
         AddSymbolGroup(groups, "LandUnitModifier1", "Land Unit - Modifier 1");
         AddSymbolGroup(groups, "LandUnitModifier2", "Land Unit - Modifier 2");
         AddSymbolGroup(groups, "EquipmentMain", "Equipment - Main symbols");
@@ -460,7 +467,7 @@ public sealed class SymbolLibraryViewerForm : Form
             {
                 OrbatEquipmentSymbolRole.Modifier1 => "LandUnitModifier1",
                 OrbatEquipmentSymbolRole.Modifier2 => "LandUnitModifier2",
-                _ => "LandUnitMain"
+                _ => $"LandUnitMain.{definition.GetEffectiveUnitCategory()}"
             },
             SymbolPhysicalDomain.Equipment => definition.SymbolRole switch
             {
@@ -528,13 +535,13 @@ public sealed class SymbolLibraryViewerForm : Form
             {
                 OrbatEquipmentSymbolRole.Modifier1 => "LandUnit Modifier 1",
                 OrbatEquipmentSymbolRole.Modifier2 => "LandUnit Modifier 2",
-                _ => "Unit type"
+                _ => "Main function"
             };
             _unitTypeLabel.Text = definition.SymbolRole switch
             {
                 OrbatEquipmentSymbolRole.Modifier1 => definition.LandUnitModifier1Type,
                 OrbatEquipmentSymbolRole.Modifier2 => definition.LandUnitModifier2Type,
-                _ => definition.UnitType
+                _ => OrbatUnitMainFunctionCatalog.GetDisplayName(definition.GetEffectiveUnitMainFunction())
             };
         }
         _frameLabel.Text = definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
@@ -659,9 +666,11 @@ public sealed class SymbolLibraryViewerForm : Form
                     ? Definition.LandUnitModifier1Type
                     : Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier2
                         ? Definition.LandUnitModifier2Type
-                        : !string.IsNullOrWhiteSpace(Definition.UnitType)
-                            ? Definition.UnitType
-                            : GetLibraryNameFromFileName();
+                        : Definition.GetEffectiveUnitMainFunction() != OrbatUnitMainFunction.Unspecified
+                            ? OrbatUnitMainFunctionCatalog.GetDisplayName(Definition.GetEffectiveUnitMainFunction())
+                            : !string.IsNullOrWhiteSpace(Definition.UnitType)
+                                ? Definition.UnitType
+                                : GetLibraryNameFromFileName();
 
         public string SecondarySortText =>
             Definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
@@ -704,9 +713,11 @@ public sealed class SymbolLibraryViewerForm : Form
                     ? Definition.Name
                     : Definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
                         ? GetDefaultEquipmentDisplayName()
-                    : !string.IsNullOrWhiteSpace(Definition.UnitType)
-                        ? Definition.UnitType
-                        : GetLibraryNameFromFileName();
+                    : Definition.GetEffectiveUnitMainFunction() != OrbatUnitMainFunction.Unspecified
+                        ? OrbatUnitMainFunctionCatalog.GetDisplayName(Definition.GetEffectiveUnitMainFunction())
+                        : !string.IsNullOrWhiteSpace(Definition.UnitType)
+                            ? Definition.UnitType
+                            : GetLibraryNameFromFileName();
         }
 
         private string GetDefaultEquipmentDisplayName()
@@ -728,7 +739,9 @@ public sealed class SymbolLibraryViewerForm : Form
                     ? Definition.LandUnitModifier1Type
                     : Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier2
                         ? Definition.LandUnitModifier2Type
-                        : Definition.UnitType;
+                        : Definition.GetEffectiveUnitMainFunction() != OrbatUnitMainFunction.Unspecified
+                            ? Definition.GetEffectiveUnitMainFunction().ToString()
+                            : Definition.UnitType;
             return !string.IsNullOrWhiteSpace(fileName)
                 && !fileName.Equals(Definition.Name, StringComparison.OrdinalIgnoreCase)
                 && Definition.Name.Equals(defaultKindName, StringComparison.OrdinalIgnoreCase);
@@ -743,7 +756,9 @@ public sealed class SymbolLibraryViewerForm : Form
 
             return Definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
                 ? Definition.EquipmentFunction
-                : Definition.UnitType;
+                : Definition.GetEffectiveUnitMainFunction() != OrbatUnitMainFunction.Unspecified
+                    ? OrbatUnitMainFunctionCatalog.GetDisplayName(Definition.GetEffectiveUnitMainFunction())
+                    : Definition.UnitType;
         }
     }
 

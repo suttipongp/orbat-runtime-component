@@ -101,9 +101,11 @@ internal static class StandardComponentLibrarySeeder
     {
         return new SymbolLibraryDefinition
         {
-            Version = 5,
+            Version = 6,
             Name = name,
             UnitType = OrbatUnitType.Unspecified.ToString(),
+            UnitCategory = OrbatUnitMainFunctionCategory.All.ToString(),
+            UnitMainFunction = OrbatUnitMainFunction.Unspecified.ToString(),
             EquipmentFunction = OrbatEquipmentFunction.Unspecified.ToString(),
             Variant = string.Empty,
             SymbolRole = role,
