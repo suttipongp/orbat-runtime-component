@@ -401,13 +401,12 @@ public sealed class SymbolOverlayDemoForm : Form
         _equipmentOperatingStateComboBox.Enabled = supportsInFlight;
         if (!supportsInFlight && GetSelectedEquipmentOperatingState() != OrbatEquipmentOperatingState.Ground)
             _equipmentOperatingStateComboBox.SelectedItem = OrbatEquipmentOperatingState.Ground.ToString();
-        _modifier1ComboBox.Enabled = equipment;
-        _modifier2ComboBox.Enabled = equipment;
+        _modifier1ComboBox.Enabled = true;
+        _modifier2ComboBox.Enabled = true;
         if (equipment)
-        {
             RefreshEquipmentVariants();
-            RefreshEquipmentModifierOptions();
-        }
+
+        RefreshModifierOptionsForDomain();
     }
 
     private static OrbatSymbolDomain ToComponentDomain(SymbolPhysicalDomain domain) =>
@@ -532,63 +531,119 @@ public sealed class SymbolOverlayDemoForm : Form
     private static string NormalizeEquipmentVariant(string? value) =>
         string.Concat((value ?? string.Empty).Where(char.IsLetterOrDigit));
 
-    private void RefreshEquipmentModifierOptions()
+    private void RefreshModifierOptionsForDomain()
     {
-        RefreshModifierOptions(_modifier1ComboBox, OrbatEquipmentSymbolRole.Modifier1);
-        RefreshModifierOptions(_modifier2ComboBox, OrbatEquipmentSymbolRole.Modifier2);
+        var domain = GetSelectedDomain();
+        RefreshModifierOptions(_modifier1ComboBox, OrbatEquipmentSymbolRole.Modifier1, domain);
+        RefreshModifierOptions(_modifier2ComboBox, OrbatEquipmentSymbolRole.Modifier2, domain);
     }
 
-    private static void RefreshModifierOptions(ComboBox comboBox, OrbatEquipmentSymbolRole role)
+    private static void RefreshModifierOptions(
+        ComboBox comboBox,
+        OrbatEquipmentSymbolRole role,
+        SymbolPhysicalDomain domain)
     {
-        var selectedFile = (comboBox.SelectedItem as EquipmentModifierOption)?.FileName;
-        var selectedModifier1 = (comboBox.SelectedItem as EquipmentModifierOption)?.Modifier1;
-        var selectedModifier2 = (comboBox.SelectedItem as EquipmentModifierOption)?.Modifier2;
-        var options = new List<EquipmentModifierOption> { new("None", string.Empty, null, null) };
-        if (role == OrbatEquipmentSymbolRole.Modifier1)
+        var selected = comboBox.SelectedItem as EquipmentModifierOption;
+        var options = new List<EquipmentModifierOption> { new("None", string.Empty) };
+
+        if (domain == SymbolPhysicalDomain.LandUnit)
+        {
+            if (role == OrbatEquipmentSymbolRole.Modifier1)
+            {
+                options.AddRange(Enum.GetValues<OrbatLandUnitModifier1>()
+                    .Where(value => value != OrbatLandUnitModifier1.Unspecified)
+                    .Select(value => new EquipmentModifierOption(
+                        value.GetDisplayName(), string.Empty, LandUnitModifier1: value)));
+            }
+            else
+            {
+                options.AddRange(Enum.GetValues<OrbatLandUnitModifier2>()
+                    .Where(value => value != OrbatLandUnitModifier2.Unspecified)
+                    .Select(value => new EquipmentModifierOption(
+                        value.GetDisplayName(), string.Empty, LandUnitModifier2: value)));
+            }
+        }
+        else if (role == OrbatEquipmentSymbolRole.Modifier1)
         {
             options.AddRange(Enum.GetValues<OrbatEquipmentModifier1>()
                 .Where(value => value != OrbatEquipmentModifier1.Unspecified)
-                .Select(value => new EquipmentModifierOption(value.GetDisplayName(), string.Empty, value, null)));
+                .Select(value => new EquipmentModifierOption(
+                    value.GetDisplayName(), string.Empty, EquipmentModifier1: value)));
         }
-        else if (role == OrbatEquipmentSymbolRole.Modifier2)
+        else
         {
             options.AddRange(Enum.GetValues<OrbatEquipmentModifier2>()
                 .Where(value => value != OrbatEquipmentModifier2.Unspecified)
-                .Select(value => new EquipmentModifierOption(value.GetDisplayName(), string.Empty, null, value)));
+                .Select(value => new EquipmentModifierOption(
+                    value.GetDisplayName(), string.Empty, EquipmentModifier2: value)));
         }
+
         foreach (var file in SymbolOverlayDemoForm.GetRecentLibraryFiles().OrderBy(File.GetLastWriteTimeUtc))
         {
             try
             {
-                var definition = JsonSerializer.Deserialize<SymbolLibraryDefinition>(File.ReadAllText(file, Encoding.UTF8), LibraryJsonOptions);
-                if (definition == null || definition.GetEffectivePhysicalDomain() != SymbolPhysicalDomain.Equipment || definition.SymbolRole != role)
+                var definition = JsonSerializer.Deserialize<SymbolLibraryDefinition>(
+                    File.ReadAllText(file, Encoding.UTF8), LibraryJsonOptions);
+                if (definition == null
+                    || definition.GetEffectivePhysicalDomain() != domain
+                    || definition.SymbolRole != role)
                     continue;
-                var modifierType = role == OrbatEquipmentSymbolRole.Modifier1
+
+                if (domain == SymbolPhysicalDomain.LandUnit)
+                {
+                    var modifierType = role == OrbatEquipmentSymbolRole.Modifier1
+                        ? definition.LandUnitModifier1Type
+                        : definition.LandUnitModifier2Type;
+                    if (role == OrbatEquipmentSymbolRole.Modifier1
+                        && Enum.TryParse(modifierType, out OrbatLandUnitModifier1 modifier1)
+                        && modifier1 != OrbatLandUnitModifier1.Unspecified)
+                    {
+                        options.RemoveAll(option => option.LandUnitModifier1 == modifier1);
+                        options.Add(new EquipmentModifierOption(
+                            modifier1.GetDisplayName(), file, LandUnitModifier1: modifier1));
+                        continue;
+                    }
+
+                    if (role == OrbatEquipmentSymbolRole.Modifier2
+                        && Enum.TryParse(modifierType, out OrbatLandUnitModifier2 modifier2)
+                        && modifier2 != OrbatLandUnitModifier2.Unspecified)
+                    {
+                        options.RemoveAll(option => option.LandUnitModifier2 == modifier2);
+                        options.Add(new EquipmentModifierOption(
+                            modifier2.GetDisplayName(), file, LandUnitModifier2: modifier2));
+                        continue;
+                    }
+
+                    options.Add(new EquipmentModifierOption(
+                        GetModifierLabel(modifierType, definition, file), file));
+                    continue;
+                }
+
+                var equipmentModifierType = role == OrbatEquipmentSymbolRole.Modifier1
                     ? definition.Modifier1Type
                     : definition.Modifier2Type;
                 if (role == OrbatEquipmentSymbolRole.Modifier1
-                    && Enum.TryParse(modifierType, out OrbatEquipmentModifier1 modifier1)
-                    && modifier1 != OrbatEquipmentModifier1.Unspecified)
+                    && Enum.TryParse(equipmentModifierType, out OrbatEquipmentModifier1 equipmentModifier1)
+                    && equipmentModifier1 != OrbatEquipmentModifier1.Unspecified)
                 {
-                    options.RemoveAll(option => option.Modifier1 == modifier1);
-                    options.Add(new EquipmentModifierOption(modifier1.GetDisplayName(), file, modifier1, null));
+                    options.RemoveAll(option => option.EquipmentModifier1 == equipmentModifier1);
+                    options.Add(new EquipmentModifierOption(
+                        equipmentModifier1.GetDisplayName(), file, EquipmentModifier1: equipmentModifier1));
                     continue;
                 }
 
                 if (role == OrbatEquipmentSymbolRole.Modifier2
-                    && Enum.TryParse(modifierType, out OrbatEquipmentModifier2 modifier2)
-                    && modifier2 != OrbatEquipmentModifier2.Unspecified)
+                    && Enum.TryParse(equipmentModifierType, out OrbatEquipmentModifier2 equipmentModifier2)
+                    && equipmentModifier2 != OrbatEquipmentModifier2.Unspecified)
                 {
-                    options.RemoveAll(option => option.Modifier2 == modifier2);
-                    options.Add(new EquipmentModifierOption(modifier2.GetDisplayName(), file, null, modifier2));
+                    options.RemoveAll(option => option.EquipmentModifier2 == equipmentModifier2);
+                    options.Add(new EquipmentModifierOption(
+                        equipmentModifier2.GetDisplayName(), file, EquipmentModifier2: equipmentModifier2));
                     continue;
                 }
 
-                var label = !string.IsNullOrWhiteSpace(modifierType)
-                    && !modifierType.Equals("Unspecified", StringComparison.OrdinalIgnoreCase)
-                        ? SplitPascalCase(modifierType)
-                        : string.IsNullOrWhiteSpace(definition.Name) ? Path.GetFileNameWithoutExtension(file) : definition.Name;
-                options.Add(new EquipmentModifierOption(label, file, null, null));
+                options.Add(new EquipmentModifierOption(
+                    GetModifierLabel(equipmentModifierType, definition, file), file));
             }
             catch
             {
@@ -601,18 +656,29 @@ public sealed class SymbolOverlayDemoForm : Form
         {
             comboBox.Items.Clear();
             comboBox.Items.Add(options[0]);
-            comboBox.Items.AddRange(options.Skip(1).OrderBy(option => option.Label, StringComparer.CurrentCultureIgnoreCase).Cast<object>().ToArray());
+            comboBox.Items.AddRange(options.Skip(1)
+                .OrderBy(option => option.Label, StringComparer.CurrentCultureIgnoreCase)
+                .Cast<object>()
+                .ToArray());
             comboBox.SelectedItem = options.FirstOrDefault(option =>
-                !string.IsNullOrWhiteSpace(selectedFile)
-                    ? string.Equals(option.FileName, selectedFile, StringComparison.OrdinalIgnoreCase)
-                    : selectedModifier1.HasValue && option.Modifier1 == selectedModifier1
-                        || selectedModifier2.HasValue && option.Modifier2 == selectedModifier2) ?? options[0];
+                selected != null && option.Matches(selected)) ?? options[0];
         }
         finally
         {
             comboBox.EndUpdate();
         }
     }
+
+    private static string GetModifierLabel(
+        string modifierType,
+        SymbolLibraryDefinition definition,
+        string file) =>
+        !string.IsNullOrWhiteSpace(modifierType)
+            && !modifierType.Equals("Unspecified", StringComparison.OrdinalIgnoreCase)
+                ? SplitPascalCase(modifierType)
+                : string.IsNullOrWhiteSpace(definition.Name)
+                    ? Path.GetFileNameWithoutExtension(file)
+                    : definition.Name;
 
     private static IReadOnlyList<SymbolDrawCommand> LoadSelectedModifierCommands(ComboBox comboBox)
     {
@@ -633,10 +699,14 @@ public sealed class SymbolOverlayDemoForm : Form
             }
         }
 
-        if (option.Modifier1 is { } modifier1)
-            return BuiltInSymbolLibrary.Create(modifier1);
-        if (option.Modifier2 is { } modifier2)
-            return BuiltInSymbolLibrary.Create(modifier2);
+        if (option.EquipmentModifier1 is { } equipmentModifier1)
+            return BuiltInSymbolLibrary.Create(equipmentModifier1);
+        if (option.EquipmentModifier2 is { } equipmentModifier2)
+            return BuiltInSymbolLibrary.Create(equipmentModifier2);
+        if (option.LandUnitModifier1 is { } landUnitModifier1)
+            return BuiltInSymbolLibrary.Create(landUnitModifier1);
+        if (option.LandUnitModifier2 is { } landUnitModifier2)
+            return BuiltInSymbolLibrary.Create(landUnitModifier2);
         return Array.Empty<SymbolDrawCommand>();
     }
 
@@ -792,9 +862,19 @@ internal sealed record LoadedEquipmentSymbol(
 internal sealed record EquipmentModifierOption(
     string Label,
     string FileName,
-    OrbatEquipmentModifier1? Modifier1,
-    OrbatEquipmentModifier2? Modifier2)
+    OrbatEquipmentModifier1? EquipmentModifier1 = null,
+    OrbatEquipmentModifier2? EquipmentModifier2 = null,
+    OrbatLandUnitModifier1? LandUnitModifier1 = null,
+    OrbatLandUnitModifier2? LandUnitModifier2 = null)
 {
+    public bool Matches(EquipmentModifierOption other) =>
+        !string.IsNullOrWhiteSpace(other.FileName)
+            ? string.Equals(FileName, other.FileName, StringComparison.OrdinalIgnoreCase)
+            : EquipmentModifier1 == other.EquipmentModifier1
+                && EquipmentModifier2 == other.EquipmentModifier2
+                && LandUnitModifier1 == other.LandUnitModifier1
+                && LandUnitModifier2 == other.LandUnitModifier2;
+
     public override string ToString() => Label;
 }
 
@@ -897,9 +977,9 @@ internal sealed class OverlayCanvas : Control
     private void DrawSymbol(Graphics graphics, RectangleF symbolBounds, SymbolFrameShape frameShape)
     {
         using var pen = new Pen(Color.Black, 2.4f);
-                var fillUpperFrameCap = Model.Domain == SymbolPhysicalDomain.Equipment
-            && Model.EquipmentFunction == OrbatEquipmentFunction.CommunicationsSatellite
-            && Model.OperatingState == OrbatEquipmentOperatingState.InFlight;
+        var fillUpperFrameCap = Model.Domain == SymbolPhysicalDomain.Equipment
+    && Model.EquipmentFunction == OrbatEquipmentFunction.CommunicationsSatellite
+    && Model.OperatingState == OrbatEquipmentOperatingState.InFlight;
         SymbolFrameRenderer.DrawFrame(graphics, symbolBounds, frameShape, Model.Status, fillFrame: true, IconGuideShape.FlatTopBottom, fillUpperCap: fillUpperFrameCap);
 
         var commands = Model.Domain == SymbolPhysicalDomain.Equipment
@@ -915,15 +995,14 @@ internal sealed class OverlayCanvas : Control
         }
 
         var interiorFrame = SymbolFrameRenderer.GetInteriorFrame(symbolBounds, frameShape, IconGuideShape.FlatTopBottom);
-        if (Model.Domain != SymbolPhysicalDomain.Equipment)
+        var hasModifier1 = Model.Modifier1Commands.Count > 0;
+        var hasModifier2 = Model.Modifier2Commands.Count > 0;
+        if (Model.Domain == SymbolPhysicalDomain.LandUnit && !hasModifier1 && !hasModifier2)
         {
             DrawCommands(graphics, symbolBounds, interiorFrame, frameShape, commands, pen);
             return;
         }
 
-
-        var hasModifier1 = Model.Modifier1Commands.Count > 0;
-        var hasModifier2 = Model.Modifier2Commands.Count > 0;
         var hasSelectedModifier = hasModifier1 || hasModifier2;
         var compositionMode = Model.EquipmentCommands.Count == 0 || hasSelectedModifier
             ? OrbatEquipmentCompositionMode.Composable

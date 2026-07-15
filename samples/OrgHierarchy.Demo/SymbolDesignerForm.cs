@@ -20,6 +20,8 @@ public sealed class SymbolDesignerForm : Form
     private readonly ComboBox _compositionModeComboBox = new() { Width = 130, DropDownWidth = 170 };
     private readonly ComboBox _modifier1TypeComboBox = new() { Width = 260, DropDownWidth = 340 };
     private readonly ComboBox _modifier2TypeComboBox = new() { Width = 280, DropDownWidth = 360 };
+    private readonly ComboBox _landUnitModifier1TypeComboBox = new() { Width = 260, DropDownWidth = 340 };
+    private readonly ComboBox _landUnitModifier2TypeComboBox = new() { Width = 280, DropDownWidth = 360 };
     private readonly ComboBox _mobilityTypeComboBox = new() { Width = 300, DropDownWidth = 400 };
     private readonly ComboBox _affiliationComboBox = new() { Width = 110 };
     private readonly ComboBox _physicalDomainComboBox = new() { Width = 115 };
@@ -60,6 +62,8 @@ public sealed class SymbolDesignerForm : Form
     private Control? _compositionModeField;
     private Control? _modifier1TypeField;
     private Control? _modifier2TypeField;
+    private Control? _landUnitModifier1TypeField;
+    private Control? _landUnitModifier2TypeField;
     private Control? _mobilityTypeField;
     private Control? _textOptionsField;
     private Control? _fillOptionsField;
@@ -156,6 +160,18 @@ public sealed class SymbolDesignerForm : Form
             .Select(value => new EquipmentModifier2Selection(value)).Cast<object>().ToArray());
         _modifier2TypeComboBox.SelectedIndex = 0;
         _modifier2TypeComboBox.SelectedIndexChanged += (_, _) => RefreshOutput();
+
+        _landUnitModifier1TypeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        _landUnitModifier1TypeComboBox.Items.AddRange(Enum.GetValues<OrbatLandUnitModifier1>()
+            .Select(value => new LandUnitModifier1Selection(value)).Cast<object>().ToArray());
+        _landUnitModifier1TypeComboBox.SelectedIndex = 0;
+        _landUnitModifier1TypeComboBox.SelectedIndexChanged += (_, _) => RefreshOutput();
+
+        _landUnitModifier2TypeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        _landUnitModifier2TypeComboBox.Items.AddRange(Enum.GetValues<OrbatLandUnitModifier2>()
+            .Select(value => new LandUnitModifier2Selection(value)).Cast<object>().ToArray());
+        _landUnitModifier2TypeComboBox.SelectedIndex = 0;
+        _landUnitModifier2TypeComboBox.SelectedIndexChanged += (_, _) => RefreshOutput();
 
         _mobilityTypeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         _mobilityTypeComboBox.Items.AddRange(Enum.GetValues<OrbatEquipmentMobilityMode>()
@@ -287,6 +303,8 @@ public sealed class SymbolDesignerForm : Form
         _compositionModeField = CreateLabeledField("Composition", _compositionModeComboBox);
         _modifier1TypeField = CreateLabeledField("Modifier 1", _modifier1TypeComboBox);
         _modifier2TypeField = CreateLabeledField("Modifier 2", _modifier2TypeComboBox);
+        _landUnitModifier1TypeField = CreateLabeledField("Modifier 1", _landUnitModifier1TypeComboBox);
+        _landUnitModifier2TypeField = CreateLabeledField("Modifier 2", _landUnitModifier2TypeComboBox);
         _mobilityTypeField = CreateLabeledField("Mobility", _mobilityTypeComboBox);
         metadataBar.Controls.Add(_unitTypeField);
         metadataBar.Controls.Add(_equipmentCategoryField);
@@ -297,6 +315,8 @@ public sealed class SymbolDesignerForm : Form
         metadataBar.Controls.Add(_compositionModeField);
         metadataBar.Controls.Add(_modifier1TypeField);
         metadataBar.Controls.Add(_modifier2TypeField);
+        metadataBar.Controls.Add(_landUnitModifier1TypeField);
+        metadataBar.Controls.Add(_landUnitModifier2TypeField);
         metadataBar.Controls.Add(_mobilityTypeField);
         metadataBar.Controls.Add(CreateLabeledField("Affiliation", _affiliationComboBox));
         metadataBar.Controls.Add(CreateLabeledField("Status", _frameStatusComboBox));
@@ -398,7 +418,7 @@ public sealed class SymbolDesignerForm : Form
         LoadLibraryFile(libraryFileName);
     }
 
-        private static void ConfigureInitialSplitterLayout(SplitContainer split)
+    private static void ConfigureInitialSplitterLayout(SplitContainer split)
     {
         var width = split.ClientSize.Width;
         if (width <= split.SplitterWidth + 50)
@@ -413,7 +433,7 @@ public sealed class SymbolDesignerForm : Form
         split.Panel1MinSize = Math.Min(480, distance);
         split.Panel2MinSize = Math.Min(340, width - distance - split.SplitterWidth);
     }
-private MenuStrip CreateMainMenu(NumericUpDown rotateAngleInput)
+    private MenuStrip CreateMainMenu(NumericUpDown rotateAngleInput)
     {
         var menu = new MenuStrip { Dock = DockStyle.Top };
         var file = new ToolStripMenuItem("File");
@@ -423,6 +443,7 @@ private MenuStrip CreateMainMenu(NumericUpDown rotateAngleInput)
         file.DropDownItems.Add(new ToolStripSeparator());
         file.DropDownItems.Add(CreateMenuItem("Load base symbol...", LoadBaseSymbol));
         file.DropDownItems.Add(CreateMenuItem("Load library...", LoadLibrary));
+        file.DropDownItems.Add(CreateMenuItem("Import drawing from library...", ImportDrawingFromLibrary));
         file.DropDownItems.Add(CreateMenuItem("Save to library...", SaveLibrary, Keys.Control | Keys.S));
         file.DropDownItems.Add(CreateMenuItem("View library", ViewLibrary));
 
@@ -939,6 +960,16 @@ private MenuStrip CreateMainMenu(NumericUpDown rotateAngleInput)
             ? selection.Value
             : OrbatEquipmentModifier2.Unspecified;
 
+    private OrbatLandUnitModifier1 GetSelectedLandUnitModifier1Type() =>
+        _landUnitModifier1TypeComboBox.SelectedItem is LandUnitModifier1Selection selection
+            ? selection.Value
+            : OrbatLandUnitModifier1.Unspecified;
+
+    private OrbatLandUnitModifier2 GetSelectedLandUnitModifier2Type() =>
+        _landUnitModifier2TypeComboBox.SelectedItem is LandUnitModifier2Selection selection
+            ? selection.Value
+            : OrbatLandUnitModifier2.Unspecified;
+
     private OrbatEquipmentMobilityMode GetSelectedMobilityType() =>
         _mobilityTypeComboBox.SelectedItem is EquipmentMobilitySelection selection
             ? selection.Value
@@ -964,10 +995,17 @@ private MenuStrip CreateMainMenu(NumericUpDown rotateAngleInput)
         if (defaultState != OrbatEquipmentOperatingState.Ground)
             _equipmentOperatingStateComboBox.SelectedItem = defaultState.ToString();
     }
+
     private void UpdateFunctionSelectorState()
     {
         var equipment = GetSelectedPhysicalDomain() == SymbolPhysicalDomain.Equipment;
         var role = GetSelectedSymbolRole();
+        if (!equipment && role == OrbatEquipmentSymbolRole.MobilityIndicator)
+        {
+            _symbolRoleComboBox.SelectedItem = OrbatEquipmentSymbolRole.MainFunction.ToString();
+            role = OrbatEquipmentSymbolRole.MainFunction;
+        }
+
         var supportsInFlight = equipment
             && OrbatEquipmentFunctionCatalog.SupportsInFlightOperatingState(GetSelectedEquipmentFunction());
 
@@ -976,10 +1014,12 @@ private MenuStrip CreateMainMenu(NumericUpDown rotateAngleInput)
         SetFieldVisible(_equipmentFunctionField, equipment);
         SetFieldVisible(_equipmentVariantField, equipment);
         SetFieldVisible(_equipmentOperatingStateField, supportsInFlight);
-        SetFieldVisible(_symbolRoleField, equipment);
-        SetFieldVisible(_compositionModeField, equipment);
+        SetFieldVisible(_symbolRoleField, true);
+        SetFieldVisible(_compositionModeField, true);
         SetFieldVisible(_modifier1TypeField, equipment && role == OrbatEquipmentSymbolRole.Modifier1);
         SetFieldVisible(_modifier2TypeField, equipment && role == OrbatEquipmentSymbolRole.Modifier2);
+        SetFieldVisible(_landUnitModifier1TypeField, !equipment && role == OrbatEquipmentSymbolRole.Modifier1);
+        SetFieldVisible(_landUnitModifier2TypeField, !equipment && role == OrbatEquipmentSymbolRole.Modifier2);
         SetFieldVisible(_mobilityTypeField, equipment && role == OrbatEquipmentSymbolRole.MobilityIndicator);
 
         _unitTypeComboBox.Enabled = !equipment;
@@ -987,10 +1027,12 @@ private MenuStrip CreateMainMenu(NumericUpDown rotateAngleInput)
         _equipmentFunctionComboBox.Enabled = equipment;
         _equipmentVariantComboBox.Enabled = equipment;
         _equipmentOperatingStateComboBox.Enabled = supportsInFlight;
-        _symbolRoleComboBox.Enabled = equipment;
-        _compositionModeComboBox.Enabled = equipment;
+        _symbolRoleComboBox.Enabled = true;
+        _compositionModeComboBox.Enabled = true;
         _modifier1TypeComboBox.Enabled = equipment && role == OrbatEquipmentSymbolRole.Modifier1;
         _modifier2TypeComboBox.Enabled = equipment && role == OrbatEquipmentSymbolRole.Modifier2;
+        _landUnitModifier1TypeComboBox.Enabled = !equipment && role == OrbatEquipmentSymbolRole.Modifier1;
+        _landUnitModifier2TypeComboBox.Enabled = !equipment && role == OrbatEquipmentSymbolRole.Modifier2;
         _mobilityTypeComboBox.Enabled = equipment && role == OrbatEquipmentSymbolRole.MobilityIndicator;
 
         if (!supportsInFlight && GetSelectedEquipmentOperatingState() != OrbatEquipmentOperatingState.Ground)
@@ -1002,6 +1044,7 @@ private MenuStrip CreateMainMenu(NumericUpDown rotateAngleInput)
         if (field is not null)
             field.Visible = visible;
     }
+
     private void SelectTool(SymbolDesignerTool tool)
     {
         var value = tool.ToString();
@@ -1130,6 +1173,32 @@ private MenuStrip CreateMainMenu(NumericUpDown rotateAngleInput)
             return;
         }
 
+        if (GetSelectedSymbolRole() == OrbatEquipmentSymbolRole.Modifier1)
+        {
+            commands = BuiltInSymbolLibrary.Create(GetSelectedLandUnitModifier1Type());
+            if (commands.Count == 0)
+            {
+                MessageBox.Show(this, "Select a LandUnit Modifier 1 type first.", "Symbol Designer", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            _canvas.SetCommands(commands);
+            return;
+        }
+
+        if (GetSelectedSymbolRole() == OrbatEquipmentSymbolRole.Modifier2)
+        {
+            commands = BuiltInSymbolLibrary.Create(GetSelectedLandUnitModifier2Type());
+            if (commands.Count == 0)
+            {
+                MessageBox.Show(this, "Select a LandUnit Modifier 2 type first.", "Symbol Designer", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            _canvas.SetCommands(commands);
+            return;
+        }
+
         var selected = Convert.ToString(_unitTypeComboBox.SelectedItem);
         if (!Enum.TryParse(selected, out Components.OrbatUnitType unitType))
             return;
@@ -1171,13 +1240,15 @@ private MenuStrip CreateMainMenu(NumericUpDown rotateAngleInput)
             Layout = OrbatEquipmentSymbolLayout.CreateDefault(),
             Modifier1Type = GetSelectedModifier1Type().ToString(),
             Modifier2Type = GetSelectedModifier2Type().ToString(),
+            LandUnitModifier1Type = GetSelectedLandUnitModifier1Type().ToString(),
+            LandUnitModifier2Type = GetSelectedLandUnitModifier2Type().ToString(),
             MobilityType = GetSelectedMobilityType().ToString(),
             Affiliation = GetSelectedAffiliation(),
             PhysicalDomain = GetSelectedPhysicalDomain(),
             FrameShape = GetSelectedFrameShape(),
             FrameStatus = GetSelectedFrameStatus(),
             OperatingState = GetSelectedEquipmentOperatingState(),
-            Version = 4,
+            Version = 5,
             Commands = _canvas.Commands.Select(command => command.Clone()).ToList()
         };
 
@@ -1210,6 +1281,13 @@ private MenuStrip CreateMainMenu(NumericUpDown rotateAngleInput)
                 ? $"Equipment.{baseName}{roleSuffix}"
                 : $"Equipment.{baseName}.{SanitizeFileNamePart(variant)}{roleSuffix}";
         }
+
+        if (GetSelectedSymbolRole() == OrbatEquipmentSymbolRole.Modifier1
+            && GetSelectedLandUnitModifier1Type() != OrbatLandUnitModifier1.Unspecified)
+            return $"LandUnit.Modifier1.{GetSelectedLandUnitModifier1Type()}";
+        if (GetSelectedSymbolRole() == OrbatEquipmentSymbolRole.Modifier2
+            && GetSelectedLandUnitModifier2Type() != OrbatLandUnitModifier2.Unspecified)
+            return $"LandUnit.Modifier2.{GetSelectedLandUnitModifier2Type()}";
 
         var unitType = Convert.ToString(_unitTypeComboBox.SelectedItem);
         var unitTypeName = string.IsNullOrWhiteSpace(unitType)
@@ -1278,6 +1356,39 @@ private MenuStrip CreateMainMenu(NumericUpDown rotateAngleInput)
 
         return selected ?? BuiltInSymbolLibrary.Create(mobility);
     }
+
+    private void ImportDrawingFromLibrary()
+    {
+        using var dialog = new OpenFileDialog
+        {
+            Title = "Import drawing only from symbol library",
+            Filter = "ORBAT symbol library|*.orbatsymbol.json;*.json|All files|*.*",
+            InitialDirectory = SymbolLibraryLocator.FindDefaultFolder() ?? string.Empty
+        };
+
+        if (dialog.ShowDialog(this) != DialogResult.OK)
+            return;
+
+        try
+        {
+            var definition = JsonSerializer.Deserialize<SymbolLibraryDefinition>(
+                File.ReadAllText(dialog.FileName, Encoding.UTF8),
+                SymbolOverlayDemoForm.LibraryJsonOptions);
+            if (definition == null || definition.Commands.Count == 0)
+            {
+                MessageBox.Show(this, "The selected library file does not contain drawing commands.", "Symbol Designer", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            _canvas.SetCommands(definition.Commands.Select(command => command.Clone()).ToList());
+            _statusLabel.Text = $"Imported drawing only from {Path.GetFileName(dialog.FileName)}. Current LandUnit metadata was preserved.";
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show(this, $"The drawing could not be imported.\r\n\r\n{exception.Message}", "Symbol Designer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
     private void LoadLibrary()
     {
         using var dialog = new OpenFileDialog
@@ -1318,6 +1429,12 @@ private MenuStrip CreateMainMenu(NumericUpDown rotateAngleInput)
         if (Enum.TryParse(definition.Modifier2Type, out OrbatEquipmentModifier2 modifier2Type))
             _modifier2TypeComboBox.SelectedItem = _modifier2TypeComboBox.Items.Cast<EquipmentModifier2Selection>()
                 .FirstOrDefault(item => item.Value == modifier2Type);
+        if (Enum.TryParse(definition.LandUnitModifier1Type, out OrbatLandUnitModifier1 landUnitModifier1Type))
+            _landUnitModifier1TypeComboBox.SelectedItem = _landUnitModifier1TypeComboBox.Items.Cast<LandUnitModifier1Selection>()
+                .FirstOrDefault(item => item.Value == landUnitModifier1Type);
+        if (Enum.TryParse(definition.LandUnitModifier2Type, out OrbatLandUnitModifier2 landUnitModifier2Type))
+            _landUnitModifier2TypeComboBox.SelectedItem = _landUnitModifier2TypeComboBox.Items.Cast<LandUnitModifier2Selection>()
+                .FirstOrDefault(item => item.Value == landUnitModifier2Type);
         if (Enum.TryParse(definition.MobilityType, out OrbatEquipmentMobilityMode mobilityType))
             _mobilityTypeComboBox.SelectedItem = _mobilityTypeComboBox.Items.Cast<EquipmentMobilitySelection>()
                 .FirstOrDefault(item => item.Value == mobilityType);
@@ -2700,7 +2817,7 @@ internal sealed class SymbolDesignerCanvas : Control
         Cursor = HitTestCommand(mousePoint, frame) >= 0 ? Cursors.SizeAll : Cursors.Default;
     }
 
-        private void DrawSelectionHandles(Graphics graphics, RectangleF frame)
+    private void DrawSelectionHandles(Graphics graphics, RectangleF frame)
     {
         if (_selectedIndices.Count == 0)
             return;
@@ -2744,7 +2861,7 @@ internal sealed class SymbolDesignerCanvas : Control
             }
         }
     }
-private void DrawReference(Graphics graphics, RectangleF frame)
+    private void DrawReference(Graphics graphics, RectangleF frame)
     {
         if (_referenceImage == null)
             return;
@@ -3418,22 +3535,22 @@ internal sealed class SymbolPreviewControl : Control
 
         var contentBounds = new RectangleF(tile.Left + 6, tile.Top + 26, Math.Max(1, tile.Width - 12), Math.Max(1, tile.Height - 34));
         var frame = GetPreviewFrame(contentBounds, shape);
-        var isEquipmentModifier = PhysicalDomain == SymbolPhysicalDomain.Equipment
-            && SymbolRole is OrbatEquipmentSymbolRole.Modifier1 or OrbatEquipmentSymbolRole.Modifier2;
-        var previewRole = isEquipmentModifier
+        var isModifierComponent = SymbolRole is OrbatEquipmentSymbolRole.Modifier1 or OrbatEquipmentSymbolRole.Modifier2;
+        var previewRole = isModifierComponent
             ? SymbolRole
             : CompositionMode == OrbatEquipmentCompositionMode.Composite
                 ? OrbatEquipmentSymbolRole.Composite
                 : SymbolRole;
-        var symbolFrame = PhysicalDomain == SymbolPhysicalDomain.Equipment
+        var interiorFrame = SymbolFrameRenderer.GetInteriorFrame(frame, shape, IconGuideShape.FlatTopBottom);
+        var symbolFrame = PhysicalDomain == SymbolPhysicalDomain.Equipment || isModifierComponent
             ? SymbolFrameRenderer.GetEquipmentComponentFrame(
-                SymbolFrameRenderer.GetInteriorFrame(frame, shape, IconGuideShape.FlatTopBottom),
+                interiorFrame,
                 previewRole,
                 SymbolLayout,
                 hasModifier1: SymbolRole == OrbatEquipmentSymbolRole.Modifier1,
                 hasModifier2: SymbolRole == OrbatEquipmentSymbolRole.Modifier2)
-            : SymbolFrameRenderer.GetInteriorFrame(frame, shape, IconGuideShape.FlatTopBottom);
-        if (isEquipmentModifier)
+            : interiorFrame;
+        if (isModifierComponent)
         {
             symbolFrame = AdjustModifierPreviewSlot(symbolFrame, frame, shape, SymbolRole);
             symbolFrame = SymbolFrameRenderer.FitCommandsPreservingAspect(symbolFrame, _commands);
@@ -3628,6 +3745,8 @@ internal sealed class SymbolLibraryDefinition
     public OrbatEquipmentSymbolLayout Layout { get; set; } = OrbatEquipmentSymbolLayout.CreateDefault();
     public string Modifier1Type { get; set; } = OrbatEquipmentModifier1.Unspecified.ToString();
     public string Modifier2Type { get; set; } = OrbatEquipmentModifier2.Unspecified.ToString();
+    public string LandUnitModifier1Type { get; set; } = OrbatLandUnitModifier1.Unspecified.ToString();
+    public string LandUnitModifier2Type { get; set; } = OrbatLandUnitModifier2.Unspecified.ToString();
     public string MobilityType { get; set; } = OrbatEquipmentMobilityMode.Unspecified.ToString();
     public SymbolAffiliation Affiliation { get; set; } = SymbolAffiliation.Friendly;
     public SymbolPhysicalDomain PhysicalDomain { get; set; } = SymbolPhysicalDomain.LandUnit;
@@ -3667,6 +3786,16 @@ internal sealed record EquipmentModifier1Selection(OrbatEquipmentModifier1 Value
 }
 
 internal sealed record EquipmentModifier2Selection(OrbatEquipmentModifier2 Value)
+{
+    public override string ToString() => Value.GetDisplayName();
+}
+
+internal sealed record LandUnitModifier1Selection(OrbatLandUnitModifier1 Value)
+{
+    public override string ToString() => Value.GetDisplayName();
+}
+
+internal sealed record LandUnitModifier2Selection(OrbatLandUnitModifier2 Value)
 {
     public override string ToString() => Value.GetDisplayName();
 }
@@ -5612,6 +5741,16 @@ internal static class BuiltInSymbolLibrary
             Control1 = new SymbolPoint(control1),
             Control2 = new SymbolPoint(control2)
         };
+
+    public static IReadOnlyList<SymbolDrawCommand> Create(OrbatLandUnitModifier1 modifier) =>
+        Enum.TryParse<OrbatEquipmentModifier1>(modifier.ToString(), out var equipmentModifier)
+            ? Create(equipmentModifier).Select(command => command.Clone()).ToList()
+            : Array.Empty<SymbolDrawCommand>();
+
+    public static IReadOnlyList<SymbolDrawCommand> Create(OrbatLandUnitModifier2 modifier) =>
+        Enum.TryParse<OrbatEquipmentModifier2>(modifier.ToString(), out var equipmentModifier)
+            ? Create(equipmentModifier).Select(command => command.Clone()).ToList()
+            : Array.Empty<SymbolDrawCommand>();
 
     public static IReadOnlyList<SymbolDrawCommand> Create(OrbatEquipmentModifier2 modifier)
     {

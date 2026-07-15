@@ -15,6 +15,36 @@ internal static class StandardComponentLibrarySeeder
         var options = new JsonSerializerOptions { WriteIndented = true };
         options.Converters.Add(new JsonStringEnumConverter());
 
+        foreach (var modifier in Enum.GetValues<OrbatLandUnitModifier1>()
+            .Where(value => value != OrbatLandUnitModifier1.Unspecified))
+        {
+            SaveIfMissing(
+                folder,
+                $"LandUnit.Modifier1.{modifier}.orbatsymbol.json",
+                CreateDefinition(
+                    modifier.ToString(),
+                    OrbatEquipmentSymbolRole.Modifier1,
+                    BuiltInSymbolLibrary.Create(modifier),
+                    physicalDomain: SymbolPhysicalDomain.LandUnit,
+                    landUnitModifier1Type: modifier.ToString()),
+                options);
+        }
+
+        foreach (var modifier in Enum.GetValues<OrbatLandUnitModifier2>()
+            .Where(value => value != OrbatLandUnitModifier2.Unspecified))
+        {
+            SaveIfMissing(
+                folder,
+                $"LandUnit.Modifier2.{modifier}.orbatsymbol.json",
+                CreateDefinition(
+                    modifier.ToString(),
+                    OrbatEquipmentSymbolRole.Modifier2,
+                    BuiltInSymbolLibrary.Create(modifier),
+                    physicalDomain: SymbolPhysicalDomain.LandUnit,
+                    landUnitModifier2Type: modifier.ToString()),
+                options);
+        }
+
         foreach (var modifier in Enum.GetValues<OrbatEquipmentModifier1>()
             .Where(value => value != OrbatEquipmentModifier1.Unspecified))
         {
@@ -64,11 +94,14 @@ internal static class StandardComponentLibrarySeeder
         IReadOnlyList<SymbolDrawCommand> commands,
         string? modifier1Type = null,
         string? modifier2Type = null,
-        string? mobilityType = null)
+        string? mobilityType = null,
+        SymbolPhysicalDomain physicalDomain = SymbolPhysicalDomain.Equipment,
+        string? landUnitModifier1Type = null,
+        string? landUnitModifier2Type = null)
     {
         return new SymbolLibraryDefinition
         {
-            Version = 4,
+            Version = 5,
             Name = name,
             UnitType = OrbatUnitType.Unspecified.ToString(),
             EquipmentFunction = OrbatEquipmentFunction.Unspecified.ToString(),
@@ -78,10 +111,14 @@ internal static class StandardComponentLibrarySeeder
             Layout = OrbatEquipmentSymbolLayout.CreateDefault(),
             Modifier1Type = modifier1Type ?? OrbatEquipmentModifier1.Unspecified.ToString(),
             Modifier2Type = modifier2Type ?? OrbatEquipmentModifier2.Unspecified.ToString(),
+            LandUnitModifier1Type = landUnitModifier1Type ?? OrbatLandUnitModifier1.Unspecified.ToString(),
+            LandUnitModifier2Type = landUnitModifier2Type ?? OrbatLandUnitModifier2.Unspecified.ToString(),
             MobilityType = mobilityType ?? OrbatEquipmentMobilityMode.Unspecified.ToString(),
             Affiliation = SymbolAffiliation.Friendly,
-            PhysicalDomain = SymbolPhysicalDomain.Equipment,
-            FrameShape = SymbolFrameShape.FriendlyEquipment,
+            PhysicalDomain = physicalDomain,
+            FrameShape = physicalDomain == SymbolPhysicalDomain.Equipment
+                ? SymbolFrameShape.FriendlyEquipment
+                : SymbolFrameShape.FriendlyUnit,
             FrameStatus = SymbolFrameStatus.Present,
             OperatingState = OrbatEquipmentOperatingState.Ground,
             Commands = commands.Select(command => command.Clone()).ToList()

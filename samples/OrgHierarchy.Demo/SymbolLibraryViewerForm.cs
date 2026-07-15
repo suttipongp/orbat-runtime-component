@@ -433,7 +433,9 @@ public sealed class SymbolLibraryViewerForm : Form
     private Dictionary<string, ListViewGroup> CreateSymbolGroups()
     {
         var groups = new Dictionary<string, ListViewGroup>(StringComparer.OrdinalIgnoreCase);
-        AddSymbolGroup(groups, "LandUnit", "Land Unit");
+        AddSymbolGroup(groups, "LandUnitMain", "Land Unit - Main symbols");
+        AddSymbolGroup(groups, "LandUnitModifier1", "Land Unit - Modifier 1");
+        AddSymbolGroup(groups, "LandUnitModifier2", "Land Unit - Modifier 2");
         AddSymbolGroup(groups, "EquipmentMain", "Equipment - Main symbols");
         AddSymbolGroup(groups, "EquipmentComposite", "Equipment - Composite symbols");
         AddSymbolGroup(groups, "EquipmentModifier1", "Equipment - Modifier 1");
@@ -454,7 +456,12 @@ public sealed class SymbolLibraryViewerForm : Form
     {
         return definition.GetEffectivePhysicalDomain() switch
         {
-            SymbolPhysicalDomain.LandUnit => "LandUnit",
+            SymbolPhysicalDomain.LandUnit => definition.SymbolRole switch
+            {
+                OrbatEquipmentSymbolRole.Modifier1 => "LandUnitModifier1",
+                OrbatEquipmentSymbolRole.Modifier2 => "LandUnitModifier2",
+                _ => "LandUnitMain"
+            },
             SymbolPhysicalDomain.Equipment => definition.SymbolRole switch
             {
                 OrbatEquipmentSymbolRole.Modifier1 => "EquipmentModifier1",
@@ -496,7 +503,7 @@ public sealed class SymbolLibraryViewerForm : Form
         _preview.SymbolRole = definition.SymbolRole;
         _preview.CompositionMode = definition.CompositionMode;
         _preview.SymbolLayout = definition.Layout ?? OrbatEquipmentSymbolLayout.CreateDefault();
-        _preview.ComponentOnly = IsEquipmentModifier(definition);
+        _preview.ComponentOnly = IsStandaloneComponent(definition);
         _preview.FillUpperFrameCap = definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
             && Enum.TryParse(definition.EquipmentFunction, out OrbatEquipmentFunction equipmentFunction)
             && equipmentFunction == OrbatEquipmentFunction.CommunicationsSatellite
@@ -517,8 +524,18 @@ public sealed class SymbolLibraryViewerForm : Form
         }
         else
         {
-            _symbolKindLabel.Text = "Unit type";
-            _unitTypeLabel.Text = definition.UnitType;
+            _symbolKindLabel.Text = definition.SymbolRole switch
+            {
+                OrbatEquipmentSymbolRole.Modifier1 => "LandUnit Modifier 1",
+                OrbatEquipmentSymbolRole.Modifier2 => "LandUnit Modifier 2",
+                _ => "Unit type"
+            };
+            _unitTypeLabel.Text = definition.SymbolRole switch
+            {
+                OrbatEquipmentSymbolRole.Modifier1 => definition.LandUnitModifier1Type,
+                OrbatEquipmentSymbolRole.Modifier2 => definition.LandUnitModifier2Type,
+                _ => definition.UnitType
+            };
         }
         _frameLabel.Text = definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
             ? $"{definition.GetEffectiveAffiliation()} / Equipment / {definition.GetEffectiveOperatingState()}"
@@ -560,7 +577,7 @@ public sealed class SymbolLibraryViewerForm : Form
         graphics.Clear(Color.White);
 
         var contentBounds = new RectangleF(12, 8, 156, 104);
-        if (IsEquipmentModifier(definition))
+        if (IsStandaloneComponent(definition))
         {
             using var componentPen = new Pen(Color.Black, 2f);
             if (definition.SymbolRole == OrbatEquipmentSymbolRole.MobilityIndicator)
@@ -591,10 +608,10 @@ public sealed class SymbolLibraryViewerForm : Form
                 hasModifier2: false)
             : interiorFrame;
         using var pen = new Pen(Color.Black, 2f);
-                var fillUpperFrameCap = definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
-            && Enum.TryParse(definition.EquipmentFunction, out OrbatEquipmentFunction equipmentFunction)
-            && equipmentFunction == OrbatEquipmentFunction.CommunicationsSatellite
-            && definition.GetEffectiveOperatingState() == OrbatEquipmentOperatingState.InFlight;
+        var fillUpperFrameCap = definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
+    && Enum.TryParse(definition.EquipmentFunction, out OrbatEquipmentFunction equipmentFunction)
+    && equipmentFunction == OrbatEquipmentFunction.CommunicationsSatellite
+    && definition.GetEffectiveOperatingState() == OrbatEquipmentOperatingState.InFlight;
         SymbolFrameRenderer.DrawFrame(graphics, frame, frameShape, definition.FrameStatus, fillFrame: true, IconGuideShape.FlatTopBottom, strokeScale: 1f, fillUpperCap: fillUpperFrameCap);
         foreach (var command in definition.Commands)
             SymbolFrameRenderer.DrawCommand(graphics, frame, SymbolFrameRenderer.GetCommandFrame(drawingFrame, frameShape, command), frameShape, command, pen, Brushes.Black, IconGuideShape.FlatTopBottom, strokeScale: 1f);
@@ -602,9 +619,10 @@ public sealed class SymbolLibraryViewerForm : Form
         return bitmap;
     }
 
-    private static bool IsEquipmentModifier(SymbolLibraryDefinition definition) =>
-        definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
-        && definition.SymbolRole is OrbatEquipmentSymbolRole.Modifier1 or OrbatEquipmentSymbolRole.Modifier2 or OrbatEquipmentSymbolRole.MobilityIndicator;
+    private static bool IsStandaloneComponent(SymbolLibraryDefinition definition) =>
+        definition.SymbolRole is OrbatEquipmentSymbolRole.Modifier1 or OrbatEquipmentSymbolRole.Modifier2
+        || definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
+            && definition.SymbolRole == OrbatEquipmentSymbolRole.MobilityIndicator;
 
     private static Label CreateValueLabel() =>
         new()
@@ -637,9 +655,13 @@ public sealed class SymbolLibraryViewerForm : Form
                             : !string.IsNullOrWhiteSpace(Definition.EquipmentFunction)
                             ? Definition.EquipmentFunction
                             : GetLibraryNameFromFileName()
-                : !string.IsNullOrWhiteSpace(Definition.UnitType)
-                    ? Definition.UnitType
-                    : GetLibraryNameFromFileName();
+                : Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier1
+                    ? Definition.LandUnitModifier1Type
+                    : Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier2
+                        ? Definition.LandUnitModifier2Type
+                        : !string.IsNullOrWhiteSpace(Definition.UnitType)
+                            ? Definition.UnitType
+                            : GetLibraryNameFromFileName();
 
         public string SecondarySortText =>
             Definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
@@ -650,15 +672,29 @@ public sealed class SymbolLibraryViewerForm : Form
 
         private string GetDisplayName()
         {
-            if (Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier1
+            var domain = Definition.GetEffectivePhysicalDomain();
+            if (domain == SymbolPhysicalDomain.LandUnit
+                && Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier1
+                && Enum.TryParse(Definition.LandUnitModifier1Type, out OrbatLandUnitModifier1 landModifier1))
+                return landModifier1.GetDisplayName();
+
+            if (domain == SymbolPhysicalDomain.LandUnit
+                && Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier2
+                && Enum.TryParse(Definition.LandUnitModifier2Type, out OrbatLandUnitModifier2 landModifier2))
+                return landModifier2.GetDisplayName();
+
+            if (domain == SymbolPhysicalDomain.Equipment
+                && Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier1
                 && Enum.TryParse(Definition.Modifier1Type, out OrbatEquipmentModifier1 modifier1))
                 return modifier1.GetDisplayName();
 
-            if (Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier2
+            if (domain == SymbolPhysicalDomain.Equipment
+                && Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier2
                 && Enum.TryParse(Definition.Modifier2Type, out OrbatEquipmentModifier2 modifier2))
                 return modifier2.GetDisplayName();
 
-            if (Definition.SymbolRole == OrbatEquipmentSymbolRole.MobilityIndicator
+            if (domain == SymbolPhysicalDomain.Equipment
+                && Definition.SymbolRole == OrbatEquipmentSymbolRole.MobilityIndicator
                 && Enum.TryParse(Definition.MobilityType, out OrbatEquipmentMobilityMode mobility))
                 return mobility.GetDisplayName();
 
@@ -688,7 +724,11 @@ public sealed class SymbolLibraryViewerForm : Form
             var fileName = GetLibraryNameFromFileName();
             var defaultKindName = Definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
                 ? Definition.EquipmentFunction
-                : Definition.UnitType;
+                : Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier1
+                    ? Definition.LandUnitModifier1Type
+                    : Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier2
+                        ? Definition.LandUnitModifier2Type
+                        : Definition.UnitType;
             return !string.IsNullOrWhiteSpace(fileName)
                 && !fileName.Equals(Definition.Name, StringComparison.OrdinalIgnoreCase)
                 && Definition.Name.Equals(defaultKindName, StringComparison.OrdinalIgnoreCase);
