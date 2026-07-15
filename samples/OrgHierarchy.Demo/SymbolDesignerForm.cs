@@ -10,24 +10,24 @@ public sealed class SymbolDesignerForm : Form
 {
     private readonly SymbolDesignerCanvas _canvas = new();
     private readonly SymbolPreviewControl _preview = new();
-    private readonly ComboBox _toolComboBox = new();
-    private readonly ComboBox _unitTypeComboBox = new();
-    private readonly ComboBox _equipmentCategoryComboBox = new() { Width = 150, DropDownWidth = 180 };
-    private readonly ComboBox _equipmentFunctionComboBox = new() { Width = 250, DropDownWidth = 300 };
-    private readonly ComboBox _equipmentVariantComboBox = new() { Width = 220, DropDownWidth = 340, DropDownStyle = ComboBoxStyle.DropDown };
-    private readonly ComboBox _equipmentOperatingStateComboBox = new() { Width = 96 };
-    private readonly ComboBox _symbolRoleComboBox = new() { Width = 104 };
-    private readonly ComboBox _compositionModeComboBox = new() { Width = 104 };
-    private readonly ComboBox _modifier1TypeComboBox = new() { Width = 176 };
-    private readonly ComboBox _modifier2TypeComboBox = new() { Width = 190 };
-    private readonly ComboBox _mobilityTypeComboBox = new() { Width = 220 };
-    private readonly ComboBox _affiliationComboBox = new();
-    private readonly ComboBox _physicalDomainComboBox = new();
-    private readonly ComboBox _frameStatusComboBox = new();
+    private readonly ComboBox _toolComboBox = new() { Width = 156, DropDownWidth = 190 };
+    private readonly ComboBox _unitTypeComboBox = new() { Width = 150, DropDownWidth = 190 };
+    private readonly ComboBox _equipmentCategoryComboBox = new() { Width = 180, DropDownWidth = 230 };
+    private readonly ComboBox _equipmentFunctionComboBox = new() { Width = 340, DropDownWidth = 440 };
+    private readonly ComboBox _equipmentVariantComboBox = new() { Width = 300, DropDownWidth = 440, DropDownStyle = ComboBoxStyle.DropDown };
+    private readonly ComboBox _equipmentOperatingStateComboBox = new() { Width = 130, DropDownWidth = 170 };
+    private readonly ComboBox _symbolRoleComboBox = new() { Width = 145, DropDownWidth = 190 };
+    private readonly ComboBox _compositionModeComboBox = new() { Width = 130, DropDownWidth = 170 };
+    private readonly ComboBox _modifier1TypeComboBox = new() { Width = 260, DropDownWidth = 340 };
+    private readonly ComboBox _modifier2TypeComboBox = new() { Width = 280, DropDownWidth = 360 };
+    private readonly ComboBox _mobilityTypeComboBox = new() { Width = 300, DropDownWidth = 400 };
+    private readonly ComboBox _affiliationComboBox = new() { Width = 110 };
+    private readonly ComboBox _physicalDomainComboBox = new() { Width = 115 };
+    private readonly ComboBox _frameStatusComboBox = new() { Width = 110 };
     private readonly TrackBar _referenceOpacityTrackBar = new();
     private readonly CheckBox _showGridCheckBox = new() { Text = "Grid", Checked = true, AutoSize = true };
     private readonly CheckBox _showIconGuideCheckBox = new() { Text = "Icon guide", Checked = true, AutoSize = true };
-    private readonly ComboBox _iconGuideShapeComboBox = new();
+    private readonly ComboBox _iconGuideShapeComboBox = new() { Width = 160, DropDownWidth = 190 };
     private readonly CheckBox _snapCheckBox = new() { Text = "Snap", Checked = true, AutoSize = true };
     private readonly CheckBox _fillCheckBox = new() { Text = "Fill closed", AutoSize = true };
     private readonly NumericUpDown _gridDivisionsInput = new();
@@ -164,7 +164,6 @@ public sealed class SymbolDesignerForm : Form
         _mobilityTypeComboBox.SelectedIndexChanged += (_, _) => RefreshOutput();
 
         _affiliationComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-        _affiliationComboBox.Width = 92;
         _affiliationComboBox.Items.AddRange(Enum.GetNames<SymbolAffiliation>().Cast<object>().ToArray());
         _affiliationComboBox.SelectedItem = SymbolAffiliation.Friendly.ToString();
         _affiliationComboBox.SelectedIndexChanged += (_, _) =>
@@ -175,7 +174,6 @@ public sealed class SymbolDesignerForm : Form
         };
 
         _physicalDomainComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-        _physicalDomainComboBox.Width = 92;
         _physicalDomainComboBox.Items.AddRange(Enum.GetNames<SymbolPhysicalDomain>().Cast<object>().ToArray());
         _physicalDomainComboBox.SelectedItem = SymbolPhysicalDomain.LandUnit.ToString();
         _physicalDomainComboBox.SelectedIndexChanged += (_, _) =>
@@ -196,7 +194,6 @@ public sealed class SymbolDesignerForm : Form
         };
 
         _frameStatusComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-        _frameStatusComboBox.Width = 92;
         _frameStatusComboBox.Items.AddRange(Enum.GetNames<SymbolFrameStatus>().Cast<object>().ToArray());
         _frameStatusComboBox.SelectedItem = SymbolFrameStatus.Present.ToString();
         _frameStatusComboBox.SelectedIndexChanged += (_, _) =>
@@ -238,7 +235,6 @@ public sealed class SymbolDesignerForm : Form
             _canvas.Invalidate();
         };
         _iconGuideShapeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-        _iconGuideShapeComboBox.Width = 128;
         _iconGuideShapeComboBox.Items.AddRange(Enum.GetNames<IconGuideShape>().Cast<object>().ToArray());
         _iconGuideShapeComboBox.SelectedItem = IconGuideShape.FlatTopBottom.ToString();
         _iconGuideShapeComboBox.SelectedIndexChanged += (_, _) =>
@@ -504,7 +500,7 @@ private MenuStrip CreateMainMenu(NumericUpDown rotateAngleInput)
     private void ConfigureContextOptions(NumericUpDown rotateAngleInput)
     {
         _contextOptionsPanel.Dock = DockStyle.Top;
-        _contextOptionsPanel.Height = 38;
+        _contextOptionsPanel.Height = 50;
         _contextOptionsPanel.AutoScroll = true;
         _contextOptionsPanel.WrapContents = false;
         _contextOptionsPanel.Padding = new Padding(8, 4, 8, 2);
