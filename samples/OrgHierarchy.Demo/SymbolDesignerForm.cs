@@ -2173,7 +2173,7 @@ internal sealed class SymbolDesignerCanvas : Control
         SaveHistory();
         _commands.RemoveAll(command => command.Kind is SymbolDrawCommandKind.Line or SymbolDrawCommandKind.Bezier);
         _commands.Add(SymbolDrawCommand.Path(points, filled));
-        SelectedIndex = _commands.Count - 1;
+        SetSelection(new[] { _commands.Count - 1 }, _commands.Count - 1);
         CommandsChanged?.Invoke(this, EventArgs.Empty);
         SelectionChanged?.Invoke(this, EventArgs.Empty);
         Invalidate();
@@ -2947,7 +2947,7 @@ internal sealed class SymbolDesignerCanvas : Control
         if (_selectedIndices.Count == 0)
             return;
 
-        foreach (var index in _selectedIndices.OrderBy(index => index))
+        foreach (var index in _selectedIndices.Where(index => index >= 0 && index < _commands.Count).OrderBy(index => index))
         {
             var command = _commands[index];
             var commandFrame = GetCommandDrawingFrame(frame, command);
