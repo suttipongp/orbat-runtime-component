@@ -514,6 +514,8 @@ public sealed class SymbolDesignerForm : Form
         arrange.DropDownItems.Add(CreateMenuItem("Fit content to frame", () => _canvas.FitContentToFrame()));
 
         var draw = new ToolStripMenuItem("Draw");
+        draw.DropDownItems.Add(CreateToggleMenuItem("Fill closed shape", _fillCheckBox));
+        draw.DropDownItems.Add(new ToolStripSeparator());
         draw.DropDownItems.Add(CreateMenuItem("Close line path", CloseLinePath));
         draw.DropDownItems.Add(CreateMenuItem("Add air defense arc", AddAirDefenseArc));
 
@@ -1193,11 +1195,20 @@ public sealed class SymbolDesignerForm : Form
         }
 
         SetFieldVisible(_textOptionsField, tool == SymbolDesignerTool.Text);
-        SetFieldVisible(_fillOptionsField, tool is SymbolDesignerTool.Rectangle
+        UpdateFillOptionVisibility();
+        SetFieldVisible(_rotateOptionsField, tool == SymbolDesignerTool.SelectMove);
+    }
+
+    private void UpdateFillOptionVisibility()
+    {
+        var tool = GetSelectedTool();
+        var drawingFillableShape = tool is SymbolDesignerTool.Rectangle
             or SymbolDesignerTool.Ellipse
             or SymbolDesignerTool.Circle
-            or SymbolDesignerTool.Capsule);
-        SetFieldVisible(_rotateOptionsField, tool == SymbolDesignerTool.SelectMove);
+            or SymbolDesignerTool.Capsule;
+        var editingFillableShape = tool == SymbolDesignerTool.SelectMove
+            && _canvas.SelectedCommand?.CanFill == true;
+        SetFieldVisible(_fillOptionsField, drawingFillableShape || editingFillableShape);
     }
     private void LoadReferenceImage()
     {
@@ -1682,6 +1693,7 @@ public sealed class SymbolDesignerForm : Form
         finally
         {
             _updatingSelectionControls = false;
+            UpdateFillOptionVisibility();
         }
     }
 
