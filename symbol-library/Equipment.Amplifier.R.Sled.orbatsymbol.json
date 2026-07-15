@@ -1,0 +1,166 @@
+﻿{
+  "Version": 4,
+  "Name": "Amplifier.R.Sled",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "MobilityIndicator",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "MobilityType": "Sled",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.34545863,
+        "Y": 0.46974534
+      },
+      "End": {
+        "X": 0.39484772,
+        "Y": 0.66859275
+      },
+      "Control1": {
+        "X": 0.35595882,
+        "Y": 0.54637057
+      },
+      "Control2": {
+        "X": 0.36706996,
+        "Y": 0.6130372
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": "5ea6eaf7e9d347e28007fbac93342225",
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.39484772,
+        "Y": 0.66859275
+      },
+      "End": {
+        "X": 0.603792,
+        "Y": 0.66649514
+      },
+      "Control1": {
+        "X": 0.0065005124,
+        "Y": -0.06825566
+      },
+      "Control2": {
+        "X": 0.0065005124,
+        "Y": -0.06825566
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": "5ea6eaf7e9d347e28007fbac93342225",
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.34545863,
+        "Y": 0.46974534
+      },
+      "End": {
+        "X": 0.33658364,
+        "Y": 0.39312023
+      },
+      "Control1": {
+        "X": 0.0048753917,
+        "Y": -0.05687976
+      },
+      "Control2": {
+        "X": 0.0048753917,
+        "Y": -0.05687976
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": "5ea6eaf7e9d347e28007fbac93342225",
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.65240824,
+        "Y": 0.469117
+      },
+      "End": {
+        "X": 0.6030191,
+        "Y": 0.6679644
+      },
+      "Control1": {
+        "X": 0.64190805,
+        "Y": 0.5457422
+      },
+      "Control2": {
+        "X": 0.6307969,
+        "Y": 0.6124089
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": -0,
+      "GroupId": "5ea6eaf7e9d347e28007fbac93342225",
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.65240824,
+        "Y": 0.469117
+      },
+      "End": {
+        "X": 0.66128314,
+        "Y": 0.39249185
+      },
+      "Control1": {
+        "X": 0.9929913,
+        "Y": -0.057508133
+      },
+      "Control2": {
+        "X": 0.9929913,
+        "Y": -0.057508133
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": -0,
+      "GroupId": "5ea6eaf7e9d347e28007fbac93342225",
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

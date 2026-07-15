@@ -1,0 +1,112 @@
+﻿{
+  "Version": 4,
+  "Name": "RecoveryAndMaintenance",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier1",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "RecoveryAndMaintenance",
+  "Modifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.08333337,
+        "Y": 0.29289326
+      },
+      "End": {
+        "X": 0.08333337,
+        "Y": 0.7083334
+      },
+      "Control1": {
+        "X": 0.34656402,
+        "Y": 0.28929695
+      },
+      "Control2": {
+        "X": 0.34656402,
+        "Y": 0.7059637
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.28064543,
+        "Y": 0.5011785
+      },
+      "End": {
+        "X": 0.70710677,
+        "Y": 0.5
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.90552133,
+        "Y": 0.29260886
+      },
+      "End": {
+        "X": 0.90552133,
+        "Y": 0.708049
+      },
+      "Control1": {
+        "X": 0.6422908,
+        "Y": 0.28901255
+      },
+      "Control2": {
+        "X": 0.6422908,
+        "Y": 0.7056793
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": -0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

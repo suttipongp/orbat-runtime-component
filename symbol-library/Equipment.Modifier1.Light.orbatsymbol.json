@@ -1,0 +1,58 @@
+﻿{
+  "Version": 4,
+  "Name": "Light",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier1",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Light",
+  "Modifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.4906484,
+        "Y": 0.57855356
+      },
+      "End": {
+        "X": 0.4906484,
+        "Y": 0.57855356
+      },
+      "Control1": {
+        "X": -0.009351611,
+        "Y": 0.121571004
+      },
+      "Control2": {
+        "X": -0.009351611,
+        "Y": 0.121571004
+      },
+      "Radius": 0,
+      "FontSize": 110,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "L",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

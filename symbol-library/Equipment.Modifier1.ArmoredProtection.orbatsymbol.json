@@ -1,0 +1,58 @@
+﻿{
+  "Version": 4,
+  "Name": "ArmoredProtection",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier1",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "ArmoredProtection",
+  "Modifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Capsule",
+      "Start": {
+        "X": 0.08228309,
+        "Y": 0.3299087
+      },
+      "End": {
+        "X": 0.9222831,
+        "Y": 0.6678082
+      },
+      "Control1": {
+        "X": 0.002283096,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0.002283096,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

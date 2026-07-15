@@ -1,0 +1,58 @@
+﻿{
+  "Version": 4,
+  "Name": "Multifunctional",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier1",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Multifunctional",
+  "Modifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.5061102,
+        "Y": 0.5465502
+      },
+      "End": {
+        "X": 0.5061102,
+        "Y": 0.5465502
+      },
+      "Control1": {
+        "X": 0.21321699,
+        "Y": 0.2132169
+      },
+      "Control2": {
+        "X": 0.21321699,
+        "Y": 0.2132169
+      },
+      "Radius": 0,
+      "FontSize": 50,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "MF",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

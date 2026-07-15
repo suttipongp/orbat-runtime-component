@@ -1,0 +1,180 @@
+﻿{
+  "Version": 3,
+  "Name": "CommunicationsSatellite",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "CommunicationsSatellite",
+  "Variant": "",
+  "SymbolRole": "MainFunction",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipmentInFlight",
+  "FrameStatus": "Present",
+  "OperatingState": "InFlight",
+  "Commands": [
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.39783108,
+        "Y": 0.37442917
+      },
+      "End": {
+        "X": 0.6061644,
+        "Y": 0.62271684
+      },
+      "Control1": {
+        "X": 0.022831082,
+        "Y": 0.041095853
+      },
+      "Control2": {
+        "X": 0.022831082,
+        "Y": 0.041095853
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.6689498,
+        "Y": 0.33504567
+      },
+      "End": {
+        "X": 0.8772831,
+        "Y": 0.668379
+      },
+      "Control1": {
+        "X": 0.0022830963,
+        "Y": 0.04337901
+      },
+      "Control2": {
+        "X": 0.0022830963,
+        "Y": 0.04337901
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.12447488,
+        "Y": 0.33394974
+      },
+      "End": {
+        "X": 0.3328082,
+        "Y": 0.6672831
+      },
+      "Control1": {
+        "X": -0.54219186,
+        "Y": 0.042283095
+      },
+      "Control2": {
+        "X": -0.54219186,
+        "Y": 0.042283095
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.3333333,
+        "Y": 0.5
+      },
+      "End": {
+        "X": 0.6689498,
+        "Y": 0.50114155
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.25,
+        "Y": 0.7916666
+      },
+      "End": {
+        "X": 0.75,
+        "Y": 0.7916666
+      },
+      "Control1": {
+        "X": 0.28767124,
+        "Y": 0.6672831
+      },
+      "Control2": {
+        "X": 0.7146119,
+        "Y": 0.668379
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.5,
+        "Y": 0.625
+      },
+      "End": {
+        "X": 0.50085896,
+        "Y": 0.7021112
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

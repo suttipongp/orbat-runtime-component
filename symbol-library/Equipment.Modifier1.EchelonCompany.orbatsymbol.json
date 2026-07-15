@@ -1,0 +1,58 @@
+﻿{
+  "Version": 4,
+  "Name": "EchelonCompany",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier1",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "EchelonCompany",
+  "Modifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.33333337,
+        "Y": 0.47222227
+      },
+      "End": {
+        "X": 0.66666675,
+        "Y": 0.52777773
+      },
+      "Control1": {
+        "X": -0.08056882,
+        "Y": 0.028436035
+      },
+      "Control2": {
+        "X": -0.08056882,
+        "Y": 0.028436035
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 90,
+      "GroupId": null,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    }
+  ]
+}

@@ -1,0 +1,193 @@
+﻿{
+  "Version": 4,
+  "Name": "Computer",
+  "UnitType": "CBRN",
+  "EquipmentFunction": "Computer",
+  "Variant": "",
+  "SymbolRole": "MainFunction",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.21232876,
+        "Y": 0.25
+      },
+      "End": {
+        "X": 0.7876712,
+        "Y": 0.30480474
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0.043378994
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0.043378994
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.2155297,
+        "Y": 0.57310504
+      },
+      "End": {
+        "X": 0.7876712,
+        "Y": 0.625
+      },
+      "Control1": {
+        "X": 0.003470309,
+        "Y": 0.36648405
+      },
+      "Control2": {
+        "X": 0.003470309,
+        "Y": 0.36648405
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.2155297,
+        "Y": 0.625
+      },
+      "End": {
+        "X": 0.2123288,
+        "Y": 0.25
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.7876712,
+        "Y": 0.25
+      },
+      "End": {
+        "X": 0.7876712,
+        "Y": 0.625
+      },
+      "Control1": {
+        "X": 0,
+        "Y": -0.002283096
+      },
+      "Control2": {
+        "X": 0,
+        "Y": -0.002283096
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.44520554,
+        "Y": 0.6272831
+      },
+      "End": {
+        "X": 0.55479455,
+        "Y": 0.76570475
+      },
+      "Control1": {
+        "X": -0.011415482,
+        "Y": 0.0022830963
+      },
+      "Control2": {
+        "X": -0.011415482,
+        "Y": 0.0022830963
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.20690617,
+        "Y": 0.7417321
+      },
+      "End": {
+        "X": 0.790239,
+        "Y": 0.7896774
+      },
+      "Control1": {
+        "X": -0.011130929,
+        "Y": 0.05337596
+      },
+      "Control2": {
+        "X": -0.011130929,
+        "Y": 0.05337596
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+﻿{
+  "Version": 4,
+  "Name": "EchelonBattalion",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier1",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "EchelonBattalion",
+  "Modifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.2501057,
+        "Y": 0.47232798
+      },
+      "End": {
+        "X": 0.5832275,
+        "Y": 0.5278835
+      },
+      "Control1": {
+        "X": -0.14293006,
+        "Y": 0.05690953
+      },
+      "Control2": {
+        "X": -0.14293006,
+        "Y": 0.05690953
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 90,
+      "GroupId": null,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.41642863,
+        "Y": 0.47198418
+      },
+      "End": {
+        "X": 0.74955046,
+        "Y": 0.52822727
+      },
+      "Control1": {
+        "X": 0.0060370862,
+        "Y": 0.038432755
+      },
+      "Control2": {
+        "X": 0.0060370862,
+        "Y": 0.038432755
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": -90,
+      "GroupId": null,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+﻿{
+  "Version": 4,
+  "Name": "Amplifier.R.Wheeled",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "MobilityIndicator",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "MobilityType": "Wheeled",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.30555555,
+        "Y": 0.41666666
+      },
+      "End": {
+        "X": 0.6944444,
+        "Y": 0.41666666
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.3611111,
+        "Y": 0.5833333
+      },
+      "End": {
+        "X": 0.5421885,
+        "Y": 0.61162513
+      },
+      "Control1": {
+        "X": 0.2621885,
+        "Y": 0.0016251206
+      },
+      "Control2": {
+        "X": 0.2621885,
+        "Y": 0.0016251206
+      },
+      "Radius": 0.16,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.6388889,
+        "Y": 0.5833333
+      },
+      "End": {
+        "X": 0.7664356,
+        "Y": 0.6034995
+      },
+      "Control1": {
+        "X": -0.27356452,
+        "Y": -0.006500542
+      },
+      "Control2": {
+        "X": -0.27356452,
+        "Y": -0.006500542
+      },
+      "Radius": 0.16,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

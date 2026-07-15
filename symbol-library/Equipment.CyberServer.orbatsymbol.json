@@ -1,0 +1,205 @@
+﻿{
+  "Version": 3,
+  "Name": "CyberServer",
+  "UnitType": "CBRN",
+  "EquipmentFunction": "CyberServer",
+  "Variant": "",
+  "SymbolRole": "MainFunction",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.25,
+        "Y": 0.2083333
+      },
+      "End": {
+        "X": 0.75,
+        "Y": 0.3687215
+      },
+      "Control1": {
+        "X": 0,
+        "Y": -0.0479452
+      },
+      "Control2": {
+        "X": 0,
+        "Y": -0.0479452
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 3,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.25,
+        "Y": 0.41666666
+      },
+      "End": {
+        "X": 0.75,
+        "Y": 0.5833333
+      },
+      "Control1": {
+        "X": -0.001095898,
+        "Y": 0.1632877
+      },
+      "Control2": {
+        "X": -0.001095898,
+        "Y": 0.1632877
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 3,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.25,
+        "Y": 0.625
+      },
+      "End": {
+        "X": 0.75,
+        "Y": 0.7916666
+      },
+      "Control1": {
+        "X": 9.132922E-05,
+        "Y": 0.3768036
+      },
+      "Control2": {
+        "X": 9.132922E-05,
+        "Y": 0.3768036
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 3,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.49543375,
+        "Y": 0.1038813
+      },
+      "End": {
+        "X": 0.49543375,
+        "Y": 0.1038813
+      },
+      "Control1": {
+        "X": -0.004566252,
+        "Y": 0.020547934
+      },
+      "Control2": {
+        "X": -0.004566252,
+        "Y": 0.020547934
+      },
+      "Radius": 0,
+      "FontSize": 20,
+      "StrokeWidth": 2,
+      "Text": "C2",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.6666667,
+        "Y": 0.2916667
+      },
+      "End": {
+        "X": 0.7,
+        "Y": 0.3
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0.03435918,
+      "FontSize": 12,
+      "StrokeWidth": 3,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.6666667,
+        "Y": 0.5
+      },
+      "End": {
+        "X": 0.8599087,
+        "Y": 0.30237442
+      },
+      "Control1": {
+        "X": 0.15990867,
+        "Y": 0.0023744255
+      },
+      "Control2": {
+        "X": 0.15990867,
+        "Y": 0.0023744255
+      },
+      "Radius": 0.03435918,
+      "FontSize": 12,
+      "StrokeWidth": 3,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.66935426,
+        "Y": 0.7113633
+      },
+      "End": {
+        "X": 0.63506854,
+        "Y": 0.47707757
+      },
+      "Control1": {
+        "X": -0.06493151,
+        "Y": 0.17707759
+      },
+      "Control2": {
+        "X": -0.06493151,
+        "Y": 0.17707759
+      },
+      "Radius": 0.03435918,
+      "FontSize": 12,
+      "StrokeWidth": 3,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

@@ -1,0 +1,139 @@
+﻿{
+  "Version": 4,
+  "Name": "Amplifier.R.WheeledCrossCountry",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "MobilityIndicator",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "MobilityType": "WheeledCrossCountry",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.2777778,
+        "Y": 0.41666666
+      },
+      "End": {
+        "X": 0.7222222,
+        "Y": 0.41666666
+      },
+      "Control1": {
+        "X": 0,
+        "Y": -0.0016251504
+      },
+      "Control2": {
+        "X": 0,
+        "Y": -0.0016251504
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.3333333,
+        "Y": 0.5833333
+      },
+      "End": {
+        "X": 0.5216038,
+        "Y": 0.58399785
+      },
+      "Control1": {
+        "X": 0.2416035,
+        "Y": -0.026002169
+      },
+      "Control2": {
+        "X": 0.2416035,
+        "Y": -0.026002169
+      },
+      "Radius": 0.16,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.49885193,
+        "Y": 0.5823727
+      },
+      "End": {
+        "X": 0.63833123,
+        "Y": 0.6051246
+      },
+      "Control1": {
+        "X": -0.021668494,
+        "Y": -0.0048754215
+      },
+      "Control2": {
+        "X": -0.021668494,
+        "Y": -0.0048754215
+      },
+      "Radius": 0.16,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.6666667,
+        "Y": 0.5823727
+      },
+      "End": {
+        "X": 0.7994807,
+        "Y": 0.58237267
+      },
+      "Control1": {
+        "X": -0.24052,
+        "Y": -0.027627349
+      },
+      "Control2": {
+        "X": -0.24052,
+        "Y": -0.027627349
+      },
+      "Radius": 0.16,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

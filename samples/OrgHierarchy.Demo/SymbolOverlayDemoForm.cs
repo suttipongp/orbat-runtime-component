@@ -11,16 +11,20 @@ public sealed class SymbolOverlayDemoForm : Form
     private readonly ComboBox _domainComboBox = new();
     private readonly ComboBox _affiliationComboBox = new();
     private readonly ComboBox _statusComboBox = new();
+    private readonly ComboBox _equipmentOperatingStateComboBox = new();
     private readonly ComboBox _unitTypeComboBox = new();
-    private readonly ComboBox _equipmentFunctionComboBox = new() { Width = 230, DropDownWidth = 250 };
+    private readonly ComboBox _equipmentCategoryComboBox = new() { Width = 230, DropDownWidth = 250 };
+    private readonly ComboBox _equipmentFunctionComboBox = new() { Width = 230, DropDownWidth = 300 };
     private readonly ComboBox _equipmentVariantComboBox = new();
     private readonly ComboBox _modifier1ComboBox = new();
     private readonly ComboBox _modifier2ComboBox = new();
     private readonly TableLayoutPanel _fieldsPanel = new();
     private readonly ToolTip _fieldToolTip = new();
     private readonly Dictionary<string, Control> _fieldInputs = new(StringComparer.OrdinalIgnoreCase);
-    private static readonly JsonSerializerOptions LibraryJsonOptions = CreateLibraryJsonOptions();
+    internal static readonly JsonSerializerOptions LibraryJsonOptions = CreateLibraryJsonOptions();
     private bool _updatingVariantList;
+    private bool _updatingEquipmentFunctionOptions;
+    private OrbatEquipmentFunction? _lastVariantFunction;
 
     public SymbolOverlayDemoForm()
     {
@@ -48,17 +52,38 @@ public sealed class SymbolOverlayDemoForm : Form
         _statusComboBox.SelectedItem = SymbolFrameStatus.Present.ToString();
         _statusComboBox.SelectedIndexChanged += (_, _) => ApplyModelToCanvas();
 
+        _equipmentOperatingStateComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        _equipmentOperatingStateComboBox.Items.AddRange(Enum.GetNames<OrbatEquipmentOperatingState>().Cast<object>().ToArray());
+        _equipmentOperatingStateComboBox.SelectedItem = OrbatEquipmentOperatingState.Ground.ToString();
+        _equipmentOperatingStateComboBox.SelectedIndexChanged += (_, _) => ApplyModelToCanvas();
+
         _unitTypeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         _unitTypeComboBox.Items.AddRange(Enum.GetNames<OrbatUnitType>().Cast<object>().ToArray());
         _unitTypeComboBox.SelectedItem = OrbatUnitType.Armor.ToString();
         _unitTypeComboBox.SelectedIndexChanged += (_, _) => ApplyModelToCanvas();
 
-        _equipmentFunctionComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-        _equipmentFunctionComboBox.Items.AddRange(Enum.GetNames<OrbatEquipmentFunction>().Cast<object>().ToArray());
-        _equipmentFunctionComboBox.SelectedItem = OrbatEquipmentFunction.Mortar.ToString();
+        _equipmentCategoryComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        _equipmentCategoryComboBox.Items.AddRange(Enum.GetValues<OrbatEquipmentFunctionCategory>()
+            .Select(value => new EquipmentFunctionCategorySelection(value)).Cast<object>().ToArray());
+        _equipmentCategoryComboBox.SelectedIndex = 0;
+        _equipmentCategoryComboBox.SelectedIndexChanged += (_, _) =>
+        {
+            if (!_updatingEquipmentFunctionOptions)
+                RefreshEquipmentFunctionOptions();
+        };
+
+        _equipmentFunctionComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+        _equipmentFunctionComboBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+        _equipmentFunctionComboBox.AutoCompleteSource = AutoCompleteSource.ListItems;
+        RefreshEquipmentFunctionOptions(OrbatEquipmentFunction.Mortar);
         _equipmentFunctionComboBox.SelectedIndexChanged += (_, _) =>
         {
+            if (_updatingEquipmentFunctionOptions)
+                return;
+
             RefreshEquipmentVariants();
+            ApplyDefaultEquipmentOperatingState();
+            UpdateFunctionSelectorState();
             SyncEquipmentFunctionField();
             ApplyModelToCanvas();
         };
@@ -133,8 +158,10 @@ public sealed class SymbolOverlayDemoForm : Form
         AddRow(panel, "Affiliation", _affiliationComboBox);
         AddRow(panel, "Status", _statusComboBox);
         AddRow(panel, "Unit type", _unitTypeComboBox);
+        AddRow(panel, "Category", _equipmentCategoryComboBox);
         AddRow(panel, "Equipment fn", _equipmentFunctionComboBox);
         AddRow(panel, "Variant", _equipmentVariantComboBox);
+        AddRow(panel, "Operating state", _equipmentOperatingStateComboBox);
         AddRow(panel, "Modifier 1", _modifier1ComboBox);
         AddRow(panel, "Modifier 2", _modifier2ComboBox);
         panel.Controls.Add(resetButton, 1, panel.RowCount);
@@ -200,6 +227,7 @@ public sealed class SymbolOverlayDemoForm : Form
             Domain = GetSelectedDomain(),
             Affiliation = GetSelectedAffiliation(),
             Status = GetSelectedStatus(),
+            OperatingState = GetSelectedEquipmentOperatingState(),
             UnitType = GetSelectedUnitType(),
             EquipmentFunction = GetSelectedEquipmentFunction(),
             EquipmentVariant = GetSelectedEquipmentVariant(),
@@ -298,24 +326,81 @@ public sealed class SymbolOverlayDemoForm : Form
             ? status
             : SymbolFrameStatus.Present;
 
+    private OrbatEquipmentOperatingState GetSelectedEquipmentOperatingState() =>
+        Enum.TryParse(Convert.ToString(_equipmentOperatingStateComboBox.SelectedItem), out OrbatEquipmentOperatingState state)
+            ? state
+            : OrbatEquipmentOperatingState.Ground;
+
     private OrbatUnitType GetSelectedUnitType() =>
         Enum.TryParse(Convert.ToString(_unitTypeComboBox.SelectedItem), out OrbatUnitType unitType)
             ? unitType
             : OrbatUnitType.Unspecified;
 
     private OrbatEquipmentFunction GetSelectedEquipmentFunction() =>
-        Enum.TryParse(Convert.ToString(_equipmentFunctionComboBox.SelectedItem), out OrbatEquipmentFunction equipmentFunction)
-            ? equipmentFunction
-            : OrbatEquipmentFunction.Unspecified;
+        _equipmentFunctionComboBox.SelectedItem is EquipmentFunctionSelection selection
+            ? selection.Value
+            : OrbatEquipmentFunctionCatalog.TryParseDisplayName(
+                _equipmentFunctionComboBox.Text,
+                out OrbatEquipmentFunction equipmentFunction)
+                ? equipmentFunction
+                : OrbatEquipmentFunction.Unspecified;
+
+    private OrbatEquipmentFunctionCategory GetSelectedEquipmentCategory() =>
+        _equipmentCategoryComboBox.SelectedItem is EquipmentFunctionCategorySelection selection
+            ? selection.Value
+            : OrbatEquipmentFunctionCategory.All;
+
+    private void RefreshEquipmentFunctionOptions(OrbatEquipmentFunction? preferredFunction = null)
+    {
+        var currentFunction = preferredFunction ?? GetSelectedEquipmentFunction();
+        var functions = OrbatEquipmentFunctionCatalog.GetFunctions(GetSelectedEquipmentCategory());
+        var selectedFunction = functions.Contains(currentFunction)
+            ? currentFunction
+            : functions.FirstOrDefault();
+
+        _updatingEquipmentFunctionOptions = true;
+        try
+        {
+            _equipmentFunctionComboBox.BeginUpdate();
+            _equipmentFunctionComboBox.Items.Clear();
+            _equipmentFunctionComboBox.Items.AddRange(functions
+                .Select(value => new EquipmentFunctionSelection(value)).Cast<object>().ToArray());
+            _equipmentFunctionComboBox.SelectedItem = _equipmentFunctionComboBox.Items
+                .Cast<EquipmentFunctionSelection>()
+                .FirstOrDefault(item => item.Value == selectedFunction);
+        }
+        finally
+        {
+            _equipmentFunctionComboBox.EndUpdate();
+            _updatingEquipmentFunctionOptions = false;
+        }
+
+        RefreshEquipmentVariants();
+        UpdateFunctionSelectorState();
+        SyncEquipmentFunctionField();
+        ApplyModelToCanvas();
+    }
 
     private string GetSelectedEquipmentVariant() => _equipmentVariantComboBox.Text.Trim();
 
+    private void ApplyDefaultEquipmentOperatingState()
+    {
+        var defaultState = OrbatEquipmentFunctionCatalog.GetDefaultOperatingState(GetSelectedEquipmentFunction());
+        if (defaultState != OrbatEquipmentOperatingState.Ground)
+            _equipmentOperatingStateComboBox.SelectedItem = defaultState.ToString();
+    }
     private void UpdateFunctionSelectorState()
     {
         var equipment = GetSelectedDomain() == SymbolPhysicalDomain.Equipment;
         _unitTypeComboBox.Enabled = !equipment;
+        _equipmentCategoryComboBox.Enabled = equipment;
         _equipmentFunctionComboBox.Enabled = equipment;
         _equipmentVariantComboBox.Enabled = equipment;
+        var supportsInFlight = equipment
+            && OrbatEquipmentFunctionCatalog.SupportsInFlightOperatingState(GetSelectedEquipmentFunction());
+        _equipmentOperatingStateComboBox.Enabled = supportsInFlight;
+        if (!supportsInFlight && GetSelectedEquipmentOperatingState() != OrbatEquipmentOperatingState.Ground)
+            _equipmentOperatingStateComboBox.SelectedItem = OrbatEquipmentOperatingState.Ground.ToString();
         _modifier1ComboBox.Enabled = equipment;
         _modifier2ComboBox.Enabled = equipment;
         if (equipment)
@@ -342,8 +427,11 @@ public sealed class SymbolOverlayDemoForm : Form
         if (_updatingVariantList)
             return;
 
-        var currentText = GetSelectedEquipmentVariant();
-        var variants = LoadLibraryVariants(GetSelectedEquipmentFunction());
+        var equipmentFunction = GetSelectedEquipmentFunction();
+        var functionChanged = _lastVariantFunction.HasValue && _lastVariantFunction.Value != equipmentFunction;
+        _lastVariantFunction = equipmentFunction;
+        var currentText = functionChanged ? string.Empty : GetSelectedEquipmentVariant();
+        var variants = LoadLibraryVariants(equipmentFunction);
         var canonicalVariant = variants.FirstOrDefault(variant => EquipmentVariantsMatch(variant, currentText));
         if (canonicalVariant == null && !string.IsNullOrWhiteSpace(currentText))
             variants.Insert(0, currentText);
@@ -395,7 +483,7 @@ public sealed class SymbolOverlayDemoForm : Form
     {
         LoadedEquipmentSymbol? fallback = null;
         LoadedEquipmentSymbol? exactComposite = null;
-        foreach (var file in GetRecentLibraryFiles())
+        foreach (var file in SymbolOverlayDemoForm.GetRecentLibraryFiles().OrderBy(File.GetLastWriteTimeUtc))
         {
             try
             {
@@ -404,7 +492,7 @@ public sealed class SymbolOverlayDemoForm : Form
                     continue;
                 if (!Enum.TryParse(definition.EquipmentFunction, out OrbatEquipmentFunction fileFunction) || fileFunction != equipmentFunction)
                     continue;
-                if (definition.Commands.Count == 0 || definition.SymbolRole is OrbatEquipmentSymbolRole.Modifier1 or OrbatEquipmentSymbolRole.Modifier2)
+                if (definition.Commands.Count == 0 || definition.SymbolRole is OrbatEquipmentSymbolRole.Modifier1 or OrbatEquipmentSymbolRole.Modifier2 or OrbatEquipmentSymbolRole.MobilityIndicator)
                     continue;
 
                 var loaded = new LoadedEquipmentSymbol(
@@ -468,7 +556,7 @@ public sealed class SymbolOverlayDemoForm : Form
                 .Where(value => value != OrbatEquipmentModifier2.Unspecified)
                 .Select(value => new EquipmentModifierOption(value.GetDisplayName(), string.Empty, null, value)));
         }
-        foreach (var file in GetRecentLibraryFiles())
+        foreach (var file in SymbolOverlayDemoForm.GetRecentLibraryFiles().OrderBy(File.GetLastWriteTimeUtc))
         {
             try
             {
@@ -478,6 +566,24 @@ public sealed class SymbolOverlayDemoForm : Form
                 var modifierType = role == OrbatEquipmentSymbolRole.Modifier1
                     ? definition.Modifier1Type
                     : definition.Modifier2Type;
+                if (role == OrbatEquipmentSymbolRole.Modifier1
+                    && Enum.TryParse(modifierType, out OrbatEquipmentModifier1 modifier1)
+                    && modifier1 != OrbatEquipmentModifier1.Unspecified)
+                {
+                    options.RemoveAll(option => option.Modifier1 == modifier1);
+                    options.Add(new EquipmentModifierOption(modifier1.GetDisplayName(), file, modifier1, null));
+                    continue;
+                }
+
+                if (role == OrbatEquipmentSymbolRole.Modifier2
+                    && Enum.TryParse(modifierType, out OrbatEquipmentModifier2 modifier2)
+                    && modifier2 != OrbatEquipmentModifier2.Unspecified)
+                {
+                    options.RemoveAll(option => option.Modifier2 == modifier2);
+                    options.Add(new EquipmentModifierOption(modifier2.GetDisplayName(), file, null, modifier2));
+                    continue;
+                }
+
                 var label = !string.IsNullOrWhiteSpace(modifierType)
                     && !modifierType.Equals("Unspecified", StringComparison.OrdinalIgnoreCase)
                         ? SplitPascalCase(modifierType)
@@ -512,28 +618,38 @@ public sealed class SymbolOverlayDemoForm : Form
     {
         if (comboBox.SelectedItem is not EquipmentModifierOption option)
             return Array.Empty<SymbolDrawCommand>();
+
+        if (!string.IsNullOrWhiteSpace(option.FileName))
+        {
+            try
+            {
+                var commands = JsonSerializer.Deserialize<SymbolLibraryDefinition>(File.ReadAllText(option.FileName, Encoding.UTF8), LibraryJsonOptions)?.Commands;
+                if (commands is { Count: > 0 })
+                    return commands;
+            }
+            catch
+            {
+                // Fall back to the built-in modifier when the library file cannot be read.
+            }
+        }
+
         if (option.Modifier1 is { } modifier1)
             return BuiltInSymbolLibrary.Create(modifier1);
         if (option.Modifier2 is { } modifier2)
             return BuiltInSymbolLibrary.Create(modifier2);
-        if (string.IsNullOrWhiteSpace(option.FileName))
-            return Array.Empty<SymbolDrawCommand>();
-        try
-        {
-            return JsonSerializer.Deserialize<SymbolLibraryDefinition>(File.ReadAllText(option.FileName, Encoding.UTF8), LibraryJsonOptions)?.Commands
-                ?? (IReadOnlyList<SymbolDrawCommand>)Array.Empty<SymbolDrawCommand>();
-        }
-        catch
-        {
-            return Array.Empty<SymbolDrawCommand>();
-        }
+        return Array.Empty<SymbolDrawCommand>();
     }
 
-    private static IReadOnlyList<string> GetRecentLibraryFiles()
+    internal static IReadOnlyList<string> GetRecentLibraryFiles()
     {
         var settings = LoadLibraryViewerSettings();
         if (settings == null)
-            return Array.Empty<string>();
+        {
+            var defaultFolder = SymbolLibraryLocator.FindDefaultFolder();
+            return !string.IsNullOrWhiteSpace(defaultFolder) && Directory.Exists(defaultFolder)
+                ? Directory.EnumerateFiles(defaultFolder, "*.orbatsymbol.json", SearchOption.TopDirectoryOnly).ToArray()
+                : Array.Empty<string>();
+        }
 
         if (settings.Mode == 1)
             return settings.Files.Where(File.Exists).ToArray();
@@ -647,6 +763,7 @@ internal sealed class OverlaySymbolModel
     public SymbolPhysicalDomain Domain { get; set; } = SymbolPhysicalDomain.LandUnit;
     public SymbolAffiliation Affiliation { get; set; } = SymbolAffiliation.Friendly;
     public SymbolFrameStatus Status { get; set; } = SymbolFrameStatus.Present;
+    public OrbatEquipmentOperatingState OperatingState { get; set; } = OrbatEquipmentOperatingState.Ground;
     public OrbatUnitType UnitType { get; set; } = OrbatUnitType.Armor;
     public OrbatEquipmentFunction EquipmentFunction { get; set; } = OrbatEquipmentFunction.Mortar;
     public string EquipmentVariant { get; set; } = string.Empty;
@@ -720,9 +837,9 @@ internal sealed class OverlayCanvas : Control
         DrawMapBackground(e.Graphics);
 
         var symbolBounds = GetSymbolBounds();
-        var frameShape = SymbolFrameMapping.GetFrameShape(Model.Affiliation, Model.Domain);
+        var frameShape = SymbolFrameMapping.GetFrameShape(Model.Affiliation, Model.Domain, Model.OperatingState);
         DrawSymbol(e.Graphics, symbolBounds, frameShape);
-        DrawAmplifierBoxes(e.Graphics, symbolBounds);
+        DrawAmplifierBoxes(e.Graphics, symbolBounds, frameShape);
     }
 
     private void DrawMapBackground(Graphics graphics)
@@ -780,7 +897,10 @@ internal sealed class OverlayCanvas : Control
     private void DrawSymbol(Graphics graphics, RectangleF symbolBounds, SymbolFrameShape frameShape)
     {
         using var pen = new Pen(Color.Black, 2.4f);
-        SymbolFrameRenderer.DrawFrame(graphics, symbolBounds, frameShape, Model.Status, fillFrame: true, IconGuideShape.FlatTopBottom);
+                var fillUpperFrameCap = Model.Domain == SymbolPhysicalDomain.Equipment
+            && Model.EquipmentFunction == OrbatEquipmentFunction.CommunicationsSatellite
+            && Model.OperatingState == OrbatEquipmentOperatingState.InFlight;
+        SymbolFrameRenderer.DrawFrame(graphics, symbolBounds, frameShape, Model.Status, fillFrame: true, IconGuideShape.FlatTopBottom, fillUpperCap: fillUpperFrameCap);
 
         var commands = Model.Domain == SymbolPhysicalDomain.Equipment
             ? Model.EquipmentCommands.Count > 0
@@ -828,14 +948,30 @@ internal sealed class OverlayCanvas : Control
         {
             var modifierFrame = SymbolFrameRenderer.GetEquipmentComponentFrame(
                 interiorFrame, OrbatEquipmentSymbolRole.Modifier1, Model.EquipmentLayout, hasModifier1, hasModifier2);
-            DrawCommands(graphics, symbolBounds, modifierFrame, frameShape, Model.Modifier1Commands, pen);
+            var commandFrame = SymbolFrameRenderer.FitCommandsPreservingAspect(modifierFrame, Model.Modifier1Commands);
+            commandFrame = SymbolFrameRenderer.ContainComponentFrame(
+                symbolBounds,
+                frameShape,
+                commandFrame,
+                Model.Modifier1Commands,
+                OrbatEquipmentSymbolRole.Modifier1,
+                IconGuideShape.FlatTopBottom);
+            DrawCommands(graphics, symbolBounds, commandFrame, frameShape, Model.Modifier1Commands, pen);
         }
 
         if (hasModifier2)
         {
             var modifierFrame = SymbolFrameRenderer.GetEquipmentComponentFrame(
                 interiorFrame, OrbatEquipmentSymbolRole.Modifier2, Model.EquipmentLayout, hasModifier1, hasModifier2);
-            DrawCommands(graphics, symbolBounds, modifierFrame, frameShape, Model.Modifier2Commands, pen);
+            var commandFrame = SymbolFrameRenderer.FitCommandsPreservingAspect(modifierFrame, Model.Modifier2Commands);
+            commandFrame = SymbolFrameRenderer.ContainComponentFrame(
+                symbolBounds,
+                frameShape,
+                commandFrame,
+                Model.Modifier2Commands,
+                OrbatEquipmentSymbolRole.Modifier2,
+                IconGuideShape.FlatTopBottom);
+            DrawCommands(graphics, symbolBounds, commandFrame, frameShape, Model.Modifier2Commands, pen);
         }
     }
 
@@ -861,11 +997,11 @@ internal sealed class OverlayCanvas : Control
         }
     }
 
-    private void DrawAmplifierBoxes(Graphics graphics, RectangleF symbolBounds)
+    private void DrawAmplifierBoxes(Graphics graphics, RectangleF symbolBounds, SymbolFrameShape frameShape)
     {
         if (Model.Domain == SymbolPhysicalDomain.Equipment)
         {
-            DrawEquipmentAmplifierBoxes(graphics, symbolBounds);
+            DrawEquipmentAmplifierBoxes(graphics, symbolBounds, frameShape);
             return;
         }
 
@@ -916,7 +1052,7 @@ internal sealed class OverlayCanvas : Control
         DrawLandUnitConnectors(graphics, symbolBounds, alBox);
     }
 
-    private void DrawEquipmentAmplifierBoxes(Graphics graphics, RectangleF symbolBounds)
+    private void DrawEquipmentAmplifierBoxes(Graphics graphics, RectangleF symbolBounds, SymbolFrameShape frameShape)
     {
         var centerX = symbolBounds.Left + symbolBounds.Width / 2f;
         var rowHeight = 42f;
@@ -934,7 +1070,7 @@ internal sealed class OverlayCanvas : Control
         DrawFieldBox(graphics, "R/AG", ragBox, StringAlignment.Center);
         var alBar = new RectangleF(colorBar.Left, ragBox.Bottom, colorBar.Width, colorBar.Height);
         DrawColorStatusBar(graphics, "AL", alBar, GetOperationalConditionColor);
-        DrawEquipmentConnectors(graphics, symbolBounds, alBar);
+        DrawEquipmentConnectors(graphics, symbolBounds, alBar, frameShape);
     }
 
     private static RectangleF GetEquipmentColorBarBounds(float centerX, RectangleF symbolBounds)
@@ -987,10 +1123,17 @@ internal sealed class OverlayCanvas : Control
         DrawFieldText(graphics, "S2", new RectangleF(sX - 106, verticalBottom + 14, 52, 26), StringAlignment.Near);
     }
 
-    private void DrawEquipmentConnectors(Graphics graphics, RectangleF symbolBounds, RectangleF alBox)
+    private void DrawEquipmentConnectors(
+        Graphics graphics,
+        RectangleF symbolBounds,
+        RectangleF alBox,
+        SymbolFrameShape frameShape)
     {
         var centerX = symbolBounds.Left + symbolBounds.Width / 2f;
-        var start = new PointF(symbolBounds.Left + 36, symbolBounds.Bottom - 10);
+        var start = SymbolFrameRenderer.GetEquipmentS2Anchor(
+            symbolBounds,
+            frameShape,
+            IconGuideShape.FlatTopBottom);
         var elbow = new PointF(symbolBounds.Left - 14, symbolBounds.Bottom + 138);
         var s2End = new PointF(elbow.X - 72, elbow.Y);
 
@@ -1073,53 +1216,52 @@ internal sealed class OverlayCanvas : Control
 
     private bool DrawMobilityBox(Graphics graphics, RectangleF box, string value)
     {
-        var mode = NormalizeOption(value);
-        if (mode is not ("wheeled" or "wheeledcrosscountry" or "tracked" or "wheeledtracked" or "towed" or "railway" or "oversnow" or "sled" or "packanimals" or "barge" or "amphibious"))
+        var normalized = NormalizeOption(value);
+        if (!Enum.TryParse<OrbatEquipmentMobilityMode>(normalized, ignoreCase: true, out var mobility)
+            || mobility == OrbatEquipmentMobilityMode.Unspecified)
+            return false;
+
+        var commands = LoadMobilityCommands(mobility);
+        if (commands.Count == 0)
             return false;
 
         DrawEmptyBox(graphics, box);
-        var iconBox = GetCenteredIconBox(box, 0.8f, 0.8f);
-        var largeIconBox = iconBox;
+        var iconBox = GetCenteredIconBox(box, 0.92f, 0.84f);
+        var mobilityFrame = SymbolFrameRenderer.GetMobilityFrame(iconBox);
         using var pen = new Pen(Color.Black, 1.7f);
-
-        switch (mode)
-        {
-            case "wheeled":
-                DrawAxleWithWheels(graphics, pen, largeIconBox, 2, 1.35f);
-                break;
-            case "wheeledcrosscountry":
-                DrawAxleWithWheels(graphics, pen, largeIconBox, 3, 1.35f);
-                break;
-            case "tracked":
-                DrawTrack(graphics, pen, iconBox);
-                break;
-            case "wheeledtracked":
-                DrawWheeledTracked(graphics, pen, largeIconBox);
-                break;
-            case "towed":
-                DrawTowed(graphics, pen, largeIconBox, 1.35f);
-                break;
-            case "railway":
-                DrawRailway(graphics, pen, largeIconBox);
-                break;
-            case "oversnow":
-                DrawOverSnow(graphics, pen, iconBox);
-                break;
-            case "sled":
-                DrawSled(graphics, pen, iconBox);
-                break;
-            case "packanimals":
-                DrawPackAnimals(graphics, pen, iconBox);
-                break;
-            case "barge":
-                DrawBarge(graphics, pen, iconBox);
-                break;
-            case "amphibious":
-                DrawAmphibious(graphics, pen, largeIconBox);
-                break;
-        }
+        foreach (var command in commands)
+            command.Draw(graphics, mobilityFrame, pen, Brushes.Black);
 
         return true;
+    }
+
+    private static IReadOnlyList<SymbolDrawCommand> LoadMobilityCommands(OrbatEquipmentMobilityMode mobility)
+    {
+        IReadOnlyList<SymbolDrawCommand>? selected = null;
+        foreach (var file in SymbolOverlayDemoForm.GetRecentLibraryFiles().OrderBy(File.GetLastWriteTimeUtc))
+        {
+            try
+            {
+                var definition = JsonSerializer.Deserialize<SymbolLibraryDefinition>(
+                    File.ReadAllText(file, Encoding.UTF8),
+                    SymbolOverlayDemoForm.LibraryJsonOptions);
+                if (definition == null
+                    || definition.GetEffectivePhysicalDomain() != SymbolPhysicalDomain.Equipment
+                    || definition.SymbolRole != OrbatEquipmentSymbolRole.MobilityIndicator
+                    || !Enum.TryParse(definition.MobilityType, ignoreCase: true, out OrbatEquipmentMobilityMode fileMobility)
+                    || fileMobility != mobility
+                    || definition.Commands.Count == 0)
+                    continue;
+
+                selected = definition.Commands;
+            }
+            catch
+            {
+                // Ignore unreadable overrides and retain the built-in fallback.
+            }
+        }
+
+        return selected ?? BuiltInSymbolLibrary.Create(mobility);
     }
 
     private static RectangleF GetCenteredIconBox(RectangleF box, float widthRatio, float heightRatio)
@@ -1131,135 +1273,6 @@ internal sealed class OverlayCanvas : Control
             box.Top + (box.Height - height) / 2f,
             width,
             height);
-    }
-
-    private static float MidY(RectangleF box) => box.Top + box.Height / 2f;
-
-    private static void DrawAxleWithWheels(Graphics graphics, Pen pen, RectangleF box, int wheelCount, float wheelScale = 1f)
-    {
-        var radius = box.Height * 0.18f * wheelScale * 1.8f;
-        var firstX = box.Left + box.Width * 0.12f;
-        var lastX = box.Left + box.Width * 0.88f;
-        var lineY = MidY(box) - radius * 0.55f;
-        var wheelY = lineY + radius;
-        graphics.DrawLine(pen, firstX, lineY, lastX, lineY);
-        for (var index = 0; index < wheelCount; index++)
-        {
-            var x = wheelCount == 1
-                ? box.Left + box.Width / 2f
-                : box.Left + box.Width * (0.12f + 0.76f * index / (wheelCount - 1));
-            DrawWheel(graphics, pen, new PointF(x, wheelY), radius);
-        }
-    }
-
-    private static void DrawWheel(Graphics graphics, Pen pen, PointF center, float radius) =>
-        graphics.DrawEllipse(pen, center.X - radius, center.Y - radius, radius * 2f, radius * 2f);
-
-    private static void DrawTrack(Graphics graphics, Pen pen, RectangleF box)
-    {
-        var rect = box;
-        var radius = rect.Height / 2f;
-        graphics.DrawArc(pen, rect.Left, rect.Top, radius * 2f, rect.Height, 90, 180);
-        graphics.DrawArc(pen, rect.Right - radius * 2f, rect.Top, radius * 2f, rect.Height, 270, 180);
-        graphics.DrawLine(pen, rect.Left + radius, rect.Top, rect.Right - radius, rect.Top);
-        graphics.DrawLine(pen, rect.Left + radius, rect.Bottom, rect.Right - radius, rect.Bottom);
-    }
-
-    private static void DrawTowed(Graphics graphics, Pen pen, RectangleF box, float wheelScale = 1f)
-    {
-        var y = MidY(box);
-        var radius = box.Height * 0.2f * wheelScale * 1.8f;
-        var leftX = box.Left + box.Width * 0.12f;
-        var rightX = box.Right - box.Width * 0.12f;
-        DrawWheel(graphics, pen, new PointF(leftX, y), radius);
-        DrawWheel(graphics, pen, new PointF(rightX, y), radius);
-        graphics.DrawLine(pen, leftX + radius, y, rightX - radius, y);
-    }
-
-    private static void DrawWheeledTracked(Graphics graphics, Pen pen, RectangleF box)
-    {
-        var wheelRadius = box.Height * 0.36f;
-        var wheelCenter = new PointF(box.Left + box.Width * 0.18f, MidY(box));
-        var trackHeight = wheelRadius * 2f;
-        var trackBox = new RectangleF(
-            box.Left + box.Width * 0.38f,
-            wheelCenter.Y - trackHeight / 2f,
-            box.Width * 0.54f,
-            trackHeight);
-
-        DrawWheel(graphics, pen, wheelCenter, wheelRadius);
-        DrawTrack(graphics, pen, trackBox);
-    }
-
-    private static void DrawRailway(Graphics graphics, Pen pen, RectangleF box)
-    {
-        var radius = box.Height * 0.24f;
-        var lineY = MidY(box) - radius;
-        var wheelY = lineY + radius;
-        graphics.DrawLine(pen, box.Left, lineY, box.Right, lineY);
-        DrawWheel(graphics, pen, new PointF(box.Left + box.Width * 0.12f, wheelY), radius);
-        DrawWheel(graphics, pen, new PointF(box.Left + box.Width * 0.26f, wheelY), radius);
-        DrawWheel(graphics, pen, new PointF(box.Right - box.Width * 0.26f, wheelY), radius);
-        DrawWheel(graphics, pen, new PointF(box.Right - box.Width * 0.12f, wheelY), radius);
-    }
-
-    private static void DrawOverSnow(Graphics graphics, Pen pen, RectangleF box)
-    {
-        var y = MidY(box);
-        using var path = new System.Drawing.Drawing2D.GraphicsPath();
-        path.AddBezier(box.Left + box.Width * 0.2f, y - box.Height * 0.35f, box.Left + box.Width * 0.24f, y + box.Height * 0.1f, box.Left + box.Width * 0.24f, y + box.Height * 0.2f, box.Left + box.Width * 0.36f, y + box.Height * 0.2f);
-        path.AddLine(box.Left + box.Width * 0.36f, y + box.Height * 0.2f, box.Right - box.Width * 0.14f, y + box.Height * 0.2f);
-        graphics.DrawPath(pen, path);
-    }
-
-    private static void DrawSled(Graphics graphics, Pen pen, RectangleF box)
-    {
-        var y = MidY(box);
-        using var path = new System.Drawing.Drawing2D.GraphicsPath();
-        path.AddBezier(box.Left + box.Width * 0.2f, y - box.Height * 0.28f, box.Left + box.Width * 0.25f, y + box.Height * 0.16f, box.Left + box.Width * 0.26f, y + box.Height * 0.2f, box.Left + box.Width * 0.36f, y + box.Height * 0.2f);
-        path.AddLine(box.Left + box.Width * 0.36f, y + box.Height * 0.2f, box.Right - box.Width * 0.24f, y + box.Height * 0.2f);
-        path.AddBezier(box.Right - box.Width * 0.24f, y + box.Height * 0.2f, box.Right - box.Width * 0.18f, y + box.Height * 0.2f, box.Right - box.Width * 0.16f, y + box.Height * 0.02f, box.Right - box.Width * 0.14f, y - box.Height * 0.22f);
-        graphics.DrawPath(pen, path);
-    }
-
-    private static void DrawPackAnimals(Graphics graphics, Pen pen, RectangleF box)
-    {
-        var top = box.Top + box.Height * 0.12f;
-        var bottom = box.Bottom - box.Height * 0.1f;
-        PointF[] points =
-        {
-            new(box.Left + box.Width * 0.16f, bottom),
-            new(box.Left + box.Width * 0.34f, top),
-            new(box.Left + box.Width * 0.52f, bottom),
-            new(box.Left + box.Width * 0.7f, top),
-            new(box.Left + box.Width * 0.88f, bottom)
-        };
-        graphics.DrawLines(pen, points);
-    }
-
-    private static void DrawBarge(Graphics graphics, Pen pen, RectangleF box)
-    {
-        var rect = new RectangleF(box.Left + box.Width * 0.12f, box.Top + box.Height * 0.08f, box.Width * 0.76f, box.Height * 0.74f);
-        graphics.DrawArc(pen, rect, 15, 150);
-    }
-
-    private static void DrawAmphibious(Graphics graphics, Pen pen, RectangleF box)
-    {
-        var waveBox = GetCenteredIconBox(box, 1f, 0.36f);
-        var centerY = MidY(waveBox);
-        var amplitude = waveBox.Height / 2f;
-        const int cycles = 4;
-        const int sampleCount = 65;
-        var points = new PointF[sampleCount];
-        for (var index = 0; index < sampleCount; index++)
-        {
-            var t = index / (float)(sampleCount - 1);
-            var x = waveBox.Left + waveBox.Width * t;
-            var y = centerY - (float)Math.Sin(t * Math.PI * 2d * cycles) * amplitude;
-            points[index] = new PointF(x, y);
-        }
-
-        graphics.DrawCurve(pen, points, 0.25f);
     }
 
     private void DrawFieldTrapezoid(Graphics graphics, string key, RectangleF box)

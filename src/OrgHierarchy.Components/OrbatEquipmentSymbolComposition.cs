@@ -5,7 +5,8 @@ public enum OrbatEquipmentSymbolRole
     Composite,
     MainFunction,
     Modifier1,
-    Modifier2
+    Modifier2,
+    MobilityIndicator
 }
 
 public enum OrbatEquipmentCompositionMode
@@ -29,4 +30,40 @@ public sealed class OrbatEquipmentSymbolLayout
     public float MainOffsetY { get; set; }
 
     public static OrbatEquipmentSymbolLayout CreateDefault() => new();
+}
+
+public enum OrbatEquipmentMobilityMode
+{
+    Unspecified,
+    Wheeled,
+    WheeledCrossCountry,
+    Tracked,
+    WheeledTracked,
+    Towed,
+    Railway,
+    OverSnow,
+    Sled,
+    PackAnimals,
+    Barge,
+    Amphibious
+}
+
+public static class OrbatEquipmentMobilityModeInfo
+{
+    public static string GetDisplayName(this OrbatEquipmentMobilityMode mode) => mode switch
+    {
+        OrbatEquipmentMobilityMode.Unspecified => "Unspecified",
+        OrbatEquipmentMobilityMode.Wheeled => "Wheeled (limited to improved roads)",
+        OrbatEquipmentMobilityMode.WheeledCrossCountry => "Wheeled (cross-country)",
+        OrbatEquipmentMobilityMode.Tracked => "Tracked",
+        OrbatEquipmentMobilityMode.WheeledTracked => "Wheeled and tracked combination",
+        OrbatEquipmentMobilityMode.Towed => "Towed",
+        OrbatEquipmentMobilityMode.Railway => "Railway",
+        OrbatEquipmentMobilityMode.OverSnow => "Over-snow (prime mover)",
+        OrbatEquipmentMobilityMode.Sled => "Sled",
+        OrbatEquipmentMobilityMode.PackAnimals => "Pack animals",
+        OrbatEquipmentMobilityMode.Barge => "Barge",
+        OrbatEquipmentMobilityMode.Amphibious => "Amphibious",
+        _ => mode.ToString()
+    };
 }

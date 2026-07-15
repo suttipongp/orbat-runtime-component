@@ -1,0 +1,154 @@
+﻿{
+  "Version": 2,
+  "Name": "ArmoredPersonnelCarrier",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "ArmoredPersonnelCarrier",
+  "Variant": "",
+  "SymbolRole": "MainFunction",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "Commands": [
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.29166666,
+        "Y": 0.25
+      },
+      "End": {
+        "X": 0.5,
+        "Y": 0.12500003
+      },
+      "Control1": {
+        "X": 0,
+        "Y": -0.07990868
+      },
+      "Control2": {
+        "X": 0,
+        "Y": -0.07990868
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.29166666,
+        "Y": 0.12500003
+      },
+      "End": {
+        "X": 0.29166666,
+        "Y": 0.875
+      },
+      "Control1": {
+        "X": -0.04566209,
+        "Y": 0.0022830963
+      },
+      "Control2": {
+        "X": -0.04566209,
+        "Y": 0.0022830963
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.7083334,
+        "Y": 0.875
+      },
+      "End": {
+        "X": 0.7083334,
+        "Y": 0.12500003
+      },
+      "Control1": {
+        "X": 0.21232879,
+        "Y": -0.24429221
+      },
+      "Control2": {
+        "X": 0.21232879,
+        "Y": -0.24429221
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.7083334,
+        "Y": 0.25456625
+      },
+      "End": {
+        "X": 0.5,
+        "Y": 0.12500003
+      },
+      "Control1": {
+        "X": 0.042283155,
+        "Y": -0.042191774
+      },
+      "Control2": {
+        "X": 0.042283155,
+        "Y": -0.042191774
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.29166666,
+        "Y": 0.875
+      },
+      "End": {
+        "X": 0.7083334,
+        "Y": 0.875
+      },
+      "Control1": {
+        "X": 0.04,
+        "Y": 0.0057534277
+      },
+      "Control2": {
+        "X": 0.04,
+        "Y": 0.0057534277
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

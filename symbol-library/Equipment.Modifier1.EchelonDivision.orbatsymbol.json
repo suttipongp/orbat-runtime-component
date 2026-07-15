@@ -1,0 +1,139 @@
+﻿{
+  "Version": 4,
+  "Name": "EchelonDivision",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier1",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "EchelonDivision",
+  "Modifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.15590066,
+        "Y": 0.46766305
+      },
+      "End": {
+        "X": 0.50298965,
+        "Y": 0.5312611
+      },
+      "Control1": {
+        "X": -0.2511849,
+        "Y": 0.030805737
+      },
+      "Control2": {
+        "X": -0.2511849,
+        "Y": 0.030805737
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 45,
+      "GroupId": "20049d9adbb5461aa5f799a282bd7450",
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.16035554,
+        "Y": 0.46500903
+      },
+      "End": {
+        "X": 0.5074444,
+        "Y": 0.52860725
+      },
+      "Control1": {
+        "X": -0.24673003,
+        "Y": 0.028151669
+      },
+      "Control2": {
+        "X": -0.24673003,
+        "Y": 0.028151669
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 135,
+      "GroupId": "20049d9adbb5461aa5f799a282bd7450",
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.4897396,
+        "Y": 0.46974835
+      },
+      "End": {
+        "X": 0.8368281,
+        "Y": 0.5333464
+      },
+      "Control1": {
+        "X": 0.08265403,
+        "Y": 0.032891013
+      },
+      "Control2": {
+        "X": 0.08265403,
+        "Y": 0.032891013
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 45,
+      "GroupId": "2b19632b6a4d47ac8b357245318aa2e2",
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.4941945,
+        "Y": 0.46709433
+      },
+      "End": {
+        "X": 0.84128284,
+        "Y": 0.5306926
+      },
+      "Control1": {
+        "X": 0.08710891,
+        "Y": 0.030236945
+      },
+      "Control2": {
+        "X": 0.08710891,
+        "Y": 0.030236945
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 135,
+      "GroupId": "2b19632b6a4d47ac8b357245318aa2e2",
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    }
+  ]
+}

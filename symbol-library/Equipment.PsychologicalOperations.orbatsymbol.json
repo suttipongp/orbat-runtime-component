@@ -1,0 +1,184 @@
+﻿{
+  "Version": 3,
+  "Name": "PsychologicalOperations",
+  "UnitType": "PsychologicalOperations",
+  "EquipmentFunction": "PsychologicalOperations",
+  "Variant": "",
+  "SymbolRole": "MainFunction",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Path",
+      "Start": {
+        "X": 0.1666666,
+        "Y": 0.3611111
+      },
+      "End": {
+        "X": 0.1666666,
+        "Y": 0.3611111
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 3,
+      "Text": "",
+      "Filled": true,
+      "Points": [
+        {
+          "X": 0.16666663,
+          "Y": 0.3611111
+        },
+        {
+          "X": 0.44444445,
+          "Y": 0.3611111
+        },
+        {
+          "X": 0.6944444,
+          "Y": 0.22222221
+        },
+        {
+          "X": 0.6944444,
+          "Y": 0.7777778
+        },
+        {
+          "X": 0.44444445,
+          "Y": 0.6388889
+        },
+        {
+          "X": 0.16666663,
+          "Y": 0.6388889
+        },
+        {
+          "X": 0.16666663,
+          "Y": 0.3611111
+        }
+      ]
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.6944444,
+        "Y": 0.3344749
+      },
+      "End": {
+        "X": 0.8333334,
+        "Y": 0.33599696
+      },
+      "Control1": {
+        "X": 0,
+        "Y": -0.025114149
+      },
+      "Control2": {
+        "X": 0,
+        "Y": -0.025114149
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 3,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.6933486,
+        "Y": 0.44068494
+      },
+      "End": {
+        "X": 0.83223754,
+        "Y": 0.442207
+      },
+      "Control1": {
+        "X": -0.0010958537,
+        "Y": 0.08109591
+      },
+      "Control2": {
+        "X": -0.0010958537,
+        "Y": 0.08109591
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 3,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.69453585,
+        "Y": 0.54917806
+      },
+      "End": {
+        "X": 0.8334248,
+        "Y": 0.5507001
+      },
+      "Control1": {
+        "X": 9.138882E-05,
+        "Y": 0.18958904
+      },
+      "Control2": {
+        "X": 9.138882E-05,
+        "Y": 0.18958904
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 3,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.69572306,
+        "Y": 0.6599543
+      },
+      "End": {
+        "X": 0.834612,
+        "Y": 0.6614764
+      },
+      "Control1": {
+        "X": 0.0012785718,
+        "Y": 0.30036527
+      },
+      "Control2": {
+        "X": 0.0012785718,
+        "Y": 0.30036527
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 3,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

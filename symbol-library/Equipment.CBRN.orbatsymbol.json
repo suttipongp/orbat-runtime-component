@@ -1,0 +1,130 @@
+﻿{
+  "Version": 3,
+  "Name": "CBRN",
+  "UnitType": "CBRN",
+  "EquipmentFunction": "CBRN",
+  "Variant": "",
+  "SymbolRole": "MainFunction",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.25,
+        "Y": 0.41438356
+      },
+      "End": {
+        "X": 0.375,
+        "Y": 0.41438353
+      },
+      "Control1": {
+        "X": 0.04223621,
+        "Y": 0.09766647
+      },
+      "Control2": {
+        "X": 0.04223621,
+        "Y": 0.09766647
+      },
+      "Radius": 0.125,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.7507111,
+        "Y": 0.41397187
+      },
+      "End": {
+        "X": 0.83105016,
+        "Y": 0.5
+      },
+      "Control1": {
+        "X": 0.5139308,
+        "Y": 0.1016922
+      },
+      "Control2": {
+        "X": 0.5139308,
+        "Y": 0.1016922
+      },
+      "Radius": 0.11770816,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.25,
+        "Y": 0.2916667
+      },
+      "End": {
+        "X": 0.7083334,
+        "Y": 0.75
+      },
+      "Control1": {
+        "X": 0.4696005,
+        "Y": 0.3040129
+      },
+      "Control2": {
+        "X": 0.5870976,
+        "Y": 0.4331433
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 3,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.7477169,
+        "Y": 0.2962329
+      },
+      "End": {
+        "X": 0.2939498,
+        "Y": 0.7477169
+      },
+      "Control1": {
+        "X": 0.5304195,
+        "Y": 0.3080386
+      },
+      "Control2": {
+        "X": 0.4129224,
+        "Y": 0.437169
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 3,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

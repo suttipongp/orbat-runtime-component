@@ -1,0 +1,56 @@
+﻿{
+  "Version": 4,
+  "Name": "Attack",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier1",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Attack",
+  "Modifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.51369864,
+        "Y": 0.4977169
+      },
+      "End": {
+        "X": 0.51369864,
+        "Y": 0.4977169
+      },
+      "Control1": {
+        "X": 0.0136986375,
+        "Y": -0.0022830963
+      },
+      "Control2": {
+        "X": 0.0136986375,
+        "Y": -0.0022830963
+      },
+      "Radius": 0,
+      "FontSize": 108,
+      "StrokeWidth": 2,
+      "Text": "A",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+﻿{
+  "Version": 4,
+  "Name": "Medium",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier2",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Medium",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.51122195,
+        "Y": 0.5532003
+      },
+      "End": {
+        "X": 0.51122195,
+        "Y": 0.5532003
+      },
+      "Control1": {
+        "X": 0.011221945,
+        "Y": 0.13653365
+      },
+      "Control2": {
+        "X": 0.011221945,
+        "Y": 0.13653365
+      },
+      "Radius": 0,
+      "FontSize": 90,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "M",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

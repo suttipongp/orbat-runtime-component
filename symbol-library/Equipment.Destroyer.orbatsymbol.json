@@ -1,0 +1,55 @@
+﻿{
+  "Version": 3,
+  "Name": "Destroyer",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Destroyer",
+  "Variant": "",
+  "SymbolRole": "MainFunction",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.49942955,
+        "Y": 0.5171232
+      },
+      "End": {
+        "X": 0.49942955,
+        "Y": 0.5171232
+      },
+      "Control1": {
+        "X": 0.041095853,
+        "Y": 0.26712325
+      },
+      "Control2": {
+        "X": 0.041095853,
+        "Y": 0.26712325
+      },
+      "Radius": 0,
+      "FontSize": 35,
+      "StrokeWidth": 2,
+      "Text": "DD",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

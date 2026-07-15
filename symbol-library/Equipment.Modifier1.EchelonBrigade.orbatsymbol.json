@@ -1,0 +1,85 @@
+﻿{
+  "Version": 4,
+  "Name": "EchelonBrigade",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier1",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "EchelonBrigade",
+  "Modifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.32177743,
+        "Y": 0.4700327
+      },
+      "End": {
+        "X": 0.6688659,
+        "Y": 0.5336307
+      },
+      "Control1": {
+        "X": -0.085308135,
+        "Y": 0.03317538
+      },
+      "Control2": {
+        "X": -0.085308135,
+        "Y": 0.03317538
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 45,
+      "GroupId": "20049d9adbb5461aa5f799a282bd7450",
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.3262323,
+        "Y": 0.46737868
+      },
+      "End": {
+        "X": 0.67332065,
+        "Y": 0.5309769
+      },
+      "Control1": {
+        "X": -0.08085325,
+        "Y": 0.03052131
+      },
+      "Control2": {
+        "X": -0.08085325,
+        "Y": 0.03052131
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 135,
+      "GroupId": "20049d9adbb5461aa5f799a282bd7450",
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    }
+  ]
+}

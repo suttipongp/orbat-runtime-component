@@ -1,0 +1,139 @@
+﻿{
+  "Version": 4,
+  "Name": "TractorTrailer",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier2",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "TractorTrailer",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0,
+        "Y": 0.3333333
+      },
+      "End": {
+        "X": 1,
+        "Y": 0.3333333
+      },
+      "Control1": {
+        "X": 0.004739314,
+        "Y": -0.004739374
+      },
+      "Control2": {
+        "X": 0.004739314,
+        "Y": -0.004739374
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.125,
+        "Y": 0.4184676
+      },
+      "End": {
+        "X": 0.25,
+        "Y": 0.4166667
+      },
+      "Control1": {
+        "X": 0.03791469,
+        "Y": 0.02843603
+      },
+      "Control2": {
+        "X": 0.03791469,
+        "Y": 0.02843603
+      },
+      "Radius": 0.08333331,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.3333333,
+        "Y": 0.4184676
+      },
+      "End": {
+        "X": 0.4155924,
+        "Y": 0.4092733
+      },
+      "Control1": {
+        "X": 0.2035071,
+        "Y": 0.02104265
+      },
+      "Control2": {
+        "X": 0.2035071,
+        "Y": 0.02104265
+      },
+      "Radius": 0.08333331,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.875,
+        "Y": 0.4163823
+      },
+      "End": {
+        "X": 0.9153081,
+        "Y": 0.4184676
+      },
+      "Control1": {
+        "X": 0.7032228,
+        "Y": 0.03023694
+      },
+      "Control2": {
+        "X": 0.7032228,
+        "Y": 0.03023694
+      },
+      "Radius": 0.08333331,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

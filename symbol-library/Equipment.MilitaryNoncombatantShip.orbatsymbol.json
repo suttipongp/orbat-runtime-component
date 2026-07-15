@@ -1,0 +1,92 @@
+﻿{
+  "Version": 3,
+  "Name": "MilitaryNoncombatantShip",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "MilitaryNoncombatantShip",
+  "Variant": "",
+  "SymbolRole": "MainFunction",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Path",
+      "Start": {
+        "X": 0.2910959,
+        "Y": 0.2545662
+      },
+      "End": {
+        "X": 0.2910959,
+        "Y": 0.2545662
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": true,
+      "Points": [
+        {
+          "X": 0.2910959,
+          "Y": 0.2545662
+        },
+        {
+          "X": 0.7083334,
+          "Y": 0.25
+        },
+        {
+          "X": 0.7083334,
+          "Y": 0.41666666
+        },
+        {
+          "X": 0.83047944,
+          "Y": 0.41438356
+        },
+        {
+          "X": 0.8333333,
+          "Y": 0.7083334
+        },
+        {
+          "X": 0.16723746,
+          "Y": 0.7060503
+        },
+        {
+          "X": 0.16666669,
+          "Y": 0.41666666
+        },
+        {
+          "X": 0.29166666,
+          "Y": 0.41666666
+        },
+        {
+          "X": 0.2910959,
+          "Y": 0.2545662
+        }
+      ]
+    }
+  ]
+}

@@ -750,6 +750,8 @@ public sealed class OrbatChartView : UserControl
     private static void DrawCapsule(Graphics graphics, Pen pen, RectangleF bounds)
     {
         var height = Math.Min(bounds.Height, bounds.Width);
+        if (height <= 0.01f || bounds.Width <= 0.01f)
+            return;
         var capsule = new RectangleF(
             bounds.Left,
             bounds.Top + (bounds.Height - height) / 2f,

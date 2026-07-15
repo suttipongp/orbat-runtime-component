@@ -1,0 +1,58 @@
+﻿{
+  "Version": 4,
+  "Name": "Heavy",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier2",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Heavy",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.51018286,
+        "Y": 0.59538656
+      },
+      "End": {
+        "X": 0.51018286,
+        "Y": 0.59538656
+      },
+      "Control1": {
+        "X": 0.09351617,
+        "Y": 0.38715708
+      },
+      "Control2": {
+        "X": 0.09351617,
+        "Y": 0.38715708
+      },
+      "Radius": 0,
+      "FontSize": 105,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "H",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

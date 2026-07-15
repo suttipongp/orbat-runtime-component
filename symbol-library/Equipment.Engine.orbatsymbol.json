@@ -1,0 +1,179 @@
+﻿{
+  "Version": 2,
+  "Name": "Engine",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Engine",
+  "Variant": "",
+  "SymbolRole": "MainFunction",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "Commands": [
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.08333337,
+        "Y": 0.29166666
+      },
+      "End": {
+        "X": 0.41666666,
+        "Y": 0.29166666
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.41666666,
+        "Y": 0.29166666
+      },
+      "End": {
+        "X": 0.41666666,
+        "Y": 0.41666666
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.9166666,
+        "Y": 0.41666666
+      },
+      "End": {
+        "X": 0.41666666,
+        "Y": 0.41666666
+      },
+      "Control1": {
+        "X": 0.04,
+        "Y": 0.04
+      },
+      "Control2": {
+        "X": 0.04,
+        "Y": 0.04
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.9166666,
+        "Y": 0.41666666
+      },
+      "End": {
+        "X": 0.9166666,
+        "Y": 0.7083334
+      },
+      "Control1": {
+        "X": 0.08,
+        "Y": 0.08
+      },
+      "Control2": {
+        "X": 0.08,
+        "Y": 0.08
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.08333337,
+        "Y": 0.7083334
+      },
+      "End": {
+        "X": 0.9166666,
+        "Y": 0.7083334
+      },
+      "Control1": {
+        "X": 0.12,
+        "Y": 0.12
+      },
+      "Control2": {
+        "X": 0.12,
+        "Y": 0.12
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.08333337,
+        "Y": 0.7083334
+      },
+      "End": {
+        "X": 0.08333337,
+        "Y": 0.29166666
+      },
+      "Control1": {
+        "X": 0.16,
+        "Y": 0.16
+      },
+      "Control2": {
+        "X": 0.16,
+        "Y": 0.16
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

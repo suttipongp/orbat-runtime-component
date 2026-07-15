@@ -1,0 +1,159 @@
+﻿{
+  "Version": 3,
+  "Name": "RoboticGuidedAndAutonomous",
+  "UnitType": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier1",
+  "CompositionMode": "Composite",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "RoboticGuidedAndAutonomous",
+  "Modifier2Type": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "Equipment",
+  "FrameShape": "FriendlyEquipment",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.1067352,
+        "Y": 0.6341324
+      },
+      "End": {
+        "X": 0.16894981,
+        "Y": 0.8504566
+      },
+      "Control1": {
+        "X": 0.015981741,
+        "Y": 0.2100456
+      },
+      "Control2": {
+        "X": 0.015981741,
+        "Y": 0.2100456
+      },
+      "Radius": 0.07255821,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.50228316,
+        "Y": 0.65753424
+      },
+      "End": {
+        "X": 0.56739706,
+        "Y": 0.34251142
+      },
+      "Control1": {
+        "X": 0.41442928,
+        "Y": -0.29789957
+      },
+      "Control2": {
+        "X": 0.41442928,
+        "Y": -0.29789957
+      },
+      "Radius": 0.07255821,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.8950685,
+        "Y": 0.63136995
+      },
+      "End": {
+        "X": 0.96127844,
+        "Y": 0.6610503
+      },
+      "Control1": {
+        "X": 0.8083105,
+        "Y": 0.020639315
+      },
+      "Control2": {
+        "X": 0.8083105,
+        "Y": 0.020639315
+      },
+      "Radius": 0.07255821,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Path",
+      "Start": {
+        "X": 0.5,
+        "Y": 0.2477169
+      },
+      "End": {
+        "X": 0.5,
+        "Y": 0.2477169
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0.16438359
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0.16438359
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "Text": "",
+      "Filled": true,
+      "Points": [
+        {
+          "X": 0.5,
+          "Y": 0.2477169
+        },
+        {
+          "X": 0.16666666,
+          "Y": 0.5810499
+        },
+        {
+          "X": 0.46347028,
+          "Y": 0.40981737
+        },
+        {
+          "X": 0.5,
+          "Y": 0.5810499
+        },
+        {
+          "X": 0.5416666,
+          "Y": 0.41438362
+        },
+        {
+          "X": 0.8333334,
+          "Y": 0.5810499
+        },
+        {
+          "X": 0.5,
+          "Y": 0.2477169
+        }
+      ]
+    }
+  ]
+}
