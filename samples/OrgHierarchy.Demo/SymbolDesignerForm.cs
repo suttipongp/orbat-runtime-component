@@ -373,10 +373,7 @@ public sealed class SymbolDesignerForm : Form
         var split = new SplitContainer
         {
             Dock = DockStyle.Fill,
-            FixedPanel = FixedPanel.Panel2,
-            Panel1MinSize = 480,
-            Panel2MinSize = 340,
-            SplitterDistance = 760
+            FixedPanel = FixedPanel.Panel2
         };
         split.Panel1.Controls.Add(_canvas);
         split.Panel2.Controls.Add(rightTabs);
@@ -391,6 +388,8 @@ public sealed class SymbolDesignerForm : Form
         Controls.Add(metadataBar);
         Controls.Add(menu);
 
+        Shown += (_, _) => ConfigureInitialSplitterLayout(split);
+
         UpdateFunctionSelectorState();
         RefreshOutput();
         RefreshSelectionControls();
@@ -403,7 +402,22 @@ public sealed class SymbolDesignerForm : Form
         LoadLibraryFile(libraryFileName);
     }
 
-    private MenuStrip CreateMainMenu(NumericUpDown rotateAngleInput)
+        private static void ConfigureInitialSplitterLayout(SplitContainer split)
+    {
+        var width = split.ClientSize.Width;
+        if (width <= split.SplitterWidth + 50)
+            return;
+
+        var panel2Width = Math.Min(360, Math.Max(260, width / 3));
+        var distance = Math.Clamp(
+            width - panel2Width - split.SplitterWidth,
+            25,
+            width - split.SplitterWidth - 25);
+        split.SplitterDistance = distance;
+        split.Panel1MinSize = Math.Min(480, distance);
+        split.Panel2MinSize = Math.Min(340, width - distance - split.SplitterWidth);
+    }
+private MenuStrip CreateMainMenu(NumericUpDown rotateAngleInput)
     {
         var menu = new MenuStrip { Dock = DockStyle.Top };
         var file = new ToolStripMenuItem("File");
