@@ -1,4 +1,4 @@
-# ORBAT Runtime Static Plugin v1.1.0
+# ORBAT Runtime Static Plugin v1.1.1
 
 This source builds a deterministic, platform-neutral static plugin for C4ISR Workbench. It contains no WinForms, GDI, System.Drawing, database, authentication, authorization, map placement, or C4ISR operational state.
 

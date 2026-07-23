@@ -2,7 +2,7 @@
   "contractVersion": "1.0",
   "id": "c4isr.orbat-runtime",
   "name": "ORBAT Platform Module",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "publisher": "Sutti",
   "description": "ORBAT symbol definitions, renderers, and operational graphics for C4ISR Workbench.",
   "enabled": true,
