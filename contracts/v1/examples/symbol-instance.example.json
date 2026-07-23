@@ -1,0 +1,56 @@
+{
+  "contractVersion": "1.0",
+  "id": "unit-1-31-infantry-symbol",
+  "components": {
+    "modifier1": {
+      "contractVersion": "1.0",
+      "libraryId": "orbat.standard-symbol-library",
+      "libraryRevision": 1,
+      "definitionId": "land-unit.modifier-1.armored-protection",
+      "definitionRevision": 1
+    },
+    "modifier2": {
+      "contractVersion": "1.0",
+      "libraryId": "orbat.standard-symbol-library",
+      "libraryRevision": 1,
+      "definitionId": "land-unit.modifier-2.airborne",
+      "definitionRevision": 1
+    },
+    "echelon": {
+      "contractVersion": "1.0",
+      "libraryId": "orbat.standard-symbol-library",
+      "libraryRevision": 1,
+      "definitionId": "land-unit.amplifier-b.battalion",
+      "definitionRevision": 1
+    }
+  },
+  "domain": "land-unit",
+  "affiliation": "friend",
+  "status": {
+    "frame": "present",
+    "operatingState": "Ground"
+  },
+  "classification": {
+    "category": "Movement and Maneuver",
+    "function": "Infantry",
+    "variant": ""
+  },
+  "renderTransform": {
+    "offsetX": 0,
+    "offsetY": 0,
+    "scaleX": 1,
+    "scaleY": 1,
+    "rotationDegrees": 0
+  },
+  "template": {
+    "contractVersion": "1.0",
+    "libraryId": "orbat.standard-symbol-library",
+    "libraryRevision": 1,
+    "definitionId": "land-unit.main.infantry",
+    "definitionRevision": 1
+  },
+  "amplifierValues": {
+    "B": "Battalion (II)",
+    "H": "1/31"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "contractVersion": "1.0",
+  "libraryId": "orbat.standard-symbol-library",
+  "libraryRevision": 1,
+  "definitionId": "land-unit.modifier-1.armored-protection",
+  "definitionRevision": 1,
+  "name": "Armored protection",
+  "domain": "land-unit",
+  "role": "modifier-1",
+  "composition": "composable",
+  "classification": {
+    "category": "Capability",
+    "modifierType": "ArmoredProtection"
+  },
+  "scene": {
+    "coordinateSpace": "normalized-cartesian",
+    "viewBox": {
+      "x": 0,
+      "y": 0,
+      "width": 1,
+      "height": 1
+    },
+    "primitives": [
+      {
+        "id": "armor-capsule",
+        "type": "capsule",
+        "start": {
+          "x": 0.1,
+          "y": 0.28
+        },
+        "end": {
+          "x": 0.9,
+          "y": 0.72
+        },
+        "style": {
+          "stroke": "#000000",
+          "strokeWidth": 0.035,
+          "fill": null,
+          "lineJoin": "round"
+        }
+      }
+    ]
+  },
+  "placeable": false
+}

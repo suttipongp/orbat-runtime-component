@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orbat.local/contracts/v1/common.schema.json",
+  "title": "ORBAT Common Contract Types",
+  "$defs": {
+    "definitionReference": {
+      "type": "object",
+      "required": [
+        "contractVersion",
+        "libraryId",
+        "libraryRevision",
+        "definitionId",
+        "definitionRevision"
+      ],
+      "properties": {
+        "contractVersion": {
+          "const": "1.0"
+        },
+        "libraryId": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+        },
+        "libraryRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "definitionId": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+        },
+        "definitionRevision": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "ownership": {
+      "type": "object",
+      "required": [
+        "headquartersId",
+        "staffSectionId",
+        "operationScope",
+        "ownerOperatorId"
+      ],
+      "properties": {
+        "headquartersId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "staffSectionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "staffSectionCode": {
+          "type": "string"
+        },
+        "operationScope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ownerOperatorId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "security": {
+      "type": "object",
+      "required": [
+        "classification"
+      ],
+      "properties": {
+        "classification": {
+          "type": "string",
+          "minLength": 1
+        },
+        "releasability": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "caveats": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "updatedAt"
+      ],
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdBy": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedBy": {
+          "type": "string"
+        },
+        "sourceSystem": {
+          "type": "string"
+        },
+        "sourceRecordId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "mapStyle": {
+      "type": "object",
+      "properties": {
+        "strokeColor": {
+          "type": "string"
+        },
+        "fillColor": {
+          "type": "string"
+        },
+        "lineStyle": {
+          "type": "string"
+        },
+        "lineWidth": {
+          "type": "number",
+          "minimum": 0
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "timeValidity": {
+      "type": "object",
+      "properties": {
+        "validFrom": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "validTo": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

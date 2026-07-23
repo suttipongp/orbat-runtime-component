@@ -1,0 +1,119 @@
+{
+  "contractVersion": "1.0",
+  "id": "c4isr.orbat-platform",
+  "name": "ORBAT Platform Module",
+  "version": "1.0.0",
+  "publisher": "Sutti",
+  "description": "ORBAT symbol definitions, renderers, and operational graphics for C4ISR Workbench.",
+  "enabled": true,
+  "requiredPermissions": [
+    "orbat.read",
+    "map.read"
+  ],
+  "protocol": {
+    "type": "static-assets",
+    "version": "1",
+    "entryPoint": "web/orbat-renderer.js"
+  },
+  "contributions": {
+    "mapLayers": [
+      {
+        "id": "orbat.symbols",
+        "title": "ORBAT Symbols",
+        "requiredPermission": "orbat.read",
+        "layerType": "symbol",
+        "domain": "ORBAT",
+        "provider": "orbat.layers.symbols"
+      }
+    ],
+    "importConnectors": [
+      {
+        "id": "orbat.import.library-json",
+        "title": "ORBAT Library JSON",
+        "requiredPermission": "orbat.write",
+        "accepts": [
+          ".orbatsymbol.json",
+          ".orbatoverlay.json"
+        ],
+        "target": "symbols"
+      }
+    ],
+    "overlayDrawTools": [
+      {
+        "id": "orbat.draw.control-measure",
+        "title": "Control measure",
+        "requiredPermission": "map.overlay.write",
+        "geometryType": "LineString",
+        "staffSectionCode": "S3",
+        "handler": "orbat.draw.controlMeasure",
+        "description": "Draw a control measure from an Operational Graphics template."
+      }
+    ],
+    "symbolRenderers": [
+      {
+        "id": "renderer.orbat.svg.v1",
+        "title": "ORBAT SVG renderer",
+        "requiredPermission": "orbat.read",
+        "standard": "MIL-STD-2525",
+        "version": "1.0.0",
+        "renderer": "orbat.renderers.svg",
+        "supportedAffiliations": [
+          "Friendly",
+          "Hostile",
+          "Neutral",
+          "Unknown"
+        ],
+        "supportedEchelons": [
+          "Team",
+          "Squad",
+          "Section",
+          "Platoon",
+          "Company",
+          "Battalion",
+          "Regiment",
+          "Brigade",
+          "Division",
+          "Corps",
+          "Army"
+        ]
+      }
+    ],
+    "symbolTemplates": [
+      {
+        "id": "symbol.template.orbat.infantry",
+        "title": "Infantry unit",
+        "requiredPermission": "orbat.read",
+        "standard": "MIL-STD-2525",
+        "symbolSet": "Unit",
+        "unitType": "Infantry",
+        "defaultAffiliation": "Friendly",
+        "description": "Composable infantry symbol from the ORBAT Symbol Library.",
+        "definition": {
+          "contractVersion": "1.0",
+          "libraryId": "orbat.standard-symbol-library",
+          "libraryRevision": 1,
+          "definitionId": "land-unit.main.infantry",
+          "definitionRevision": 1
+        }
+      }
+    ],
+    "tacticalGraphicTemplates": [
+      {
+        "id": "graphic.template.orbat.phase-line",
+        "title": "Phase line",
+        "requiredPermission": "map.overlay.write",
+        "standard": "MIL-STD-2525",
+        "geometryType": "LineString",
+        "category": "Control Measure",
+        "description": "Line-based phase line control measure.",
+        "definition": {
+          "contractVersion": "1.0",
+          "libraryId": "orbat.standard-symbol-library",
+          "libraryRevision": 1,
+          "definitionId": "control-measure.phase-line",
+          "definitionRevision": 1
+        }
+      }
+    ]
+  }
+}

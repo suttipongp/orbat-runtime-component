@@ -1,0 +1,183 @@
+{
+  "contractVersion": "1.0",
+  "hostProfile": "c4isr-workbench/v1",
+  "id": "overlay-training-01",
+  "name": "Training Overlay 01",
+  "overlayType": "FeatureCollection",
+  "coordinateReferenceSystem": "EPSG:4326",
+  "classification": "UNCLASSIFIED",
+  "overlayDomain": "Operations",
+  "ownerSection": "S3",
+  "ownership": {
+    "headquartersId": "hq-bde-main",
+    "staffSectionId": "staff-s3",
+    "staffSectionCode": "S3",
+    "operationScope": "operations",
+    "ownerOperatorId": "operator.local"
+  },
+  "visible": true,
+  "style": {
+    "strokeColor": "#7cc9d8",
+    "fillColor": "#2b8a9f",
+    "lineStyle": "Solid",
+    "lineWidth": 2,
+    "opacity": 0.35
+  },
+  "featureCollection": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "id": "unit-1-31-infantry",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            100.51,
+            13.76
+          ]
+        },
+        "properties": {
+          "featureId": "unit-1-31-infantry",
+          "featureType": "UnitSymbol",
+          "layerKey": "reconReports",
+          "rendererId": "renderer.orbat.svg.v1",
+          "standard": "MIL-STD-2525",
+          "symbolSet": "Unit",
+          "displayCode": "1/31",
+          "label": "1/31 Infantry",
+          "readiness": "Ready",
+          "visible": true,
+          "symbolInstance": {
+            "contractVersion": "1.0",
+            "id": "unit-1-31-infantry-symbol",
+            "components": {
+              "modifier1": {
+                "contractVersion": "1.0",
+                "libraryId": "orbat.standard-symbol-library",
+                "libraryRevision": 1,
+                "definitionId": "land-unit.modifier-1.armored-protection",
+                "definitionRevision": 1
+              },
+              "modifier2": {
+                "contractVersion": "1.0",
+                "libraryId": "orbat.standard-symbol-library",
+                "libraryRevision": 1,
+                "definitionId": "land-unit.modifier-2.airborne",
+                "definitionRevision": 1
+              },
+              "echelon": {
+                "contractVersion": "1.0",
+                "libraryId": "orbat.standard-symbol-library",
+                "libraryRevision": 1,
+                "definitionId": "land-unit.amplifier-b.battalion",
+                "definitionRevision": 1
+              }
+            },
+            "domain": "land-unit",
+            "affiliation": "friend",
+            "status": {
+              "frame": "present",
+              "operatingState": "Ground"
+            },
+            "classification": {
+              "category": "Movement and Maneuver",
+              "function": "Infantry",
+              "variant": ""
+            },
+            "template": {
+              "contractVersion": "1.0",
+              "libraryId": "orbat.standard-symbol-library",
+              "libraryRevision": 1,
+              "definitionId": "land-unit.main.infantry",
+              "definitionRevision": 1
+            },
+            "amplifierValues": {
+              "B": "Battalion (II)",
+              "H": "1/31"
+            }
+          },
+          "ownership": {
+            "headquartersId": "hq-bde-main",
+            "staffSectionId": "staff-s3",
+            "staffSectionCode": "S3",
+            "operationScope": "operations",
+            "ownerOperatorId": "operator.local"
+          },
+          "security": {
+            "classification": "UNCLASSIFIED"
+          },
+          "provenance": {
+            "updatedAt": "2026-07-23T01:00:00Z",
+            "updatedBy": "operator.local",
+            "sourceSystem": "orbat-runtime-component"
+          }
+        }
+      },
+      {
+        "type": "Feature",
+        "id": "phase-line-red-1",
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              100.501,
+              13.756
+            ],
+            [
+              100.512,
+              13.761
+            ],
+            [
+              100.526,
+              13.754
+            ]
+          ]
+        },
+        "properties": {
+          "featureId": "phase-line-red-1",
+          "featureType": "ControlMeasure",
+          "layerKey": "routes",
+          "template": {
+            "contractVersion": "1.0",
+            "libraryId": "orbat.standard-symbol-library",
+            "libraryRevision": 1,
+            "definitionId": "control-measure.phase-line",
+            "definitionRevision": 1
+          },
+          "label": "PL RED",
+          "status": "planned",
+          "visible": true,
+          "style": {
+            "strokeColor": "#ff4048",
+            "fillColor": "#ff4048",
+            "lineStyle": "PhaseLine",
+            "lineWidth": 2,
+            "opacity": 1
+          },
+          "ownership": {
+            "headquartersId": "hq-bde-main",
+            "staffSectionId": "staff-s3",
+            "staffSectionCode": "S3",
+            "operationScope": "operations",
+            "ownerOperatorId": "operator.local"
+          },
+          "security": {
+            "classification": "UNCLASSIFIED"
+          },
+          "provenance": {
+            "updatedAt": "2026-07-23T01:00:00Z",
+            "updatedBy": "operator.local",
+            "sourceSystem": "orbat-runtime-component"
+          }
+        }
+      }
+    ]
+  },
+  "provenance": {
+    "createdAt": "2026-07-23T01:00:00Z",
+    "createdBy": "operator.local",
+    "updatedAt": "2026-07-23T01:00:00Z",
+    "updatedBy": "operator.local",
+    "sourceSystem": "orbat-runtime-component"
+  }
+}

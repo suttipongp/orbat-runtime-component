@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orbat.local/contracts/v1/tactical-feature.schema.json",
+  "title": "ORBAT Tactical Feature",
+  "description": "GeoJSON features accepted by the C4ISR overlay host profile.",
+  "oneOf": [
+    { "$ref": "#/$defs/symbolFeature" },
+    { "$ref": "https://orbat.local/contracts/v1/control-measure.schema.json" }
+  ],
+  "$defs": {
+    "symbolFeature": {
+      "type": "object",
+      "required": ["type", "geometry", "properties"],
+      "properties": {
+        "type": { "const": "Feature" },
+        "id": { "type": ["string", "number"] },
+        "geometry": {
+          "$ref": "https://orbat.local/contracts/v1/geojson.schema.json#/$defs/point"
+        },
+        "properties": {
+          "type": "object",
+          "required": [
+            "featureId",
+            "featureType",
+            "rendererId",
+            "symbolInstance"
+          ],
+          "properties": {
+            "featureId": { "type": "string", "minLength": 1 },
+            "featureType": { "enum": ["UnitSymbol", "EquipmentSymbol"] },
+            "layerKey": { "type": "string" },
+            "rendererId": { "type": "string", "minLength": 1 },
+            "standard": { "type": "string" },
+            "symbolSet": { "type": "string" },
+            "displayCode": { "type": "string" },
+            "label": { "type": "string" },
+            "readiness": { "type": "string" },
+            "visible": { "type": "boolean" },
+            "symbolInstance": {
+              "$ref": "https://orbat.local/contracts/v1/symbol-instance.schema.json"
+            },
+            "style": {
+              "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/mapStyle"
+            },
+            "ownership": {
+              "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/ownership"
+            },
+            "security": {
+              "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/security"
+            },
+            "provenance": {
+              "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/provenance"
+            },
+            "extensions": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

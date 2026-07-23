@@ -1,0 +1,61 @@
+{
+  "contractVersion": "1.0",
+  "libraryId": "orbat.standard-symbol-library",
+  "libraryRevision": 1,
+  "definitionId": "land-unit.amplifier-b.battalion",
+  "definitionRevision": 1,
+  "name": "Battalion echelon",
+  "domain": "land-unit",
+  "role": "echelon-indicator",
+  "composition": "composable",
+  "classification": {
+    "category": "Amplifier B",
+    "modifierType": "Battalion"
+  },
+  "scene": {
+    "coordinateSpace": "normalized-cartesian",
+    "viewBox": {
+      "x": 0,
+      "y": 0,
+      "width": 1,
+      "height": 1
+    },
+    "primitives": [
+      {
+        "id": "battalion-left",
+        "type": "line",
+        "start": {
+          "x": 0.38,
+          "y": 0.14
+        },
+        "end": {
+          "x": 0.38,
+          "y": 0.86
+        },
+        "style": {
+          "stroke": "#000000",
+          "strokeWidth": 0.08,
+          "lineCap": "square"
+        }
+      },
+      {
+        "id": "battalion-right",
+        "type": "line",
+        "start": {
+          "x": 0.62,
+          "y": 0.14
+        },
+        "end": {
+          "x": 0.62,
+          "y": 0.86
+        },
+        "style": {
+          "stroke": "#000000",
+          "strokeWidth": 0.08,
+          "lineCap": "square"
+        }
+      }
+    ]
+  },
+  "placeable": false
+}

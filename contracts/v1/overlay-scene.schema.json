@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orbat.local/contracts/v1/overlay-scene.schema.json",
+  "title": "ORBAT Overlay Document",
+  "description": "C4ISR host profile wrapping a GeoJSON FeatureCollection with operational metadata.",
+  "type": "object",
+  "required": [
+    "contractVersion",
+    "hostProfile",
+    "id",
+    "name",
+    "overlayType",
+    "coordinateReferenceSystem",
+    "classification",
+    "overlayDomain",
+    "ownerSection",
+    "ownership",
+    "visible",
+    "style",
+    "featureCollection",
+    "provenance"
+  ],
+  "properties": {
+    "contractVersion": { "const": "1.0" },
+    "hostProfile": { "const": "c4isr-workbench/v1" },
+    "id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "overlayType": {
+      "enum": ["Point", "LineString", "Polygon", "FeatureCollection"]
+    },
+    "coordinateReferenceSystem": { "const": "EPSG:4326" },
+    "classification": { "type": "string", "minLength": 1 },
+    "overlayDomain": { "type": "string", "minLength": 1 },
+    "ownerSection": { "type": "string", "minLength": 1 },
+    "ownership": {
+      "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/ownership"
+    },
+    "visible": { "type": "boolean" },
+    "style": {
+      "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/mapStyle"
+    },
+    "featureCollection": {
+      "type": "object",
+      "required": ["type", "features"],
+      "properties": {
+        "type": { "const": "FeatureCollection" },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "https://orbat.local/contracts/v1/tactical-feature.schema.json"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/provenance"
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

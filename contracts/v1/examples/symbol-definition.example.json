@@ -1,0 +1,106 @@
+{
+  "contractVersion": "1.0",
+  "libraryId": "orbat.standard-symbol-library",
+  "libraryRevision": 1,
+  "definitionId": "equipment.main.mortar.generic",
+  "definitionRevision": 1,
+  "name": "Mortar.Generic",
+  "domain": "equipment",
+  "role": "main-function",
+  "composition": "composable",
+  "classification": {
+    "category": "Fires",
+    "function": "Mortar",
+    "variant": "Generic",
+    "operatingState": "Ground"
+  },
+  "layout": {
+    "mainScaleWithoutModifiers": 0.8,
+    "mainScaleWithOneModifier": 0.74,
+    "mainScaleWithTwoModifiers": 0.68,
+    "modifierWidthScale": 0.4,
+    "modifierHeightScale": 0.18,
+    "modifierCenterOffset": 0.36,
+    "mainSingleModifierOffset": 0.07,
+    "mainOffsetX": 0,
+    "mainOffsetY": 0
+  },
+  "scene": {
+    "coordinateSpace": "normalized-cartesian",
+    "viewBox": {
+      "x": 0,
+      "y": 0,
+      "width": 1,
+      "height": 1
+    },
+    "primitives": [
+      {
+        "id": "shaft",
+        "type": "line",
+        "start": {
+          "x": 0.5,
+          "y": 0.08
+        },
+        "end": {
+          "x": 0.5,
+          "y": 0.75
+        },
+        "style": {
+          "stroke": "#000000",
+          "strokeWidth": 0.025,
+          "lineCap": "round"
+        }
+      },
+      {
+        "id": "base",
+        "type": "circle",
+        "start": {
+          "x": 0.42,
+          "y": 0.75
+        },
+        "end": {
+          "x": 0.58,
+          "y": 0.91
+        },
+        "style": {
+          "stroke": "#000000",
+          "strokeWidth": 0.025,
+          "fill": null
+        }
+      },
+      {
+        "id": "arrow-left",
+        "type": "line",
+        "start": {
+          "x": 0.38,
+          "y": 0.25
+        },
+        "end": {
+          "x": 0.5,
+          "y": 0.08
+        },
+        "style": {
+          "stroke": "#000000",
+          "strokeWidth": 0.025
+        }
+      },
+      {
+        "id": "arrow-right",
+        "type": "line",
+        "start": {
+          "x": 0.62,
+          "y": 0.25
+        },
+        "end": {
+          "x": 0.5,
+          "y": 0.08
+        },
+        "style": {
+          "stroke": "#000000",
+          "strokeWidth": 0.025
+        }
+      }
+    ]
+  },
+  "placeable": true
+}

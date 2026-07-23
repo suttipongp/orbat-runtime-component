@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orbat.local/contracts/v1/symbol-instance.schema.json",
+  "title": "ORBAT Symbol Instance",
+  "description": "A composed symbol independent of map location and renderer technology.",
+  "type": "object",
+  "required": [
+    "contractVersion",
+    "id",
+    "template",
+    "domain",
+    "affiliation",
+    "status"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "components": {
+      "type": "object",
+      "properties": {
+        "mainFunction": {
+          "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/definitionReference"
+        },
+        "modifier1": {
+          "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/definitionReference"
+        },
+        "modifier2": {
+          "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/definitionReference"
+        },
+        "equipmentFunction": {
+          "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/definitionReference"
+        },
+        "variant": {
+          "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/definitionReference"
+        },
+        "echelon": {
+          "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/definitionReference"
+        },
+        "mobility": {
+          "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/definitionReference"
+        },
+        "amplifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/definitionReference"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "domain": {
+      "enum": [
+        "land-unit",
+        "equipment"
+      ]
+    },
+    "affiliation": {
+      "enum": [
+        "unspecified",
+        "friend",
+        "hostile",
+        "neutral",
+        "unknown",
+        "suspect",
+        "civilian"
+      ]
+    },
+    "status": {
+      "type": "object",
+      "required": [
+        "frame"
+      ],
+      "properties": {
+        "frame": {
+          "enum": [
+            "present",
+            "planned-anticipated"
+          ]
+        },
+        "operatingState": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "classification": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string"
+        },
+        "function": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "renderTransform": {
+      "description": "Optional local transform in normalized symbol coordinates, never map coordinates.",
+      "type": "object",
+      "properties": {
+        "offsetX": {
+          "type": "number"
+        },
+        "offsetY": {
+          "type": "number"
+        },
+        "scaleX": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "scaleY": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "rotationDegrees": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "template": {
+      "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/definitionReference"
+    },
+    "amplifierValues": {
+      "description": "Operational values only; semantic amplifier graphics are definition references in components.amplifiers.",
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

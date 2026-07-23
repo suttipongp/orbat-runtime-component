@@ -12,3 +12,7 @@ c4isr-workbench/
 
 TestResults/
 coverage/
+dist/
+tmp/
+plugin/tools/__pycache__/
+.codex/

@@ -1,0 +1,48 @@
+{
+  "contractVersion": "1.0",
+  "libraryId": "orbat.standard-symbol-library",
+  "libraryRevision": 1,
+  "definitionId": "equipment.modifier-2.amphibious",
+  "definitionRevision": 1,
+  "name": "Amphibious",
+  "domain": "equipment",
+  "role": "modifier-2",
+  "composition": "composable",
+  "classification": {
+    "category": "Mobility",
+    "modifierType": "Amphibious"
+  },
+  "scene": {
+    "coordinateSpace": "normalized-cartesian",
+    "viewBox": {
+      "x": 0,
+      "y": 0,
+      "width": 1,
+      "height": 1
+    },
+    "primitives": [
+      {
+        "id": "amphibious-wave",
+        "type": "sine-wave",
+        "start": {
+          "x": 0.04,
+          "y": 0.5
+        },
+        "end": {
+          "x": 0.96,
+          "y": 0.5
+        },
+        "cycles": 5,
+        "amplitude": 0.16,
+        "style": {
+          "stroke": "#000000",
+          "strokeWidth": 0.03,
+          "fill": null,
+          "lineCap": "round",
+          "lineJoin": "round"
+        }
+      }
+    ]
+  },
+  "placeable": false
+}

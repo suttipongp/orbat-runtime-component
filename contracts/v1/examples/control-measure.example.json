@@ -1,0 +1,64 @@
+{
+  "type": "Feature",
+  "id": "phase-line-red-1",
+  "geometry": {
+    "type": "LineString",
+    "coordinates": [
+      [
+        100.501,
+        13.756
+      ],
+      [
+        100.512,
+        13.761
+      ],
+      [
+        100.526,
+        13.754
+      ]
+    ]
+  },
+  "properties": {
+    "featureId": "phase-line-red-1",
+    "featureType": "ControlMeasure",
+    "layerKey": "routes",
+    "template": {
+      "contractVersion": "1.0",
+      "libraryId": "orbat.standard-symbol-library",
+      "libraryRevision": 1,
+      "definitionId": "control-measure.phase-line",
+      "definitionRevision": 1
+    },
+    "label": "PL RED",
+    "labels": {
+      "name": "PL RED"
+    },
+    "status": "planned",
+    "visible": true,
+    "style": {
+      "strokeColor": "#ff4048",
+      "fillColor": "#ff4048",
+      "lineStyle": "PhaseLine",
+      "lineWidth": 2,
+      "opacity": 1
+    },
+    "time": {
+      "validFrom": "2026-07-23T01:00:00Z"
+    },
+    "ownership": {
+      "headquartersId": "hq-bde-main",
+      "staffSectionId": "staff-s3",
+      "staffSectionCode": "S3",
+      "operationScope": "operations",
+      "ownerOperatorId": "operator.local"
+    },
+    "security": {
+      "classification": "UNCLASSIFIED"
+    },
+    "provenance": {
+      "updatedAt": "2026-07-23T01:00:00Z",
+      "updatedBy": "operator.local",
+      "sourceSystem": "orbat-runtime-component"
+    }
+  }
+}

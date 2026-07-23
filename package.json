@@ -1,0 +1,11 @@
+{
+  "name": "orbat-runtime-component",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "plugin:build": "py -3 plugin/tools/build_plugin.py",
+    "plugin:verify": "py -3 plugin/tools/verify_plugin.py",
+    "plugin:golden": "py -3 plugin/tools/build_plugin.py --update-golden"
+  }
+}

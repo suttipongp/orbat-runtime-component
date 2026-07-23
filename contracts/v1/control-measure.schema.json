@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orbat.local/contracts/v1/control-measure.schema.json",
+  "title": "ORBAT Control Measure Feature",
+  "description": "A GeoJSON operational graphic resolved from an Operational Graphics Library.",
+  "type": "object",
+  "required": ["type", "geometry", "properties"],
+  "properties": {
+    "type": { "const": "Feature" },
+    "id": { "type": ["string", "number"] },
+    "geometry": {
+      "$ref": "https://orbat.local/contracts/v1/geojson.schema.json#/$defs/geometry"
+    },
+    "properties": {
+      "type": "object",
+      "required": [
+        "featureId",
+        "featureType",
+        "template",
+        "status"
+      ],
+      "properties": {
+        "featureId": { "type": "string", "minLength": 1 },
+        "featureType": { "const": "ControlMeasure" },
+        "layerKey": { "type": "string" },
+        "template": {
+          "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/definitionReference"
+        },
+        "label": { "type": "string" },
+        "labels": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "status": { "enum": ["draft", "planned", "active", "complete", "cancelled"] },
+        "visible": { "type": "boolean" },
+        "style": {
+          "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/mapStyle"
+        },
+        "time": {
+          "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/timeValidity"
+        },
+        "ownership": {
+          "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/ownership"
+        },
+        "security": {
+          "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/security"
+        },
+        "provenance": {
+          "$ref": "https://orbat.local/contracts/v1/common.schema.json#/$defs/provenance"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
