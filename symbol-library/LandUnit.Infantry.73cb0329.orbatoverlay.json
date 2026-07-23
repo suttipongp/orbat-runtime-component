@@ -1,0 +1,28 @@
+﻿{
+  "Version": 1,
+  "InstanceId": "73cb032902a2481394ccdec045f24b33",
+  "LibraryId": "54e229ad2e019d84639583cf8504eac5",
+  "LibraryVersion": 1,
+  "Modifier1LibraryId": "aa9f8fe4e5a1dc3fa5e423bb87182e83",
+  "Modifier2LibraryId": "eb8cf27b27e0479c8d9e30eccb3abf49",
+  "Modifier1": "ArmoredProtection",
+  "Modifier2": "airborne",
+  "Mobility": "",
+  "MobilityLibraryId": "",
+  "Domain": "LandUnit",
+  "Affiliation": "Friend",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Function": "Infantry",
+  "Variant": "",
+  "X": 0.5,
+  "Y": 0.5,
+  "Width": 1,
+  "Height": 1,
+  "RotationDegrees": 0,
+  "Visible": true,
+  "Amplifiers": {
+    "B/C/D": "Corps (XXX)",
+    "H/AF": "1/ARMY"
+  }
+}

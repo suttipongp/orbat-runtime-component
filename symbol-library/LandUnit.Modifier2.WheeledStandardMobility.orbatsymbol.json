@@ -1,0 +1,92 @@
+﻿{
+  "Version": 7,
+  "LibraryId": "692e00c4bf874ea1a6dbb03aff6b7c01",
+  "LibraryVersion": 1,
+  "Name": "WheeledStandardMobility",
+  "UnitType": "Unspecified",
+  "UnitCategory": "CommandAndControl",
+  "UnitMainFunction": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier2",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "air assault",
+  "LandUnitModifier2Type": "WheeledStandardMobility",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.3333333,
+        "Y": 0.5035433
+      },
+      "End": {
+        "X": 0.38530183,
+        "Y": 0.49291342
+      },
+      "Control1": {
+        "X": 0.051968515,
+        "Y": -0.007086575
+      },
+      "Control2": {
+        "X": 0.051968515,
+        "Y": -0.007086575
+      },
+      "Radius": 0.08340858,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.6666667,
+        "Y": 0.5035433
+      },
+      "End": {
+        "X": 0.7777778,
+        "Y": 0.5035433
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0.08340868,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ],
+  "HasStoredLibraryId": true
+}

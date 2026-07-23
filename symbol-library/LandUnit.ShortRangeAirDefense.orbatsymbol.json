@@ -1,0 +1,170 @@
+﻿{
+  "Version": 6,
+  "Name": "ShortRangeAirDefense",
+  "UnitType": "AirDefense",
+  "UnitCategory": "Fires",
+  "UnitMainFunction": "ShortRangeAirDefense",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Composite",
+  "CompositionMode": "Composite",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "Unspecified",
+  "LandUnitModifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.49999997,
+        "Y": 0.1598522
+      },
+      "End": {
+        "X": 0.5,
+        "Y": 0.7285714
+      },
+      "Control1": {
+        "X": -0.0013756454,
+        "Y": -0.062391773
+      },
+      "Control2": {
+        "X": -0.0013756454,
+        "Y": -0.062391773
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.4047619,
+        "Y": 0.24285713
+      },
+      "End": {
+        "X": 0.5952381,
+        "Y": 0.24285713
+      },
+      "Control1": {
+        "X": 0.4047619,
+        "Y": 0.12857142
+      },
+      "Control2": {
+        "X": 0.5952381,
+        "Y": 0.12857142
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.4047619,
+        "Y": 0.24285713
+      },
+      "End": {
+        "X": 0.4047619,
+        "Y": 0.7285714
+      },
+      "Control1": {
+        "X": 0.025408357,
+        "Y": -0.031306714
+      },
+      "Control2": {
+        "X": 0.025408357,
+        "Y": -0.031306714
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.5952381,
+        "Y": 0.24285713
+      },
+      "End": {
+        "X": 0.5952381,
+        "Y": 0.7285714
+      },
+      "Control1": {
+        "X": -0.053539038,
+        "Y": -0.016333938
+      },
+      "Control2": {
+        "X": -0.053539038,
+        "Y": -0.016333938
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0,
+        "Y": 1
+      },
+      "End": {
+        "X": 1,
+        "Y": 1
+      },
+      "Control1": {
+        "X": 0.099999994,
+        "Y": 0.67142856
+      },
+      "Control2": {
+        "X": 0.9,
+        "Y": 0.67142856
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

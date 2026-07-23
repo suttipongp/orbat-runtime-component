@@ -1,0 +1,66 @@
+﻿{
+  "Version": 8,
+  "LibraryId": "54bb323dcfe44ef3832f5439014227ba",
+  "LibraryVersion": 5,
+  "Name": "Amplifier.B.Brigade",
+  "UnitType": "Unspecified",
+  "UnitCategory": "CommandAndControl",
+  "UnitMainFunction": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "EchelonIndicator",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "Unspecified",
+  "LandUnitModifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "EchelonType": "Brigade",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.50085616,
+        "Y": 0.5032101
+      },
+      "End": {
+        "X": 0.50085616,
+        "Y": 0.5032101
+      },
+      "Control1": {
+        "X": 0.10440956,
+        "Y": 0.33654338
+      },
+      "Control2": {
+        "X": 0.10440956,
+        "Y": 0.33654338
+      },
+      "Radius": 0,
+      "FontSize": 50,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "x",
+      "Filled": false,
+      "Points": []
+    }
+  ],
+  "HasStoredLibraryId": true
+}

@@ -1,7 +1,11 @@
 ﻿{
-  "Version": 4,
+  "Version": 7,
+  "LibraryId": "61e0302d21db7555199907a14ef4a029",
+  "LibraryVersion": 3,
   "Name": "Amplifier.R.Railway",
   "UnitType": "Unspecified",
+  "UnitCategory": "CommandAndControl",
+  "UnitMainFunction": "Unspecified",
   "EquipmentFunction": "Unspecified",
   "Variant": "",
   "SymbolRole": "MobilityIndicator",
@@ -20,6 +24,8 @@
   },
   "Modifier1Type": "Unspecified",
   "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "Unspecified",
+  "LandUnitModifier2Type": "Unspecified",
   "MobilityType": "Railway",
   "Affiliation": "Friendly",
   "PhysicalDomain": "Equipment",
@@ -84,20 +90,20 @@
     {
       "Kind": "Line",
       "Start": {
-        "X": 0.22222221,
-        "Y": 0.41666666
+        "X": 0.22222218,
+        "Y": 0.37073994
       },
       "End": {
-        "X": 0.7777778,
-        "Y": 0.41666666
+        "X": 0.77777785,
+        "Y": 0.37073994
       },
       "Control1": {
-        "X": -0.036334902,
-        "Y": -0.0031595528
+        "X": -0.03633493,
+        "Y": -0.049086273
       },
       "Control2": {
-        "X": -0.036334902,
-        "Y": -0.0031595528
+        "X": -0.03633493,
+        "Y": -0.049086273
       },
       "Radius": 0,
       "FontSize": 12,
@@ -162,5 +168,6 @@
       "Filled": false,
       "Points": []
     }
-  ]
+  ],
+  "HasStoredLibraryId": true
 }

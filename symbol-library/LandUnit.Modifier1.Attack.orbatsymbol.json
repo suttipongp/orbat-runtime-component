@@ -1,0 +1,62 @@
+﻿{
+  "Version": 6,
+  "Name": "Attack",
+  "UnitType": "Intelligence",
+  "UnitCategory": "Intelligence",
+  "UnitMainFunction": "IntelligenceOperations",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier1",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "attack",
+  "LandUnitModifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.49985483,
+        "Y": 0.109528184
+      },
+      "End": {
+        "X": 0.49985483,
+        "Y": 0.109528184
+      },
+      "Control1": {
+        "X": 0.079854816,
+        "Y": 0.009528138
+      },
+      "Control2": {
+        "X": 0.079854816,
+        "Y": 0.009528138
+      },
+      "Radius": 0,
+      "FontSize": 20,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "A",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

@@ -37,6 +37,39 @@ public static class OrbatSymbolAmplifierLayouts
         "FullToCapacity"
     };
 
+    private static readonly string[] UnitEchelons =
+    {
+        "Team (Ø)",
+        "Squad (•)",
+        "Section (••)",
+        "Platoon (•••)",
+        "Company (I)",
+        "Battalion (II)",
+        "Regiment (III)",
+        "Brigade (X)",
+        "Division (XX)",
+        "Corps (XXX)",
+        "Army (XXXX)",
+        "Army group (XXXXX)",
+        "Region (XXXXXX)",
+        "Command (++)",
+        "Team task force (Ø + D)",
+        "Squad task force (• + D)",
+        "Section task force (•• + D)",
+        "Platoon task force (••• + D)",
+        "Company task force (I + D)",
+        "Battalion task force (II + D)",
+        "Regiment task force (III + D)",
+        "Brigade task force (X + D)",
+        "Division task force (XX + D)",
+        "Corps task force (XXX + D)",
+        "Army task force (XXXX + D)",
+        "Army group task force (XXXXX + D)",
+        "Region task force (XXXXXX + D)",
+        "Command task force (++ + D)",
+        "Company team (I + D)",
+        "Marine expeditionary force (XXX + D)"
+    };
     private static readonly string[] EngagementBars =
     {
         "HostileTarget",
@@ -49,10 +82,27 @@ public static class OrbatSymbolAmplifierLayouts
         OrbatSymbolDomain.LandUnit,
         new[]
         {
+            new OrbatSymbolAmplifierField(
+                "B/C/D",
+                "B / D",
+                OrbatAmplifierArea.Top,
+                2,
+                0,
+                "Echelon / task organization",
+                "B identifies command level. D draws the task-organization bracket around any echelon symbol.",
+                options: UnitEchelons),
+            new OrbatSymbolAmplifierField(
+                "H/AF",
+                "H",
+                OrbatAmplifierArea.Right,
+                2,
+                0,
+                "Additional information / unit designation",
+                "A unique alphanumeric designation that identifies the displayed unit, beginning with the unit's own designation followed by its higher-echelon command designation. Example: A/6-37.",
+                maxLength: 20),
             new OrbatSymbolAmplifierField("A/AA", "A/AA", OrbatAmplifierArea.Center, 0, 0),
             new OrbatSymbolAmplifierField("AO", "AO", OrbatAmplifierArea.Top, 0, 0),
             new OrbatSymbolAmplifierField("AB", "AB", OrbatAmplifierArea.Top, 1, 0),
-            new OrbatSymbolAmplifierField("B/C/D", "B/C/D", OrbatAmplifierArea.Top, 2, 0),
             new OrbatSymbolAmplifierField("AC", "AC", OrbatAmplifierArea.Top, 3, 0),
             new OrbatSymbolAmplifierField("AR/W", "AR/W", OrbatAmplifierArea.Left, 0, 0),
             new OrbatSymbolAmplifierField("X/Y", "X/Y", OrbatAmplifierArea.Left, 1, 0),
@@ -61,7 +111,6 @@ public static class OrbatSymbolAmplifierLayouts
             new OrbatSymbolAmplifierField("Z", "Z", OrbatAmplifierArea.Left, 4, 0),
             new OrbatSymbolAmplifierField("F/AS", "F/AS", OrbatAmplifierArea.Right, 0, 0),
             new OrbatSymbolAmplifierField("G", "G", OrbatAmplifierArea.Right, 1, 0),
-            new OrbatSymbolAmplifierField("H/AF", "H/AF", OrbatAmplifierArea.Right, 2, 0),
             new OrbatSymbolAmplifierField("M", "M", OrbatAmplifierArea.Right, 3, 0),
             new OrbatSymbolAmplifierField("J/K/P", "J/K/P", OrbatAmplifierArea.Right, 4, 0),
             new OrbatSymbolAmplifierField("R/AW", "R/AW", OrbatAmplifierArea.Bottom, 0, 0),

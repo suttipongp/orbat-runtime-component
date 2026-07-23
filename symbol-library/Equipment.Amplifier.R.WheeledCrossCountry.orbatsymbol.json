@@ -1,7 +1,11 @@
 ﻿{
-  "Version": 4,
+  "Version": 7,
+  "LibraryId": "75d8125fe70fcb3de94021ddf32e4f06",
+  "LibraryVersion": 4,
   "Name": "Amplifier.R.WheeledCrossCountry",
   "UnitType": "Unspecified",
+  "UnitCategory": "CommandAndControl",
+  "UnitMainFunction": "Unspecified",
   "EquipmentFunction": "Unspecified",
   "Variant": "",
   "SymbolRole": "MobilityIndicator",
@@ -20,6 +24,8 @@
   },
   "Modifier1Type": "Unspecified",
   "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "Unspecified",
+  "LandUnitModifier2Type": "Unspecified",
   "MobilityType": "WheeledCrossCountry",
   "Affiliation": "Friendly",
   "PhysicalDomain": "Equipment",
@@ -31,19 +37,19 @@
       "Kind": "Line",
       "Start": {
         "X": 0.2777778,
-        "Y": 0.41666666
+        "Y": 0.37894112
       },
       "End": {
         "X": 0.7222222,
-        "Y": 0.41666666
+        "Y": 0.37894112
       },
       "Control1": {
         "X": 0,
-        "Y": -0.0016251504
+        "Y": -0.03935069
       },
       "Control2": {
         "X": 0,
-        "Y": -0.0016251504
+        "Y": -0.03935069
       },
       "Radius": 0,
       "FontSize": 12,
@@ -135,5 +141,6 @@
       "Filled": false,
       "Points": []
     }
-  ]
+  ],
+  "HasStoredLibraryId": true
 }

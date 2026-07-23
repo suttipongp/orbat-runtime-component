@@ -1,0 +1,89 @@
+﻿{
+  "Version": 6,
+  "Name": "BattalionEchelonOfSupport",
+  "UnitType": "Intelligence",
+  "UnitCategory": "Intelligence",
+  "UnitMainFunction": "IntelligenceOperations",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier1",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "battalion (echelon of support)",
+  "LandUnitModifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.45846337,
+        "Y": 0.05727774
+      },
+      "End": {
+        "X": 0.4842226,
+        "Y": 0.2167514
+      },
+      "Control1": {
+        "X": 0.010889262,
+        "Y": 0.03675136
+      },
+      "Control2": {
+        "X": 0.010889262,
+        "Y": 0.03675136
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.51486987,
+        "Y": 0.05727774
+      },
+      "End": {
+        "X": 0.54153657,
+        "Y": 0.2167514
+      },
+      "Control1": {
+        "X": 0.06994549,
+        "Y": 0.035916515
+      },
+      "Control2": {
+        "X": 0.06994549,
+        "Y": 0.035916515
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    }
+  ]
+}

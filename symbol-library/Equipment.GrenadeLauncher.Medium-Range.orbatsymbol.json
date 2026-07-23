@@ -1,10 +1,14 @@
 ﻿{
-  "Version": 2,
+  "Version": 7,
+  "LibraryId": "92986ad2fd614553885d16e16d1f99a6",
+  "LibraryVersion": 1,
   "Name": "GrenadeLauncher.Medium-Range",
   "UnitType": "Infantry",
+  "UnitCategory": "MovementAndManeuver",
+  "UnitMainFunction": "Infantry",
   "EquipmentFunction": "GrenadeLauncher",
   "Variant": "Medium-Range",
-  "SymbolRole": "Composite",
+  "SymbolRole": "MainFunction",
   "CompositionMode": "Composite",
   "Layout": {
     "MainScaleWithoutModifiers": 0.8,
@@ -20,10 +24,14 @@
   },
   "Modifier1Type": "Unspecified",
   "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "Unspecified",
+  "LandUnitModifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
   "Affiliation": "Friendly",
   "PhysicalDomain": "Equipment",
   "FrameShape": "FriendlyEquipment",
   "FrameStatus": "Present",
+  "OperatingState": "Ground",
   "Commands": [
     {
       "Kind": "Line",
@@ -46,6 +54,8 @@
       "Radius": 0,
       "FontSize": 12,
       "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []
@@ -71,6 +81,8 @@
       "Radius": 0,
       "FontSize": 12,
       "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []
@@ -96,6 +108,8 @@
       "Radius": 0,
       "FontSize": 12,
       "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []
@@ -121,6 +135,8 @@
       "Radius": 0.083333395,
       "FontSize": 12,
       "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []
@@ -146,6 +162,8 @@
       "Radius": 0,
       "FontSize": 12,
       "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []
@@ -171,9 +189,12 @@
       "Radius": 0,
       "FontSize": 12,
       "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []
     }
-  ]
+  ],
+  "HasStoredLibraryId": true
 }

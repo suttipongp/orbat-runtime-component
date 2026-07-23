@@ -1,0 +1,28 @@
+﻿{
+  "Version": 1,
+  "InstanceId": "66a6a4974af24477a6f0411a1d179081",
+  "LibraryId": "54e229ad2e019d84639583cf8504eac5",
+  "LibraryVersion": 1,
+  "Modifier1LibraryId": "aa9f8fe4e5a1dc3fa5e423bb87182e83",
+  "Modifier2LibraryId": "d04dd13fcd0640e3b266f1ba895f9f18",
+  "Modifier1": "ArmoredProtection",
+  "Modifier2": "WheeledHighMobility",
+  "Mobility": "",
+  "MobilityLibraryId": "",
+  "Domain": "LandUnit",
+  "Affiliation": "Friend",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Function": "Infantry",
+  "Variant": "",
+  "X": 0.5,
+  "Y": 0.5,
+  "Width": 1,
+  "Height": 1,
+  "RotationDegrees": 0,
+  "Visible": true,
+  "Amplifiers": {
+    "B/C/D": "Regiment task force (III \u002B D)",
+    "H/AF": "2/111"
+  }
+}

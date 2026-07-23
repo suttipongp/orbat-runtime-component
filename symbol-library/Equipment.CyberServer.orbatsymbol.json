@@ -1,5 +1,5 @@
 ﻿{
-  "Version": 3,
+  "Version": 4,
   "Name": "CyberServer",
   "UnitType": "CBRN",
   "EquipmentFunction": "CyberServer",
@@ -20,6 +20,7 @@
   },
   "Modifier1Type": "Unspecified",
   "Modifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
   "Affiliation": "Friendly",
   "PhysicalDomain": "Equipment",
   "FrameShape": "FriendlyEquipment",
@@ -34,7 +35,7 @@
       },
       "End": {
         "X": 0.75,
-        "Y": 0.3687215
+        "Y": 0.375
       },
       "Control1": {
         "X": 0,
@@ -46,7 +47,9 @@
       },
       "Radius": 0,
       "FontSize": 12,
-      "StrokeWidth": 3,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []
@@ -55,7 +58,7 @@
       "Kind": "Rectangle",
       "Start": {
         "X": 0.25,
-        "Y": 0.41666666
+        "Y": 0.4166667
       },
       "End": {
         "X": 0.75,
@@ -71,7 +74,9 @@
       },
       "Radius": 0,
       "FontSize": 12,
-      "StrokeWidth": 3,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []
@@ -96,7 +101,9 @@
       },
       "Radius": 0,
       "FontSize": 12,
-      "StrokeWidth": 3,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []
@@ -105,23 +112,25 @@
       "Kind": "Text",
       "Start": {
         "X": 0.49543375,
-        "Y": 0.1038813
+        "Y": 0.10252014
       },
       "End": {
         "X": 0.49543375,
-        "Y": 0.1038813
+        "Y": 0.10252014
       },
       "Control1": {
         "X": -0.004566252,
-        "Y": 0.020547934
+        "Y": 0.019186772
       },
       "Control2": {
         "X": -0.004566252,
-        "Y": 0.020547934
+        "Y": 0.019186772
       },
       "Radius": 0,
       "FontSize": 20,
       "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "C2",
       "Filled": false,
       "Points": []
@@ -146,7 +155,9 @@
       },
       "Radius": 0.03435918,
       "FontSize": 12,
-      "StrokeWidth": 3,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []
@@ -159,19 +170,21 @@
       },
       "End": {
         "X": 0.8599087,
-        "Y": 0.30237442
+        "Y": 0.3023744
       },
       "Control1": {
-        "X": 0.15990867,
-        "Y": 0.0023744255
+        "X": 0.1599087,
+        "Y": 0.002374426
       },
       "Control2": {
-        "X": 0.15990867,
-        "Y": 0.0023744255
+        "X": 0.1599087,
+        "Y": 0.002374426
       },
       "Radius": 0.03435918,
       "FontSize": 12,
-      "StrokeWidth": 3,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []
@@ -179,24 +192,26 @@
     {
       "Kind": "Circle",
       "Start": {
-        "X": 0.66935426,
+        "X": 0.6693543,
         "Y": 0.7113633
       },
       "End": {
-        "X": 0.63506854,
-        "Y": 0.47707757
+        "X": 0.6350685,
+        "Y": 0.4770776
       },
       "Control1": {
         "X": -0.06493151,
-        "Y": 0.17707759
+        "Y": 0.1770776
       },
       "Control2": {
         "X": -0.06493151,
-        "Y": 0.17707759
+        "Y": 0.1770776
       },
       "Radius": 0.03435918,
       "FontSize": 12,
-      "StrokeWidth": 3,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []

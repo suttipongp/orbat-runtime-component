@@ -1,0 +1,62 @@
+﻿{
+  "Version": 6,
+  "Name": "IntelligenceOperations",
+  "UnitType": "Intelligence",
+  "UnitCategory": "Intelligence",
+  "UnitMainFunction": "IntelligenceOperations",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Composite",
+  "CompositionMode": "Composite",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "Unspecified",
+  "LandUnitModifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.5054706,
+        "Y": 0.51637286
+      },
+      "End": {
+        "X": 0.5054706,
+        "Y": 0.51637286
+      },
+      "Control1": {
+        "X": 0.06261343,
+        "Y": 0.10208714
+      },
+      "Control2": {
+        "X": 0.06261343,
+        "Y": 0.10208714
+      },
+      "Radius": 0,
+      "FontSize": 35,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "MI",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

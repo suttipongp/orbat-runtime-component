@@ -1,0 +1,79 @@
+﻿{
+  "Version": 6,
+  "Name": "Surveillance",
+  "UnitType": "Reconnaissance",
+  "UnitCategory": "MovementAndManeuver",
+  "UnitMainFunction": "Surveillance",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Composite",
+  "CompositionMode": "Composite",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "Unspecified",
+  "LandUnitModifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Path",
+      "Start": {
+        "X": 0.5,
+        "Y": 0.24863887
+      },
+      "End": {
+        "X": 0.5,
+        "Y": 0.24863887
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": true,
+      "Points": [
+        {
+          "X": 0.5,
+          "Y": 0.24863887
+        },
+        {
+          "X": 0.2777778,
+          "Y": 0.75
+        },
+        {
+          "X": 0.7227768,
+          "Y": 0.74863887
+        },
+        {
+          "X": 0.5,
+          "Y": 0.24863887
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,280 @@
+﻿{
+  "Version": 6,
+  "Name": "Cbrne",
+  "UnitType": "CBRN",
+  "UnitCategory": "Protection",
+  "UnitMainFunction": "Cbrne",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Composite",
+  "CompositionMode": "Composite",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "Unspecified",
+  "LandUnitModifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.25,
+        "Y": 0.41438356
+      },
+      "End": {
+        "X": 0.375,
+        "Y": 0.41438353
+      },
+      "Control1": {
+        "X": 0.04223621,
+        "Y": 0.09766647
+      },
+      "Control2": {
+        "X": 0.04223621,
+        "Y": 0.09766647
+      },
+      "Radius": 0.125,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.7507111,
+        "Y": 0.41397187
+      },
+      "End": {
+        "X": 0.83105016,
+        "Y": 0.5
+      },
+      "Control1": {
+        "X": 0.5139308,
+        "Y": 0.1016922
+      },
+      "Control2": {
+        "X": 0.5139308,
+        "Y": 0.1016922
+      },
+      "Radius": 0.11770816,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.25,
+        "Y": 0.2916667
+      },
+      "End": {
+        "X": 0.42680284,
+        "Y": 0.33830535
+      },
+      "Control1": {
+        "X": 0.31757432,
+        "Y": 0.2954658
+      },
+      "Control2": {
+        "X": 0.37548062,
+        "Y": 0.310323
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 3,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.61922795,
+        "Y": 0.55148983
+      },
+      "End": {
+        "X": 0.7083334,
+        "Y": 0.75
+      },
+      "Control1": {
+        "X": 0.64971775,
+        "Y": 0.60728246
+      },
+      "Control2": {
+        "X": 0.6789155,
+        "Y": 0.67311466
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 3,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.7477169,
+        "Y": 0.2962329
+      },
+      "End": {
+        "X": 0.57516766,
+        "Y": 0.34089947
+      },
+      "Control1": {
+        "X": 0.6820082,
+        "Y": 0.29980284
+      },
+      "Control2": {
+        "X": 0.6254252,
+        "Y": 0.31410095
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 3,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.38372684,
+        "Y": 0.5491854
+      },
+      "End": {
+        "X": 0.2939498,
+        "Y": 0.7477169
+      },
+      "Control1": {
+        "X": 0.35286242,
+        "Y": 0.6048589
+      },
+      "Control2": {
+        "X": 0.32345146,
+        "Y": 0.67071027
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 3,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Polyline",
+      "Start": {
+        "X": 0.44328472,
+        "Y": 0.2931236
+      },
+      "End": {
+        "X": 0.44328472,
+        "Y": 0.2931236
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": [
+        {
+          "X": 0.44328472,
+          "Y": 0.2931236
+        },
+        {
+          "X": 0.36257312,
+          "Y": 0.5
+        },
+        {
+          "X": 0.4453519,
+          "Y": 0.70710677
+        },
+        {
+          "X": 0.5555556,
+          "Y": 0.70710677
+        },
+        {
+          "X": 0.6388889,
+          "Y": 0.5
+        },
+        {
+          "X": 0.55646306,
+          "Y": 0.29355717
+        },
+        {
+          "X": 0.44328472,
+          "Y": 0.2931236
+        }
+      ]
+    },
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.5072594,
+        "Y": 0.52994543
+      },
+      "End": {
+        "X": 0.5072594,
+        "Y": 0.52994543
+      },
+      "Control1": {
+        "X": 0.0072595477,
+        "Y": 0.029945582
+      },
+      "Control2": {
+        "X": 0.0072595477,
+        "Y": 0.029945582
+      },
+      "Radius": 0,
+      "FontSize": 25,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "E",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

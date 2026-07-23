@@ -1,5 +1,5 @@
 ﻿{
-  "Version": 2,
+  "Version": 4,
   "Name": "AntiTankGun.Light",
   "UnitType": "Unspecified",
   "EquipmentFunction": "AntiTankGun",
@@ -20,10 +20,12 @@
   },
   "Modifier1Type": "Unspecified",
   "Modifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
   "Affiliation": "Friendly",
   "PhysicalDomain": "Equipment",
   "FrameShape": "FriendlyEquipment",
   "FrameStatus": "Present",
+  "OperatingState": "Ground",
   "Commands": [
     {
       "Kind": "Line",
@@ -46,6 +48,8 @@
       "Radius": 0,
       "FontSize": 12,
       "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []
@@ -71,6 +75,8 @@
       "Radius": 0,
       "FontSize": 12,
       "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []
@@ -96,6 +102,8 @@
       "Radius": 0,
       "FontSize": 12,
       "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []
@@ -103,7 +111,7 @@
     {
       "Kind": "Line",
       "Start": {
-        "X": 0.25,
+        "X": 0.3333333,
         "Y": 0.8333333
       },
       "End": {
@@ -121,6 +129,8 @@
       "Radius": 0,
       "FontSize": 12,
       "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []
@@ -129,23 +139,25 @@
       "Kind": "Line",
       "Start": {
         "X": 0.49999997,
-        "Y": 0.62442905
+        "Y": 0.6244291
       },
       "End": {
-        "X": 0.75,
+        "X": 0.6666667,
         "Y": 0.8333333
       },
       "Control1": {
-        "X": 0,
-        "Y": 0
+        "X": 0.0013611317,
+        "Y": -0.0013611317
       },
       "Control2": {
-        "X": 0,
-        "Y": 0
+        "X": 0.0013611317,
+        "Y": -0.0013611317
       },
       "Radius": 0,
       "FontSize": 12,
       "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []
@@ -171,6 +183,8 @@
       "Radius": 0,
       "FontSize": 12,
       "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []

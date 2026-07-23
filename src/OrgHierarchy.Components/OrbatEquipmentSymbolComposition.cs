@@ -6,7 +6,8 @@ public enum OrbatEquipmentSymbolRole
     MainFunction,
     Modifier1,
     Modifier2,
-    MobilityIndicator
+    MobilityIndicator,
+    EchelonIndicator
 }
 
 public enum OrbatEquipmentCompositionMode

@@ -1,0 +1,120 @@
+﻿{
+  "Version": 8,
+  "LibraryId": "8e07cbb0d8104dd99fa1680df1b4266f",
+  "LibraryVersion": 2,
+  "Name": "Amplifier.B.Platoon",
+  "UnitType": "Unspecified",
+  "UnitCategory": "CommandAndControl",
+  "UnitMainFunction": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "EchelonIndicator",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "Unspecified",
+  "LandUnitModifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "EchelonType": "Platoon",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.5,
+        "Y": 0.5
+      },
+      "End": {
+        "X": 0.5,
+        "Y": 0.5833333
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0.08333331,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.3333333,
+        "Y": 0.5
+      },
+      "End": {
+        "X": 0.54,
+        "Y": 0.62231964
+      },
+      "Control1": {
+        "X": 0.04,
+        "Y": 0.038986303
+      },
+      "Control2": {
+        "X": 0.04,
+        "Y": 0.038986303
+      },
+      "Radius": 0.08333331,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.6666667,
+        "Y": 0.5
+      },
+      "End": {
+        "X": 0.58000004,
+        "Y": 0.66333336
+      },
+      "Control1": {
+        "X": 0.08,
+        "Y": 0.08
+      },
+      "Control2": {
+        "X": 0.08,
+        "Y": 0.08
+      },
+      "Radius": 0.08333331,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    }
+  ],
+  "HasStoredLibraryId": true
+}

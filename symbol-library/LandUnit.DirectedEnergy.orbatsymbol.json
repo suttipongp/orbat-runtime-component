@@ -1,0 +1,413 @@
+﻿{
+  "Version": 6,
+  "Name": "DirectedEnergy",
+  "UnitType": "Unspecified",
+  "UnitCategory": "Fires",
+  "UnitMainFunction": "DirectedEnergy",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Composite",
+  "CompositionMode": "Composite",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "Unspecified",
+  "LandUnitModifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.67142856,
+        "Y": 0.5
+      },
+      "End": {
+        "X": 0.78571427,
+        "Y": 0.4990149
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.7285714,
+        "Y": 0.44285715
+      },
+      "End": {
+        "X": 0.78571427,
+        "Y": 0.4990149
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.78571427,
+        "Y": 0.4990149
+      },
+      "End": {
+        "X": 0.7285714,
+        "Y": 0.55714285
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.67233604,
+        "Y": 0.5
+      },
+      "End": {
+        "X": 0.65238094,
+        "Y": 0.6142857
+      },
+      "Control1": {
+        "X": -0.019056141,
+        "Y": -0.002722323
+      },
+      "Control2": {
+        "X": -0.019056141,
+        "Y": -0.002722323
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.65238094,
+        "Y": 0.6142857
+      },
+      "End": {
+        "X": 0.6142857,
+        "Y": 0.3857143
+      },
+      "Control1": {
+        "X": 0.03811258,
+        "Y": -0.012250423
+      },
+      "Control2": {
+        "X": 0.03811258,
+        "Y": -0.012250423
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.6142857,
+        "Y": 0.3857143
+      },
+      "End": {
+        "X": 0.5761905,
+        "Y": 0.6142857
+      },
+      "Control1": {
+        "X": 0.03720507,
+        "Y": 0.17967334
+      },
+      "Control2": {
+        "X": 0.03720507,
+        "Y": 0.17967334
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.5761905,
+        "Y": 0.6142857
+      },
+      "End": {
+        "X": 0.53809524,
+        "Y": 0.3857143
+      },
+      "Control1": {
+        "X": 0.043557167,
+        "Y": -0.0095281005
+      },
+      "Control2": {
+        "X": 0.043557167,
+        "Y": -0.0095281005
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.5190476,
+        "Y": 0.4990149
+      },
+      "End": {
+        "X": 0.46190476,
+        "Y": 0.5
+      },
+      "Control1": {
+        "X": -0.031760454,
+        "Y": 0.0013611913
+      },
+      "Control2": {
+        "X": -0.031760454,
+        "Y": 0.0013611913
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.53809524,
+        "Y": 0.3857143
+      },
+      "End": {
+        "X": 0.5190476,
+        "Y": 0.4990149
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.46190476,
+        "Y": 0.5
+      },
+      "End": {
+        "X": 0.44285715,
+        "Y": 0.6142857
+      },
+      "Control1": {
+        "X": 0.001814872,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0.001814872,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.44285715,
+        "Y": 0.6142857
+      },
+      "End": {
+        "X": 0.4047619,
+        "Y": 0.3857143
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.4047619,
+        "Y": 0.3857143
+      },
+      "End": {
+        "X": 0.36666667,
+        "Y": 0.6142857
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.36666667,
+        "Y": 0.6142857
+      },
+      "End": {
+        "X": 0.32857144,
+        "Y": 0.3857143
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.32857144,
+        "Y": 0.3857143
+      },
+      "End": {
+        "X": 0.2904762,
+        "Y": 0.6142857
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

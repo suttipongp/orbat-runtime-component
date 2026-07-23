@@ -1,0 +1,143 @@
+﻿{
+  "Version": 6,
+  "Name": "Mortar",
+  "UnitType": "Unspecified",
+  "UnitCategory": "MovementAndManeuver",
+  "UnitMainFunction": "Mortar",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Composite",
+  "CompositionMode": "Composite",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "Unspecified",
+  "LandUnitModifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.5,
+        "Y": 0.16666666
+      },
+      "End": {
+        "X": 0.5,
+        "Y": 0.6666667
+      },
+      "Control1": {
+        "X": 0,
+        "Y": 0
+      },
+      "Control2": {
+        "X": 0,
+        "Y": 0
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Circle",
+      "Start": {
+        "X": 0.5,
+        "Y": 0.75
+      },
+      "End": {
+        "X": 0.5833333,
+        "Y": 0.8319722
+      },
+      "Control1": {
+        "X": 0,
+        "Y": -0.0013611913
+      },
+      "Control2": {
+        "X": 0,
+        "Y": -0.0013611913
+      },
+      "Radius": 0.083333336,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.3888889,
+        "Y": 0.3333333
+      },
+      "End": {
+        "X": 0.49909252,
+        "Y": 0.16636416
+      },
+      "Control1": {
+        "X": -0.0009074807,
+        "Y": 0.08303085
+      },
+      "Control2": {
+        "X": -0.0009074807,
+        "Y": 0.08303085
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Line",
+      "Start": {
+        "X": 0.6111111,
+        "Y": 0.3333333
+      },
+      "End": {
+        "X": 0.5,
+        "Y": 0.16666666
+      },
+      "Control1": {
+        "X": 0.016333938,
+        "Y": 0.10344827
+      },
+      "Control2": {
+        "X": 0.016333938,
+        "Y": 0.10344827
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2.5,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

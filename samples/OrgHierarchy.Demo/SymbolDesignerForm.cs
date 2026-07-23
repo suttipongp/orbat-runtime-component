@@ -1,4 +1,5 @@
 using System.Drawing.Drawing2D;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -25,6 +26,7 @@ public sealed class SymbolDesignerForm : Form
     private readonly ComboBox _landUnitModifier1TypeComboBox = new() { Width = 260, DropDownWidth = 340 };
     private readonly ComboBox _landUnitModifier2TypeComboBox = new() { Width = 280, DropDownWidth = 360 };
     private readonly ComboBox _mobilityTypeComboBox = new() { Width = 300, DropDownWidth = 400 };
+    private readonly ComboBox _echelonTypeComboBox = new() { Width = 180, DropDownWidth = 220 };
     private readonly ComboBox _affiliationComboBox = new() { Width = 110 };
     private readonly ComboBox _physicalDomainComboBox = new() { Width = 115 };
     private readonly ComboBox _frameStatusComboBox = new() { Width = 110 };
@@ -69,6 +71,7 @@ public sealed class SymbolDesignerForm : Form
     private Control? _landUnitModifier1TypeField;
     private Control? _landUnitModifier2TypeField;
     private Control? _mobilityTypeField;
+    private Control? _echelonTypeField;
     private Control? _textOptionsField;
     private Control? _fillOptionsField;
     private Control? _rotateOptionsField;
@@ -76,6 +79,10 @@ public sealed class SymbolDesignerForm : Form
     private bool _updatingEquipmentVariantOptions;
     private bool _updatingEquipmentFunctionOptions;
     private bool _updatingUnitMainFunctionOptions;
+    private string _loadedLibraryId = string.Empty;
+    private int _loadedLibraryVersion;
+    private string _loadedLibraryIdentityKey = string.Empty;
+    private bool _loadedHasStoredLibraryId;
 
     public SymbolDesignerForm()
     {
@@ -218,6 +225,11 @@ public sealed class SymbolDesignerForm : Form
         _mobilityTypeComboBox.SelectedIndex = 0;
         _mobilityTypeComboBox.SelectedIndexChanged += (_, _) => RefreshOutput();
 
+        _echelonTypeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        _echelonTypeComboBox.Items.AddRange(Enum.GetValues<OrbatEchelon>().Cast<object>().ToArray());
+        _echelonTypeComboBox.SelectedItem = OrbatEchelon.Unspecified;
+        _echelonTypeComboBox.SelectedIndexChanged += (_, _) => RefreshOutput();
+
         _affiliationComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         _affiliationComboBox.Items.AddRange(Enum.GetNames<SymbolAffiliation>().Cast<object>().ToArray());
         _affiliationComboBox.SelectedItem = SymbolAffiliation.Friendly.ToString();
@@ -347,6 +359,7 @@ public sealed class SymbolDesignerForm : Form
         _landUnitModifier1TypeField = CreateLabeledField("Sector 1", _landUnitModifier1TypeComboBox);
         _landUnitModifier2TypeField = CreateLabeledField("Sector 2", _landUnitModifier2TypeComboBox);
         _mobilityTypeField = CreateLabeledField("Mobility", _mobilityTypeComboBox);
+        _echelonTypeField = CreateLabeledField("Echelon", _echelonTypeComboBox);
         metadataBar.Controls.Add(_unitCategoryField);
         metadataBar.Controls.Add(_unitMainFunctionField);
         metadataBar.Controls.Add(_equipmentCategoryField);
@@ -360,6 +373,7 @@ public sealed class SymbolDesignerForm : Form
         metadataBar.Controls.Add(_landUnitModifier1TypeField);
         metadataBar.Controls.Add(_landUnitModifier2TypeField);
         metadataBar.Controls.Add(_mobilityTypeField);
+        metadataBar.Controls.Add(_echelonTypeField);
         metadataBar.Controls.Add(CreateLabeledField("Affiliation", _affiliationComboBox));
         metadataBar.Controls.Add(CreateLabeledField("Status", _frameStatusComboBox));
 
@@ -1061,6 +1075,11 @@ public sealed class SymbolDesignerForm : Form
             ? role
             : OrbatEquipmentSymbolRole.MainFunction;
 
+    private OrbatEchelon GetSelectedEchelonType() =>
+        _echelonTypeComboBox.SelectedItem is OrbatEchelon echelon
+            ? echelon
+            : OrbatEchelon.Unspecified;
+
     private OrbatEquipmentCompositionMode GetSelectedCompositionMode() =>
         Enum.TryParse(Convert.ToString(_compositionModeComboBox.SelectedItem), out OrbatEquipmentCompositionMode mode)
             ? mode
@@ -1229,12 +1248,17 @@ private OrbatEquipmentMobilityMode GetSelectedMobilityType() =>
     {
         var equipment = GetSelectedPhysicalDomain() == SymbolPhysicalDomain.Equipment;
         var role = GetSelectedSymbolRole();
-        if (!equipment && role == OrbatEquipmentSymbolRole.MobilityIndicator)
+        if ((!equipment && role == OrbatEquipmentSymbolRole.MobilityIndicator)
+            || (equipment && role == OrbatEquipmentSymbolRole.EchelonIndicator))
         {
             _symbolRoleComboBox.SelectedItem = OrbatEquipmentSymbolRole.MainFunction.ToString();
             role = OrbatEquipmentSymbolRole.MainFunction;
         }
 
+        var landUnitComponent = !equipment
+            && role is OrbatEquipmentSymbolRole.Modifier1
+                or OrbatEquipmentSymbolRole.Modifier2
+                or OrbatEquipmentSymbolRole.EchelonIndicator;
         var supportsInFlight = equipment
             && OrbatEquipmentFunctionCatalog.SupportsInFlightOperatingState(GetSelectedEquipmentFunction());
 
@@ -1246,16 +1270,17 @@ private OrbatEquipmentMobilityMode GetSelectedMobilityType() =>
         SetFieldVisible(_equipmentVariantField, equipment);
         SetFieldVisible(_equipmentOperatingStateField, supportsInFlight);
         SetFieldVisible(_symbolRoleField, true);
-        SetFieldVisible(_compositionModeField, true);
+        SetFieldVisible(_compositionModeField, role != OrbatEquipmentSymbolRole.EchelonIndicator);
         SetFieldVisible(_modifier1TypeField, equipment && role == OrbatEquipmentSymbolRole.Modifier1);
         SetFieldVisible(_modifier2TypeField, equipment && role == OrbatEquipmentSymbolRole.Modifier2);
         SetFieldVisible(_landUnitModifier1TypeField, !equipment && role == OrbatEquipmentSymbolRole.Modifier1);
         SetFieldVisible(_landUnitModifier2TypeField, !equipment && role == OrbatEquipmentSymbolRole.Modifier2);
         SetFieldVisible(_mobilityTypeField, equipment && role == OrbatEquipmentSymbolRole.MobilityIndicator);
+        SetFieldVisible(_echelonTypeField, !equipment && role == OrbatEquipmentSymbolRole.EchelonIndicator);
 
         _unitTypeComboBox.Enabled = false;
-        _unitCategoryComboBox.Enabled = !equipment;
-        _unitMainFunctionComboBox.Enabled = !equipment;
+        _unitCategoryComboBox.Enabled = !equipment && !landUnitComponent;
+        _unitMainFunctionComboBox.Enabled = !equipment && !landUnitComponent;
         _equipmentCategoryComboBox.Enabled = equipment;
         _equipmentFunctionComboBox.Enabled = equipment;
         _equipmentVariantComboBox.Enabled = equipment;
@@ -1267,6 +1292,7 @@ private OrbatEquipmentMobilityMode GetSelectedMobilityType() =>
         _landUnitModifier1TypeComboBox.Enabled = !equipment && role == OrbatEquipmentSymbolRole.Modifier1;
         _landUnitModifier2TypeComboBox.Enabled = !equipment && role == OrbatEquipmentSymbolRole.Modifier2;
         _mobilityTypeComboBox.Enabled = equipment && role == OrbatEquipmentSymbolRole.MobilityIndicator;
+        _echelonTypeComboBox.Enabled = !equipment && role == OrbatEquipmentSymbolRole.EchelonIndicator;
 
         if (!supportsInFlight && GetSelectedEquipmentOperatingState() != OrbatEquipmentOperatingState.Ground)
             _equipmentOperatingStateComboBox.SelectedItem = OrbatEquipmentOperatingState.Ground.ToString();
@@ -1442,6 +1468,19 @@ private OrbatEquipmentMobilityMode GetSelectedMobilityType() =>
             return;
         }
 
+        if (GetSelectedSymbolRole() == OrbatEquipmentSymbolRole.EchelonIndicator)
+        {
+            commands = BuiltInSymbolLibrary.Create(GetSelectedEchelonType());
+            if (commands.Count == 0)
+            {
+                MessageBox.Show(this, "Select an Echelon first.", "Symbol Designer", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            _canvas.SetCommands(commands);
+            return;
+        }
+
         var selected = Convert.ToString(_unitTypeComboBox.SelectedItem);
         if (!Enum.TryParse(selected, out Components.OrbatUnitType unitType))
             return;
@@ -1470,9 +1509,19 @@ private OrbatEquipmentMobilityMode GetSelectedMobilityType() =>
             return;
 
         var libraryName = SymbolLibraryFileNaming.GetLogicalName(dialog.FileName);
-        var selectedMainFunction = GetSelectedUnitMainFunction();
+        var selectedRole = GetSelectedSymbolRole();
+        var selectedDomain = GetSelectedPhysicalDomain();
+        var landUnitComponent = selectedDomain == SymbolPhysicalDomain.LandUnit
+            && selectedRole is OrbatEquipmentSymbolRole.Modifier1
+                or OrbatEquipmentSymbolRole.Modifier2
+                or OrbatEquipmentSymbolRole.EchelonIndicator;
+        var selectedMainFunction = landUnitComponent
+            ? OrbatUnitMainFunction.Unspecified
+            : GetSelectedUnitMainFunction();
         var selectedUnitType = OrbatUnitMainFunctionCatalog.ToLegacyUnitType(selectedMainFunction).ToString();
-        var libraryUnitType = selectedMainFunction == OrbatUnitMainFunction.Unspecified
+        var libraryUnitType = landUnitComponent
+            ? OrbatUnitType.Unspecified.ToString()
+            : selectedMainFunction == OrbatUnitMainFunction.Unspecified
             ? InferUnitTypeFromLibraryName(libraryName, selectedUnitType)
             : selectedUnitType;
         var definition = new SymbolLibraryDefinition
@@ -1483,7 +1532,7 @@ private OrbatEquipmentMobilityMode GetSelectedMobilityType() =>
             UnitMainFunction = selectedMainFunction.ToString(),
             EquipmentFunction = GetSelectedEquipmentFunction().ToString(),
             Variant = GetSelectedEquipmentVariant(),
-            SymbolRole = GetSelectedSymbolRole(),
+            SymbolRole = selectedRole,
             CompositionMode = GetSelectedCompositionMode(),
             Layout = OrbatEquipmentSymbolLayout.CreateDefault(),
             Modifier1Type = GetSelectedModifier1Type().ToString(),
@@ -1491,18 +1540,32 @@ private OrbatEquipmentMobilityMode GetSelectedMobilityType() =>
             LandUnitModifier1Type = GetSelectedLandUnitModifier1Name(),
             LandUnitModifier2Type = GetSelectedLandUnitModifier2Name(),
             MobilityType = GetSelectedMobilityType().ToString(),
+            EchelonType = GetSelectedEchelonType().ToString(),
             Affiliation = GetSelectedAffiliation(),
-            PhysicalDomain = GetSelectedPhysicalDomain(),
+            PhysicalDomain = selectedDomain,
             FrameShape = GetSelectedFrameShape(),
             FrameStatus = GetSelectedFrameStatus(),
             OperatingState = GetSelectedEquipmentOperatingState(),
-            Version = 6,
+            Version = SymbolLibraryDefinition.CurrentSchemaVersion,
             Commands = _canvas.Commands.Select(command => command.Clone()).ToList()
         };
 
+        var identityKey = definition.GetIdentityKey();
+        var preserveIdentity = !string.IsNullOrWhiteSpace(_loadedLibraryId)
+            && identityKey.Equals(_loadedLibraryIdentityKey, StringComparison.OrdinalIgnoreCase);
+        definition.LibraryId = preserveIdentity
+            ? _loadedLibraryId
+            : Guid.NewGuid().ToString("N");
+        definition.LibraryVersion = preserveIdentity && _loadedHasStoredLibraryId
+            ? Math.Max(1, _loadedLibraryVersion) + 1
+            : 1;
         var options = new JsonSerializerOptions { WriteIndented = true };
         options.Converters.Add(new JsonStringEnumConverter());
         File.WriteAllText(dialog.FileName, JsonSerializer.Serialize(definition, options), Encoding.UTF8);
+        _loadedLibraryId = definition.LibraryId;
+        _loadedLibraryVersion = definition.LibraryVersion;
+        _loadedLibraryIdentityKey = identityKey;
+        _loadedHasStoredLibraryId = true;
         RefreshEquipmentVariantOptions();
         RefreshLandUnitModifierOptions();
     }
@@ -1530,6 +1593,10 @@ private OrbatEquipmentMobilityMode GetSelectedMobilityType() =>
                 ? $"Equipment.{baseName}{roleSuffix}"
                 : $"Equipment.{baseName}.{SanitizeFileNamePart(variant)}{roleSuffix}";
         }
+
+        if (GetSelectedSymbolRole() == OrbatEquipmentSymbolRole.EchelonIndicator
+            && GetSelectedEchelonType() != OrbatEchelon.Unspecified)
+            return $"LandUnit.Amplifier.B.{GetSelectedEchelonType()}";
 
         var sector1Name = GetSelectedLandUnitModifier1Name();
         if (GetSelectedSymbolRole() == OrbatEquipmentSymbolRole.Modifier1
@@ -1679,6 +1746,10 @@ private static string SanitizeFileNamePart(string value)
         if (definition == null)
             return;
 
+        _loadedLibraryId = definition.GetEffectiveLibraryId();
+        _loadedLibraryVersion = Math.Max(1, definition.LibraryVersion);
+        _loadedLibraryIdentityKey = definition.GetIdentityKey();
+        _loadedHasStoredLibraryId = definition.HasStoredLibraryId;
         _affiliationComboBox.SelectedItem = definition.GetEffectiveAffiliation().ToString();
         _physicalDomainComboBox.SelectedItem = definition.GetEffectivePhysicalDomain().ToString();
         var mainFunction = OrbatUnitMainFunction.Unspecified;
@@ -1706,6 +1777,8 @@ private static string SanitizeFileNamePart(string value)
         if (Enum.TryParse(definition.MobilityType, out OrbatEquipmentMobilityMode mobilityType))
             _mobilityTypeComboBox.SelectedItem = _mobilityTypeComboBox.Items.Cast<EquipmentMobilitySelection>()
                 .FirstOrDefault(item => item.Value == mobilityType);
+        if (Enum.TryParse(definition.EchelonType, out OrbatEchelon echelonType))
+            _echelonTypeComboBox.SelectedItem = echelonType;
         UpdateFunctionSelectorState();
         _frameStatusComboBox.SelectedItem = definition.FrameStatus.ToString();
         _equipmentOperatingStateComboBox.SelectedItem = definition.GetEffectiveOperatingState().ToString();
@@ -1760,7 +1833,8 @@ private static string SanitizeFileNamePart(string value)
         _preview.SymbolRole = GetSelectedSymbolRole();
         _preview.CompositionMode = GetSelectedCompositionMode();
         _preview.SymbolLayout = OrbatEquipmentSymbolLayout.CreateDefault();
-        _preview.ComponentOnly = GetSelectedSymbolRole() == OrbatEquipmentSymbolRole.MobilityIndicator;
+        _preview.ComponentOnly = GetSelectedSymbolRole() is OrbatEquipmentSymbolRole.MobilityIndicator
+            or OrbatEquipmentSymbolRole.EchelonIndicator;
         _preview.SetCommands(commands);
         _commandListBox.BeginUpdate();
         try
@@ -3084,7 +3158,7 @@ internal sealed class SymbolDesignerCanvas : Control
         DrawReference(e.Graphics, drawingFrame);
         if (ShowGrid)
             DrawGrid(e.Graphics, drawingFrame, drawingFrame);
-        if (SymbolRole != OrbatEquipmentSymbolRole.MobilityIndicator)
+        if (!IsStandaloneComponentRole(SymbolRole))
         {
             if (ShowIconGuide)
                 DrawIconGuide(e.Graphics, FrameShape == SymbolFrameShape.FriendlyEquipment ? frame : drawingFrame);
@@ -3096,7 +3170,7 @@ internal sealed class SymbolDesignerCanvas : Control
         {
             var selected = _selectedIndices.Contains(index);
             using var pen = new Pen(selected ? Color.FromArgb(40, 120, 220) : Color.Black, selected ? 2.4f : 2f);
-            if (SymbolRole == OrbatEquipmentSymbolRole.MobilityIndicator)
+            if (IsStandaloneComponentRole(SymbolRole))
                 _commands[index].Draw(e.Graphics, drawingFrame, pen, Brushes.Black);
             else
                 SymbolFrameRenderer.DrawCommand(e.Graphics, frame, GetCommandDrawingFrame(drawingFrame, _commands[index]), FrameShape, _commands[index], pen, Brushes.Black, IconGuideShape);
@@ -3400,10 +3474,10 @@ internal sealed class SymbolDesignerCanvas : Control
 
     private void DrawDrawingBounds(Graphics graphics, RectangleF drawingFrame)
     {
-        if (SymbolRole == OrbatEquipmentSymbolRole.MobilityIndicator)
+        if (IsStandaloneComponentRole(SymbolRole))
         {
-            using var mobilityPen = new Pen(Color.FromArgb(175, 40, 120, 220), 1.2f);
-            graphics.DrawRectangle(mobilityPen, Rectangle.Round(drawingFrame));
+            using var componentPen = new Pen(Color.FromArgb(175, 40, 120, 220), 1.2f);
+            graphics.DrawRectangle(componentPen, Rectangle.Round(drawingFrame));
             return;
         }
 
@@ -3670,11 +3744,17 @@ internal sealed class SymbolDesignerCanvas : Control
     {
         var maxWidth = ClientSize.Width - 80;
         var maxHeight = ClientSize.Height - 100;
-        var mobilityIndicator = SymbolRole == OrbatEquipmentSymbolRole.MobilityIndicator;
-        var width = mobilityIndicator
-            ? Math.Min(maxWidth, maxHeight * 3f)
+        var standaloneAspectRatio = SymbolRole switch
+        {
+            OrbatEquipmentSymbolRole.MobilityIndicator => 3f,
+            OrbatEquipmentSymbolRole.EchelonIndicator => 2f,
+            _ => 0f
+        };
+        var standalone = standaloneAspectRatio > 0f;
+        var width = standalone
+            ? Math.Min(maxWidth, maxHeight * standaloneAspectRatio)
             : Math.Min(maxWidth, maxHeight);
-        var height = mobilityIndicator ? width / 3f : width / StandardFrameAspectRatio;
+        var height = standalone ? width / standaloneAspectRatio : width / StandardFrameAspectRatio;
 
         return new RectangleF(
             (ClientSize.Width - width) / 2f,
@@ -3686,9 +3766,12 @@ internal sealed class SymbolDesignerCanvas : Control
     private RectangleF GetDrawingFrameBounds() => GetDrawingFrameBounds(GetFrameBounds());
 
     private RectangleF GetDrawingFrameBounds(RectangleF frame) =>
-        SymbolRole == OrbatEquipmentSymbolRole.MobilityIndicator
+        IsStandaloneComponentRole(SymbolRole)
             ? frame
             : SymbolFrameRenderer.GetInteriorFrame(frame, FrameShape, IconGuideShape);
+
+    private static bool IsStandaloneComponentRole(OrbatEquipmentSymbolRole role) =>
+        role is OrbatEquipmentSymbolRole.MobilityIndicator or OrbatEquipmentSymbolRole.EchelonIndicator;
 
     private RectangleF GetGuideFrameBounds(RectangleF frame) =>
         SymbolFrameRenderer.GetGuideFrame(frame, FrameShape, IconGuideShape);
@@ -3950,6 +4033,7 @@ internal sealed class SymbolPreviewControl : Control
         {
             OrbatEquipmentSymbolRole.Modifier2 => "Modifier 2 component",
             OrbatEquipmentSymbolRole.MobilityIndicator => "R mobility indicator",
+            OrbatEquipmentSymbolRole.EchelonIndicator => "Echelon indicator",
             _ => "Modifier 1 component"
         };
         TextRenderer.DrawText(
@@ -3969,6 +4053,12 @@ internal sealed class SymbolPreviewControl : Control
             graphics.DrawRectangle(border, Rectangle.Round(mobilityFrame));
             foreach (var command in _commands)
                 command.Draw(graphics, mobilityFrame, pen, Brushes.Black);
+        }
+        else if (SymbolRole == OrbatEquipmentSymbolRole.EchelonIndicator)
+        {
+            var echelonFrame = SymbolFrameRenderer.GetEchelonFrame(contentBounds);
+            foreach (var command in _commands)
+                command.Draw(graphics, echelonFrame, pen, Brushes.Black);
         }
         else
         {
@@ -4007,6 +4097,7 @@ internal sealed class SymbolPreviewControl : Control
         {
             symbolFrame = AdjustModifierPreviewSlot(symbolFrame, frame, shape, SymbolRole);
             symbolFrame = SymbolFrameRenderer.FitCommandsPreservingAspect(symbolFrame, _commands);
+            symbolFrame = SymbolFrameRenderer.AdjustModifierFrameForAffiliation(symbolFrame, shape);
             symbolFrame = SymbolFrameRenderer.ContainComponentFrame(
                 frame,
                 shape,
@@ -4019,7 +4110,19 @@ internal sealed class SymbolPreviewControl : Control
         using var pen = new Pen(Color.Black, 2f);
         SymbolFrameRenderer.DrawFrame(graphics, frame, shape, _frameStatus, fillFrame: true, IconGuideShape.FlatTopBottom, fillUpperCap: FillUpperFrameCap);
         foreach (var command in _commands)
-            SymbolFrameRenderer.DrawCommand(graphics, frame, SymbolFrameRenderer.GetCommandFrame(symbolFrame, shape, command), shape, command, pen, Brushes.Black, IconGuideShape.FlatTopBottom);
+            SymbolFrameRenderer.DrawCommand(
+                graphics,
+                frame,
+                SymbolFrameRenderer.GetCommandFrame(
+                    symbolFrame,
+                    shape,
+                    command,
+                    applyHostileCapsuleAdjustment: !isModifierComponent),
+                shape,
+                command,
+                pen,
+                Brushes.Black,
+                IconGuideShape.FlatTopBottom);
 
         if (shape == _frameShape)
         {
@@ -4039,17 +4142,6 @@ internal sealed class SymbolPreviewControl : Control
         {
             var direction = role == OrbatEquipmentSymbolRole.Modifier1 ? 1f : -1f;
             slot.Offset(0f, affiliationFrame.Height * 0.08f * direction);
-        }
-
-        if (shape is SymbolFrameShape.Unknown or SymbolFrameShape.UnknownEquipmentInFlight)
-        {
-            const float scale = 1.35f;
-            var center = new PointF(slot.Left + slot.Width / 2f, slot.Top + slot.Height / 2f);
-            slot = new RectangleF(
-                center.X - slot.Width * scale / 2f,
-                center.Y - slot.Height * scale / 2f,
-                slot.Width * scale,
-                slot.Height * scale);
         }
 
         return slot;
@@ -4198,7 +4290,11 @@ internal static class SymbolLibraryFileNaming
 }
 internal sealed class SymbolLibraryDefinition
 {
+    public const int CurrentSchemaVersion = 8;
+
     public int Version { get; set; } = 1;
+    public string LibraryId { get; set; } = string.Empty;
+    public int LibraryVersion { get; set; } = 1;
     public string Name { get; set; } = string.Empty;
     public string UnitType { get; set; } = string.Empty;
     public string UnitCategory { get; set; } = OrbatUnitMainFunctionCategory.All.ToString();
@@ -4213,6 +4309,7 @@ internal sealed class SymbolLibraryDefinition
     public string LandUnitModifier1Type { get; set; } = OrbatLandUnitModifier1.Unspecified.ToString();
     public string LandUnitModifier2Type { get; set; } = OrbatLandUnitModifier2.Unspecified.ToString();
     public string MobilityType { get; set; } = OrbatEquipmentMobilityMode.Unspecified.ToString();
+    public string EchelonType { get; set; } = OrbatEchelon.Unspecified.ToString();
     public SymbolAffiliation Affiliation { get; set; } = SymbolAffiliation.Friendly;
     public SymbolPhysicalDomain PhysicalDomain { get; set; } = SymbolPhysicalDomain.LandUnit;
     public SymbolFrameShape FrameShape { get; set; } = SymbolFrameShape.FriendlyUnit;
@@ -4220,6 +4317,50 @@ internal sealed class SymbolLibraryDefinition
     public OrbatEquipmentOperatingState OperatingState { get; set; } = OrbatEquipmentOperatingState.Ground;
     public List<SymbolDrawCommand> Commands { get; set; } = new();
 
+    public bool HasStoredLibraryId => !string.IsNullOrWhiteSpace(LibraryId);
+
+    public string GetEffectiveLibraryId()
+    {
+        if (HasStoredLibraryId)
+            return LibraryId.Trim();
+
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(GetIdentityKey()));
+        return Convert.ToHexString(hash).ToLowerInvariant()[..32];
+    }
+
+    public string GetIdentityKey()
+    {
+        var domain = GetEffectivePhysicalDomain();
+        var type = domain switch
+        {
+            SymbolPhysicalDomain.LandUnit => SymbolRole switch
+            {
+                OrbatEquipmentSymbolRole.Modifier1 => LandUnitModifier1Type,
+                OrbatEquipmentSymbolRole.Modifier2 => LandUnitModifier2Type,
+                OrbatEquipmentSymbolRole.EchelonIndicator => EchelonType,
+                _ => GetEffectiveUnitMainFunction().ToString()
+            },
+            SymbolPhysicalDomain.Equipment => SymbolRole switch
+            {
+                OrbatEquipmentSymbolRole.Modifier1 => Modifier1Type,
+                OrbatEquipmentSymbolRole.Modifier2 => Modifier2Type,
+                OrbatEquipmentSymbolRole.MobilityIndicator => MobilityType,
+                _ => EquipmentFunction
+            },
+            _ => Name
+        };
+
+        return string.Join("|",
+            domain,
+            SymbolRole,
+            NormalizeIdentityPart(type),
+            NormalizeIdentityPart(Variant),
+            domain == SymbolPhysicalDomain.Equipment ? GetEffectiveOperatingState() : OrbatEquipmentOperatingState.Ground,
+            CompositionMode).ToLowerInvariant();
+    }
+
+    private static string NormalizeIdentityPart(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "unspecified" : value.Trim();
     private bool HasConsistentFrameMetadata() =>
         FrameShape == SymbolFrameMapping.GetFrameShape(Affiliation, PhysicalDomain, OperatingState);
 
@@ -4411,12 +4552,32 @@ internal static class SymbolFrameRenderer
         };
     }
 
-    public static RectangleF GetCommandFrame(RectangleF interiorFrame, SymbolFrameShape shape, SymbolDrawCommand command)
+    public static RectangleF GetCommandFrame(
+        RectangleF interiorFrame,
+        SymbolFrameShape shape,
+        SymbolDrawCommand command,
+        bool applyHostileCapsuleAdjustment = true)
     {
-        if (shape != SymbolFrameShape.Hostile || command.Kind != SymbolDrawCommandKind.Capsule)
+        if (!applyHostileCapsuleAdjustment
+            || shape != SymbolFrameShape.Hostile
+            || command.Kind != SymbolDrawCommandKind.Capsule)
             return interiorFrame;
 
         return ScaleRectangle(interiorFrame, 1.24f, 1f);
+    }
+
+    public static RectangleF AdjustModifierFrameForAffiliation(
+        RectangleF commandFrame,
+        SymbolFrameShape shape)
+    {
+        return shape switch
+        {
+            SymbolFrameShape.Hostile or SymbolFrameShape.HostileEquipmentInFlight =>
+                ScaleRectangle(commandFrame, 0.78f, 1f),
+            SymbolFrameShape.Unknown or SymbolFrameShape.UnknownEquipmentInFlight =>
+                ScaleRectangle(commandFrame, 0.78f, 0.78f),
+            _ => commandFrame
+        };
     }
     public static PointF GetEquipmentS2Anchor(
         RectangleF frame,
@@ -4557,6 +4718,37 @@ internal static class SymbolFrameRenderer
             scale);
     }
 
+    public static RectangleF FitCommandsPreservingStandardFrameAspect(
+        RectangleF availableFrame,
+        IReadOnlyList<SymbolDrawCommand> commands)
+    {
+        var hasBounds = false;
+        var visualBounds = RectangleF.Empty;
+        foreach (var command in commands)
+        {
+            var commandBounds = command.GetNormalizedVisualBounds();
+            if (commandBounds.Width <= 0.0001f && commandBounds.Height <= 0.0001f)
+                continue;
+
+            visualBounds = hasBounds ? Union(visualBounds, commandBounds) : commandBounds;
+            hasBounds = true;
+        }
+
+        if (!hasBounds)
+            return availableFrame;
+
+        var visualWidth = Math.Max(0.0001f, visualBounds.Width * StandardFrameAspectRatio);
+        var visualHeight = Math.Max(0.0001f, visualBounds.Height);
+        var scale = Math.Min(availableFrame.Width / visualWidth, availableFrame.Height / visualHeight);
+        return new RectangleF(
+            availableFrame.Left + (availableFrame.Width - visualWidth * scale) / 2f
+                - visualBounds.Left * StandardFrameAspectRatio * scale,
+            availableFrame.Top + (availableFrame.Height - visualHeight * scale) / 2f
+                - visualBounds.Top * scale,
+            StandardFrameAspectRatio * scale,
+            scale);
+    }
+
     public static RectangleF ContainComponentFrame(
         RectangleF affiliationFrame,
         SymbolFrameShape shape,
@@ -4618,6 +4810,19 @@ internal static class SymbolFrameRenderer
     {
         const float sourceAspectRatio = 3f;
         var width = Math.Min(availableFrame.Width, availableFrame.Height * sourceAspectRatio);
+        var height = width / sourceAspectRatio;
+        return new RectangleF(
+            availableFrame.Left + (availableFrame.Width - width) / 2f,
+            availableFrame.Top + (availableFrame.Height - height) / 2f,
+            width,
+            height);
+    }
+
+    public static RectangleF GetEchelonFrame(RectangleF availableFrame)
+    {
+        const float sourceAspectRatio = 2f;
+        const float contentScale = 2f;
+        var width = Math.Min(availableFrame.Width, availableFrame.Height * sourceAspectRatio) * contentScale;
         var height = width / sourceAspectRatio;
         return new RectangleF(
             availableFrame.Left + (availableFrame.Width - width) / 2f,
@@ -6220,6 +6425,21 @@ internal static class BuiltInSymbolLibrary
             Control1 = new SymbolPoint(control1),
             Control2 = new SymbolPoint(control2)
         };
+
+    public static IReadOnlyList<SymbolDrawCommand> Create(OrbatEchelon echelon)
+    {
+        var marker = echelon switch
+        {
+            OrbatEchelon.Team => "Ø", OrbatEchelon.Squad => "•", OrbatEchelon.Section => "••",
+            OrbatEchelon.Platoon => "•••", OrbatEchelon.Company => "I", OrbatEchelon.Battalion => "II",
+            OrbatEchelon.Regiment => "III", OrbatEchelon.Brigade => "X", OrbatEchelon.Division => "XX",
+            OrbatEchelon.Corps => "XXX", OrbatEchelon.Army => "XXXX", OrbatEchelon.ArmyGroup => "XXXXX",
+            OrbatEchelon.Region => "XXXXXX", OrbatEchelon.Command => "++", _ => string.Empty
+        };
+        if (string.IsNullOrWhiteSpace(marker)) return Array.Empty<SymbolDrawCommand>();
+        var fontSize = marker.Length switch { <= 2 => 108f, 3 => 96f, 4 => 84f, _ => 72f };
+        return new[] { SymbolDrawCommand.TextCommand(new PointF(0.5f, 0.5f), marker, fontSize) };
+    }
 
     public static IReadOnlyList<SymbolDrawCommand> Create(OrbatLandUnitModifier1 modifier)
     {

@@ -73,6 +73,21 @@ internal static class StandardComponentLibrarySeeder
                 options);
         }
 
+        foreach (var echelon in Enum.GetValues<OrbatEchelon>()
+            .Where(value => value != OrbatEchelon.Unspecified))
+        {
+            SaveIfMissing(
+                folder,
+                $"LandUnit.Amplifier.B.{echelon}.orbatsymbol.json",
+                CreateDefinition(
+                    echelon.ToString(),
+                    OrbatEquipmentSymbolRole.EchelonIndicator,
+                    BuiltInSymbolLibrary.Create(echelon),
+                    physicalDomain: SymbolPhysicalDomain.LandUnit,
+                    echelonType: echelon.ToString()),
+                options);
+        }
+
         foreach (var mobility in Enum.GetValues<OrbatEquipmentMobilityMode>()
             .Where(value => value != OrbatEquipmentMobilityMode.Unspecified))
         {
@@ -95,13 +110,14 @@ internal static class StandardComponentLibrarySeeder
         string? modifier1Type = null,
         string? modifier2Type = null,
         string? mobilityType = null,
+        string? echelonType = null,
         SymbolPhysicalDomain physicalDomain = SymbolPhysicalDomain.Equipment,
         string? landUnitModifier1Type = null,
         string? landUnitModifier2Type = null)
     {
-        return new SymbolLibraryDefinition
+        var definition = new SymbolLibraryDefinition
         {
-            Version = 6,
+            Version = SymbolLibraryDefinition.CurrentSchemaVersion,
             Name = name,
             UnitType = OrbatUnitType.Unspecified.ToString(),
             UnitCategory = OrbatUnitMainFunctionCategory.All.ToString(),
@@ -116,6 +132,7 @@ internal static class StandardComponentLibrarySeeder
             LandUnitModifier1Type = landUnitModifier1Type ?? OrbatLandUnitModifier1.Unspecified.ToString(),
             LandUnitModifier2Type = landUnitModifier2Type ?? OrbatLandUnitModifier2.Unspecified.ToString(),
             MobilityType = mobilityType ?? OrbatEquipmentMobilityMode.Unspecified.ToString(),
+            EchelonType = echelonType ?? OrbatEchelon.Unspecified.ToString(),
             Affiliation = SymbolAffiliation.Friendly,
             PhysicalDomain = physicalDomain,
             FrameShape = physicalDomain == SymbolPhysicalDomain.Equipment
@@ -125,6 +142,9 @@ internal static class StandardComponentLibrarySeeder
             OperatingState = OrbatEquipmentOperatingState.Ground,
             Commands = commands.Select(command => command.Clone()).ToList()
         };
+        definition.LibraryId = definition.GetEffectiveLibraryId();
+        definition.LibraryVersion = 1;
+        return definition;
     }
 
     private static void SaveIfMissing(

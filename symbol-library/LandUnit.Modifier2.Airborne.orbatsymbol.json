@@ -1,0 +1,92 @@
+﻿{
+  "Version": 7,
+  "LibraryId": "eb8cf27b27e0479c8d9e30eccb3abf49",
+  "LibraryVersion": 4,
+  "Name": "Airborne",
+  "UnitType": "Intelligence",
+  "UnitCategory": "Intelligence",
+  "UnitMainFunction": "IntelligenceOperations",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier2",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "air assault",
+  "LandUnitModifier2Type": "airborne",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.2777778,
+        "Y": 0.5
+      },
+      "End": {
+        "X": 0.5,
+        "Y": 0.49323577
+      },
+      "Control1": {
+        "X": 0.2777778,
+        "Y": 0.29289323
+      },
+      "Control2": {
+        "X": 0.5,
+        "Y": 0.29289323
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0.49837673,
+        "Y": 0.4956706
+      },
+      "End": {
+        "X": 0.7222222,
+        "Y": 0.49323577
+      },
+      "Control1": {
+        "X": 0.5,
+        "Y": 0.29289323
+      },
+      "Control2": {
+        "X": 0.7222222,
+        "Y": 0.29289323
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ],
+  "HasStoredLibraryId": true
+}

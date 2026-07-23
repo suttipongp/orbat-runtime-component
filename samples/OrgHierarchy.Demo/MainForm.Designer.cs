@@ -26,6 +26,7 @@ partial class MainForm
     private Button _openSymbolDesignerButton = null!;
     private Button _viewSymbolLibraryButton = null!;
     private Button _openSymbolOverlayDemoButton = null!;
+    private Button _viewOverlayUnitLibraryButton = null!;
     private ToolTip _symbolsToolTip = null!;
     private ContextMenuStrip _orbatContextMenu = null!;
     private Panel _orbatOptionsPanel = null!;
@@ -70,6 +71,7 @@ partial class MainForm
         _openSymbolDesignerButton = new Button();
         _viewSymbolLibraryButton = new Button();
         _openSymbolOverlayDemoButton = new Button();
+        _viewOverlayUnitLibraryButton = new Button();
         _symbolsToolTip = new ToolTip(components);
         _orbatContextMenu = new ContextMenuStrip(components);
         _orbatOptionsPanel = new Panel();
@@ -301,6 +303,17 @@ partial class MainForm
         _symbolsToolTip.SetToolTip(_openSymbolOverlayDemoButton, "Preview map overlay symbols with unit/equipment amplifier boxes.");
         _openSymbolOverlayDemoButton.UseVisualStyleBackColor = true;
         // 
+        // _viewOverlayUnitLibraryButton
+        //
+        _viewOverlayUnitLibraryButton.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+        _viewOverlayUnitLibraryButton.Location = new Point(398, 8);
+        _viewOverlayUnitLibraryButton.Name = "_viewOverlayUnitLibraryButton";
+        _viewOverlayUnitLibraryButton.Size = new Size(138, 28);
+        _viewOverlayUnitLibraryButton.TabIndex = 3;
+        _viewOverlayUnitLibraryButton.Text = "Overlay library";
+        _symbolsToolTip.SetToolTip(_viewOverlayUnitLibraryButton, "Browse saved LandUnit and Equipment overlay instances.");
+        _viewOverlayUnitLibraryButton.UseVisualStyleBackColor = true;
+        //
         // _orbatOptionsPanel
         // 
         _orbatOptionsPanel.Controls.Add(_showUniqueDesignationCheckBox);
@@ -326,6 +339,7 @@ partial class MainForm
         // 
         // _symbolsHeaderPanel
         // 
+        _symbolsHeaderPanel.Controls.Add(_viewOverlayUnitLibraryButton);
         _symbolsHeaderPanel.Controls.Add(_openSymbolOverlayDemoButton);
         _symbolsHeaderPanel.Controls.Add(_viewSymbolLibraryButton);
         _symbolsHeaderPanel.Controls.Add(_openSymbolDesignerButton);

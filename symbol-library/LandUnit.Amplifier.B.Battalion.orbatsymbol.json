@@ -1,0 +1,93 @@
+﻿{
+  "Version": 8,
+  "LibraryId": "d2f73c4148fa4ad98e7559357a9d64a1",
+  "LibraryVersion": 3,
+  "Name": "Amplifier.B.Battalion",
+  "UnitType": "Unspecified",
+  "UnitCategory": "CommandAndControl",
+  "UnitMainFunction": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "EchelonIndicator",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "Unspecified",
+  "LandUnitModifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "EchelonType": "Battalion",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.44444445,
+        "Y": 0.3333333
+      },
+      "End": {
+        "X": 0.4726833,
+        "Y": 0.6646393
+      },
+      "Control1": {
+        "X": -0.0461227,
+        "Y": -0.002027303
+      },
+      "Control2": {
+        "X": -0.0461227,
+        "Y": -0.002027303
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    },
+    {
+      "Kind": "Rectangle",
+      "Start": {
+        "X": 0.52747524,
+        "Y": 0.3333333
+      },
+      "End": {
+        "X": 0.5555556,
+        "Y": 0.6646393
+      },
+      "Control1": {
+        "X": 0.07497224,
+        "Y": 0.0055347458
+      },
+      "Control2": {
+        "X": 0.07497224,
+        "Y": 0.0055347458
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": true,
+      "Points": []
+    }
+  ],
+  "HasStoredLibraryId": true
+}

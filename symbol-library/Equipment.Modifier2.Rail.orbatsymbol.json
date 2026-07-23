@@ -1,7 +1,11 @@
 ﻿{
-  "Version": 4,
+  "Version": 7,
+  "LibraryId": "d7f47de313030cbd8b2f052cec544ef4",
+  "LibraryVersion": 1,
   "Name": "Rail",
   "UnitType": "Unspecified",
+  "UnitCategory": "CommandAndControl",
+  "UnitMainFunction": "Unspecified",
   "EquipmentFunction": "Unspecified",
   "Variant": "",
   "SymbolRole": "Modifier2",
@@ -20,6 +24,8 @@
   },
   "Modifier1Type": "Unspecified",
   "Modifier2Type": "Rail",
+  "LandUnitModifier1Type": "Unspecified",
+  "LandUnitModifier2Type": "Unspecified",
   "MobilityType": "Unspecified",
   "Affiliation": "Friendly",
   "PhysicalDomain": "Equipment",
@@ -30,20 +36,20 @@
     {
       "Kind": "Line",
       "Start": {
-        "X": 0,
-        "Y": 0.3333333
+        "X": -0.0023076534,
+        "Y": 0.30102563
       },
       "End": {
-        "X": 1,
-        "Y": 0.3333333
+        "X": 0.9976926,
+        "Y": 0.30102563
       },
       "Control1": {
-        "X": 0.004739314,
-        "Y": -0.004739374
+        "X": 0.002431661,
+        "Y": -0.03704706
       },
       "Control2": {
-        "X": 0.004739314,
-        "Y": -0.004739374
+        "X": 0.002431661,
+        "Y": -0.03704706
       },
       "Radius": 0,
       "FontSize": 12,
@@ -162,5 +168,6 @@
       "Filled": false,
       "Points": []
     }
-  ]
+  ],
+  "HasStoredLibraryId": true
 }

@@ -1,0 +1,93 @@
+﻿{
+  "Version": 8,
+  "LibraryId": "7d81fae6ee944a9f9277b232509539e6",
+  "LibraryVersion": 1,
+  "Name": "Amplifier.B.Division",
+  "UnitType": "Unspecified",
+  "UnitCategory": "CommandAndControl",
+  "UnitMainFunction": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "EchelonIndicator",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "Unspecified",
+  "LandUnitModifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "EchelonType": "Division",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.5625,
+        "Y": 0.5
+      },
+      "End": {
+        "X": 0.5625,
+        "Y": 0.5
+      },
+      "Control1": {
+        "X": 0.25544858,
+        "Y": 0.34465283
+      },
+      "Control2": {
+        "X": 0.25544858,
+        "Y": 0.34465283
+      },
+      "Radius": 0,
+      "FontSize": 50,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "x",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.4375,
+        "Y": 0.5
+      },
+      "End": {
+        "X": 0.4375,
+        "Y": 0.5
+      },
+      "Control1": {
+        "X": -0.021977708,
+        "Y": 0.3358156
+      },
+      "Control2": {
+        "X": -0.021977708,
+        "Y": 0.3358156
+      },
+      "Radius": 0,
+      "FontSize": 50,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "x",
+      "Filled": false,
+      "Points": []
+    }
+  ],
+  "HasStoredLibraryId": true
+}

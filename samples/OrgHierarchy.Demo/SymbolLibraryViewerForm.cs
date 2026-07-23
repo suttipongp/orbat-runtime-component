@@ -16,6 +16,7 @@ public sealed class SymbolLibraryViewerForm : Form
     private readonly Button _browseFolderButton = new() { Text = "Browse folder", AutoSize = true };
     private readonly Button _openFilesButton = new() { Text = "Open files", AutoSize = true };
     private readonly Button _reloadButton = new() { Text = "Reload", AutoSize = true };
+    private readonly Button _validateButton = new() { Text = "Validate", AutoSize = true };
     private readonly Button _editInDesignerButton = new() { Text = "Edit in designer", AutoSize = true };
     private readonly Button _deleteFileButton = new() { Text = "Delete file", AutoSize = true };
     private readonly Label _statusLabel = new() { Dock = DockStyle.Fill, ForeColor = SystemColors.GrayText, TextAlign = ContentAlignment.MiddleLeft };
@@ -28,10 +29,13 @@ public sealed class SymbolLibraryViewerForm : Form
     private readonly Label _frameLabel = CreateValueLabel();
     private readonly Label _statusValueLabel = CreateValueLabel();
     private readonly Label _commandCountLabel = CreateValueLabel();
+    private readonly Label _libraryIdLabel = CreateValueLabel();
+    private readonly Label _libraryVersionLabel = CreateValueLabel();
     private readonly TextBox _fileTextBox = new() { Dock = DockStyle.Fill, ReadOnly = true };
     private readonly ListBox _commandListBox = new() { Dock = DockStyle.Fill, IntegralHeight = false };
     private readonly JsonSerializerOptions _jsonOptions = CreateJsonOptions();
     private string[] _loadedFiles = Array.Empty<string>();
+    private SymbolLibraryValidationReport _lastValidationReport = SymbolLibraryValidationReport.Empty;
 
     public SymbolLibraryViewerForm()
     {
@@ -59,6 +63,7 @@ public sealed class SymbolLibraryViewerForm : Form
         _browseFolderButton.Click += (_, _) => BrowseFolder();
         _openFilesButton.Click += (_, _) => OpenFiles();
         _reloadButton.Click += (_, _) => ReloadCurrentLibrary();
+        _validateButton.Click += (_, _) => ShowValidationReport();
         _editInDesignerButton.Click += (_, _) => EditSelectedInDesigner();
         _deleteFileButton.Click += (_, _) => DeleteSelectedFile();
 
@@ -98,13 +103,14 @@ public sealed class SymbolLibraryViewerForm : Form
         var toolbar = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            ColumnCount = 7
+            ColumnCount = 8
         };
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 94));
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 112));
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90));
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 76));
+        toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 88));
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 126));
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 102));
 
@@ -113,8 +119,9 @@ public sealed class SymbolLibraryViewerForm : Form
         toolbar.Controls.Add(_browseFolderButton, 2, 0);
         toolbar.Controls.Add(_openFilesButton, 3, 0);
         toolbar.Controls.Add(_reloadButton, 4, 0);
-        toolbar.Controls.Add(_editInDesignerButton, 5, 0);
-        toolbar.Controls.Add(_deleteFileButton, 6, 0);
+        toolbar.Controls.Add(_validateButton, 5, 0);
+        toolbar.Controls.Add(_editInDesignerButton, 6, 0);
+        toolbar.Controls.Add(_deleteFileButton, 7, 0);
         return toolbar;
     }
 
@@ -139,8 +146,8 @@ public sealed class SymbolLibraryViewerForm : Form
             ColumnCount = 1,
             RowCount = 2
         };
-        panel.RowStyles.Add(new RowStyle(SizeType.Percent, 72));
-        panel.RowStyles.Add(new RowStyle(SizeType.Percent, 28));
+        panel.RowStyles.Add(new RowStyle(SizeType.Percent, 62));
+        panel.RowStyles.Add(new RowStyle(SizeType.Percent, 38));
         panel.Controls.Add(_preview, 0, 0);
         panel.Controls.Add(CreateMetadataPanel(), 0, 1);
         return panel;
@@ -152,7 +159,7 @@ public sealed class SymbolLibraryViewerForm : Form
         {
             Dock = DockStyle.Fill,
             ColumnCount = 2,
-            RowCount = 6,
+            RowCount = 8,
             Padding = new Padding(0, 8, 0, 0)
         };
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 96));
@@ -163,7 +170,9 @@ public sealed class SymbolLibraryViewerForm : Form
         AddMetadataRow(panel, 2, "Frame", _frameLabel);
         AddMetadataRow(panel, 3, "Status", _statusValueLabel);
         AddMetadataRow(panel, 4, "Commands", _commandCountLabel);
-        AddMetadataRow(panel, 5, "File", _fileTextBox);
+        AddMetadataRow(panel, 5, "Library ID", _libraryIdLabel);
+        AddMetadataRow(panel, 6, "Revision", _libraryVersionLabel);
+        AddMetadataRow(panel, 7, "File", _fileTextBox);
         return panel;
     }
 
@@ -174,7 +183,7 @@ public sealed class SymbolLibraryViewerForm : Form
 
     private static void AddMetadataRow(TableLayoutPanel panel, int row, Control label, Control value)
     {
-        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, row == 5 ? 56 : 30));
+        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, row == 7 ? 56 : 30));
         panel.Controls.Add(label, 0, row);
         panel.Controls.Add(value, 1, row);
     }
@@ -211,6 +220,20 @@ public sealed class SymbolLibraryViewerForm : Form
         LoadFiles(dialog.FileNames);
         _libraryPathTextBox.Text = Path.GetDirectoryName(dialog.FileNames[0]) ?? string.Empty;
         SaveRecentLibrary(SymbolLibraryLoadMode.Files, _libraryPathTextBox.Text, dialog.FileNames);
+    }
+
+    private void ShowValidationReport()
+    {
+        if (_loadedFiles.Length == 0)
+        {
+            MessageBox.Show(this, "Open a symbol library folder or files first.", "Symbol Library Validation", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        _lastValidationReport = SymbolLibraryValidator.ValidateFiles(_loadedFiles, _jsonOptions);
+        using var form = new SymbolLibraryValidationForm(_lastValidationReport);
+        form.ShowDialog(this);
+        _statusLabel.Text = $"Validation: {_lastValidationReport.ErrorCount} error(s), {_lastValidationReport.WarningCount} warning(s), {_lastValidationReport.InfoCount} info.";
     }
 
     private void ReloadCurrentLibrary()
@@ -374,6 +397,7 @@ public sealed class SymbolLibraryViewerForm : Form
     private void LoadFiles(IReadOnlyList<string> files)
     {
         _loadedFiles = files.ToArray();
+        _lastValidationReport = SymbolLibraryValidator.ValidateFiles(_loadedFiles, _jsonOptions);
         _symbolListView.BeginUpdate();
         try
         {
@@ -420,9 +444,10 @@ public sealed class SymbolLibraryViewerForm : Form
                 _symbolListView.Items[0].Selected = true;
 
             var loaded = _symbolListView.Items.Count;
-            _statusLabel.Text = skipped == 0
+            var loadSummary = skipped == 0
                 ? $"Loaded {loaded} symbol(s)."
                 : $"Loaded {loaded} symbol(s). Skipped {skipped} invalid file(s).";
+            _statusLabel.Text = $"{loadSummary} Validation: {_lastValidationReport.ErrorCount} error(s), {_lastValidationReport.WarningCount} warning(s).";
         }
         finally
         {
@@ -443,6 +468,7 @@ public sealed class SymbolLibraryViewerForm : Form
         }
         AddSymbolGroup(groups, "LandUnitModifier1", "Land Unit - Sector 1 (Modifier 1)");
         AddSymbolGroup(groups, "LandUnitModifier2", "Land Unit - Sector 2 (Modifier 2)");
+        AddSymbolGroup(groups, "LandUnitEchelon", "Land Unit - Amplifier B (Echelon)");
         AddSymbolGroup(groups, "EquipmentMain", "Equipment - Main symbols");
         AddSymbolGroup(groups, "EquipmentComposite", "Equipment - Composite symbols");
         AddSymbolGroup(groups, "EquipmentModifier1", "Equipment - Modifier 1");
@@ -467,6 +493,7 @@ public sealed class SymbolLibraryViewerForm : Form
             {
                 OrbatEquipmentSymbolRole.Modifier1 => "LandUnitModifier1",
                 OrbatEquipmentSymbolRole.Modifier2 => "LandUnitModifier2",
+                OrbatEquipmentSymbolRole.EchelonIndicator => "LandUnitEchelon",
                 _ => $"LandUnitMain.{definition.GetEffectiveUnitCategory()}"
             },
             SymbolPhysicalDomain.Equipment => definition.SymbolRole switch
@@ -535,12 +562,14 @@ public sealed class SymbolLibraryViewerForm : Form
             {
                 OrbatEquipmentSymbolRole.Modifier1 => "LandUnit Modifier 1",
                 OrbatEquipmentSymbolRole.Modifier2 => "LandUnit Modifier 2",
+                OrbatEquipmentSymbolRole.EchelonIndicator => "Amplifier B (Echelon)",
                 _ => "Main function"
             };
             _unitTypeLabel.Text = definition.SymbolRole switch
             {
                 OrbatEquipmentSymbolRole.Modifier1 => definition.LandUnitModifier1Type,
                 OrbatEquipmentSymbolRole.Modifier2 => definition.LandUnitModifier2Type,
+                OrbatEquipmentSymbolRole.EchelonIndicator => definition.EchelonType,
                 _ => OrbatUnitMainFunctionCatalog.GetDisplayName(definition.GetEffectiveUnitMainFunction())
             };
         }
@@ -549,6 +578,10 @@ public sealed class SymbolLibraryViewerForm : Form
             : $"{definition.GetEffectiveAffiliation()} / LandUnit";
         _statusValueLabel.Text = definition.FrameStatus.ToString();
         _commandCountLabel.Text = definition.Commands.Count.ToString();
+        _libraryIdLabel.Text = definition.HasStoredLibraryId
+            ? definition.LibraryId
+            : $"{definition.GetEffectiveLibraryId()} (derived)";
+        _libraryVersionLabel.Text = Math.Max(1, definition.LibraryVersion).ToString();
         _fileTextBox.Text = item.FileName;
 
         _commandListBox.BeginUpdate();
@@ -573,6 +606,8 @@ public sealed class SymbolLibraryViewerForm : Form
         _frameLabel.Text = string.Empty;
         _statusValueLabel.Text = string.Empty;
         _commandCountLabel.Text = string.Empty;
+        _libraryIdLabel.Text = string.Empty;
+        _libraryVersionLabel.Text = string.Empty;
         _fileTextBox.Text = string.Empty;
     }
 
@@ -594,6 +629,12 @@ public sealed class SymbolLibraryViewerForm : Form
                 var commandFrame = SymbolFrameRenderer.FitMobilityThumbnailCommands(thumbnailBounds, definition.Commands);
                 foreach (var command in definition.Commands)
                     command.Draw(graphics, commandFrame, componentPen, Brushes.Black);
+            }
+            else if (definition.SymbolRole == OrbatEquipmentSymbolRole.EchelonIndicator)
+            {
+                var echelonFrame = SymbolFrameRenderer.GetEchelonFrame(contentBounds);
+                foreach (var command in definition.Commands)
+                    command.Draw(graphics, echelonFrame, componentPen, Brushes.Black);
             }
             else
             {
@@ -627,7 +668,9 @@ public sealed class SymbolLibraryViewerForm : Form
     }
 
     private static bool IsStandaloneComponent(SymbolLibraryDefinition definition) =>
-        definition.SymbolRole is OrbatEquipmentSymbolRole.Modifier1 or OrbatEquipmentSymbolRole.Modifier2
+        definition.SymbolRole is OrbatEquipmentSymbolRole.Modifier1
+            or OrbatEquipmentSymbolRole.Modifier2
+            or OrbatEquipmentSymbolRole.EchelonIndicator
         || definition.GetEffectivePhysicalDomain() == SymbolPhysicalDomain.Equipment
             && definition.SymbolRole == OrbatEquipmentSymbolRole.MobilityIndicator;
 
@@ -666,7 +709,9 @@ public sealed class SymbolLibraryViewerForm : Form
                     ? Definition.LandUnitModifier1Type
                     : Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier2
                         ? Definition.LandUnitModifier2Type
-                        : Definition.GetEffectiveUnitMainFunction() != OrbatUnitMainFunction.Unspecified
+                        : Definition.SymbolRole == OrbatEquipmentSymbolRole.EchelonIndicator
+                            ? Definition.EchelonType
+                            : Definition.GetEffectiveUnitMainFunction() != OrbatUnitMainFunction.Unspecified
                             ? OrbatUnitMainFunctionCatalog.GetDisplayName(Definition.GetEffectiveUnitMainFunction())
                             : !string.IsNullOrWhiteSpace(Definition.UnitType)
                                 ? Definition.UnitType
@@ -683,6 +728,11 @@ public sealed class SymbolLibraryViewerForm : Form
         {
             var domain = Definition.GetEffectivePhysicalDomain();
             if (domain == SymbolPhysicalDomain.LandUnit
+                && Definition.SymbolRole == OrbatEquipmentSymbolRole.EchelonIndicator
+                && Enum.TryParse(Definition.EchelonType, out OrbatEchelon echelon))
+                return echelon.ToString();
+
+            if (domain == SymbolPhysicalDomain.LandUnit
                 && Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier1
                 && Enum.TryParse(Definition.LandUnitModifier1Type, out OrbatLandUnitModifier1 landModifier1))
                 return landModifier1.GetDisplayName();
@@ -692,7 +742,7 @@ public sealed class SymbolLibraryViewerForm : Form
                 && Enum.TryParse(Definition.LandUnitModifier2Type, out OrbatLandUnitModifier2 landModifier2))
                 return landModifier2.GetDisplayName();
 
-            if (domain == SymbolPhysicalDomain.LandUnit
+             if (domain == SymbolPhysicalDomain.LandUnit
                 && Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier1
                 && !string.IsNullOrWhiteSpace(Definition.LandUnitModifier1Type)
                 && !Definition.LandUnitModifier1Type.Equals(OrbatLandUnitModifier1.Unspecified.ToString(), StringComparison.OrdinalIgnoreCase))
@@ -751,7 +801,9 @@ public sealed class SymbolLibraryViewerForm : Form
                     ? Definition.LandUnitModifier1Type
                     : Definition.SymbolRole == OrbatEquipmentSymbolRole.Modifier2
                         ? Definition.LandUnitModifier2Type
-                        : Definition.GetEffectiveUnitMainFunction() != OrbatUnitMainFunction.Unspecified
+                        : Definition.SymbolRole == OrbatEquipmentSymbolRole.EchelonIndicator
+                            ? Definition.EchelonType
+                            : Definition.GetEffectiveUnitMainFunction() != OrbatUnitMainFunction.Unspecified
                             ? Definition.GetEffectiveUnitMainFunction().ToString()
                             : Definition.UnitType;
             return !string.IsNullOrWhiteSpace(fileName)

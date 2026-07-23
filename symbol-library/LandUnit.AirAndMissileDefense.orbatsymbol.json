@@ -1,0 +1,89 @@
+﻿{
+  "Version": 6,
+  "Name": "AirAndMissileDefense",
+  "UnitType": "AirDefense",
+  "UnitCategory": "Fires",
+  "UnitMainFunction": "AirAndMissileDefense",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Composite",
+  "CompositionMode": "Composite",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "Unspecified",
+  "LandUnitModifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Bezier",
+      "Start": {
+        "X": 0,
+        "Y": 1
+      },
+      "End": {
+        "X": 0.997718,
+        "Y": 0.99872017
+      },
+      "Control1": {
+        "X": 0.111111104,
+        "Y": 0.6666667
+      },
+      "Control2": {
+        "X": 0.8888889,
+        "Y": 0.6666667
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.49344623,
+        "Y": 0.6137326
+      },
+      "End": {
+        "X": 0.49344623,
+        "Y": 0.6137326
+      },
+      "Control1": {
+        "X": 0.049001813,
+        "Y": 0.28039926
+      },
+      "Control2": {
+        "X": 0.049001813,
+        "Y": 0.28039926
+      },
+      "Radius": 0,
+      "FontSize": 35,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "MD",
+      "Filled": false,
+      "Points": []
+    }
+  ]
+}

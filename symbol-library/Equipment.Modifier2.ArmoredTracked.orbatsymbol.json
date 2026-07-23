@@ -1,7 +1,11 @@
 ﻿{
-  "Version": 4,
+  "Version": 7,
+  "LibraryId": "e54e9550d257b7d015044d027d5aea38",
+  "LibraryVersion": 1,
   "Name": "ArmoredTracked",
   "UnitType": "Unspecified",
+  "UnitCategory": "CommandAndControl",
+  "UnitMainFunction": "Unspecified",
   "EquipmentFunction": "Unspecified",
   "Variant": "",
   "SymbolRole": "Modifier2",
@@ -20,6 +24,8 @@
   },
   "Modifier1Type": "Unspecified",
   "Modifier2Type": "ArmoredTracked",
+  "LandUnitModifier1Type": "Unspecified",
+  "LandUnitModifier2Type": "Unspecified",
   "MobilityType": "Unspecified",
   "Affiliation": "Friendly",
   "PhysicalDomain": "Equipment",
@@ -30,12 +36,12 @@
     {
       "Kind": "Capsule",
       "Start": {
-        "X": 0.08333331,
-        "Y": 0.3333333
+        "X": 0.16666666,
+        "Y": 0.3685065
       },
       "End": {
-        "X": 0.92,
-        "Y": 0.66780823
+        "X": 0.8333334,
+        "Y": 0.6241883
       },
       "Control1": {
         "X": 0,
@@ -48,9 +54,12 @@
       "Radius": 0,
       "FontSize": 12,
       "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
       "Text": "",
       "Filled": false,
       "Points": []
     }
-  ]
+  ],
+  "HasStoredLibraryId": true
 }

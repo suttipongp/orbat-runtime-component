@@ -1,0 +1,65 @@
+﻿{
+  "Version": 7,
+  "LibraryId": "aa9f8fe4e5a1dc3fa5e423bb87182e83",
+  "LibraryVersion": 3,
+  "Name": "ArmoredProtection",
+  "UnitType": "Intelligence",
+  "UnitCategory": "Intelligence",
+  "UnitMainFunction": "IntelligenceOperations",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "Modifier1",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "ArmoredProtection",
+  "LandUnitModifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Capsule",
+      "Start": {
+        "X": 0.2777778,
+        "Y": 0.3733766
+      },
+      "End": {
+        "X": 0.7222222,
+        "Y": 0.62662333
+      },
+      "Control1": {
+        "X": -0.15594429,
+        "Y": 0.24808934
+      },
+      "Control2": {
+        "X": -0.15594429,
+        "Y": 0.24808934
+      },
+      "Radius": 0,
+      "FontSize": 12,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "",
+      "Filled": false,
+      "Points": []
+    }
+  ],
+  "HasStoredLibraryId": true
+}

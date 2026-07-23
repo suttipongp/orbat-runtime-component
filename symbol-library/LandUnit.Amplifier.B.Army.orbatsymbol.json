@@ -1,0 +1,147 @@
+﻿{
+  "Version": 8,
+  "LibraryId": "6d6a5bfad0a4456da6a255232e68a4fe",
+  "LibraryVersion": 1,
+  "Name": "Amplifier.B.Army",
+  "UnitType": "Unspecified",
+  "UnitCategory": "CommandAndControl",
+  "UnitMainFunction": "Unspecified",
+  "EquipmentFunction": "Unspecified",
+  "Variant": "",
+  "SymbolRole": "EchelonIndicator",
+  "CompositionMode": "Composable",
+  "Layout": {
+    "MainScaleWithoutModifiers": 0.8,
+    "MainScaleWithOneModifier": 0.74,
+    "MainScaleWithTwoModifiers": 0.68,
+    "ModifierScale": 0.22,
+    "ModifierWidthScale": 0.4,
+    "ModifierHeightScale": 0.18,
+    "ModifierCenterOffset": 0.36,
+    "MainSingleModifierOffset": 0.07,
+    "MainOffsetX": 0,
+    "MainOffsetY": 0
+  },
+  "Modifier1Type": "Unspecified",
+  "Modifier2Type": "Unspecified",
+  "LandUnitModifier1Type": "Unspecified",
+  "LandUnitModifier2Type": "Unspecified",
+  "MobilityType": "Unspecified",
+  "EchelonType": "Army",
+  "Affiliation": "Friendly",
+  "PhysicalDomain": "LandUnit",
+  "FrameShape": "FriendlyUnit",
+  "FrameStatus": "Present",
+  "OperatingState": "Ground",
+  "Commands": [
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.5625,
+        "Y": 0.5
+      },
+      "End": {
+        "X": 0.5625,
+        "Y": 0.5
+      },
+      "Control1": {
+        "X": 0.5326914,
+        "Y": 0.09427267
+      },
+      "Control2": {
+        "X": 0.5326914,
+        "Y": 0.09427267
+      },
+      "Radius": 0,
+      "FontSize": 50,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "x",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.4375,
+        "Y": 0.5
+      },
+      "End": {
+        "X": 0.4375,
+        "Y": 0.5
+      },
+      "Control1": {
+        "X": -0.116250336,
+        "Y": 0.35507557
+      },
+      "Control2": {
+        "X": -0.116250336,
+        "Y": 0.35507557
+      },
+      "Radius": 0,
+      "FontSize": 50,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "x",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.6875,
+        "Y": 0.5
+      },
+      "End": {
+        "X": 0.6875,
+        "Y": 0.5
+      },
+      "Control1": {
+        "X": 0.7463548,
+        "Y": 0.3514871
+      },
+      "Control2": {
+        "X": 0.7463548,
+        "Y": 0.3514871
+      },
+      "Radius": 0,
+      "FontSize": 50,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "x",
+      "Filled": false,
+      "Points": []
+    },
+    {
+      "Kind": "Text",
+      "Start": {
+        "X": 0.3125,
+        "Y": 0.5
+      },
+      "End": {
+        "X": 0.3125,
+        "Y": 0.5
+      },
+      "Control1": {
+        "X": 0.04281699,
+        "Y": 1.0891554
+      },
+      "Control2": {
+        "X": 0.04281699,
+        "Y": 1.0891554
+      },
+      "Radius": 0,
+      "FontSize": 50,
+      "StrokeWidth": 2,
+      "RotationDegrees": 0,
+      "GroupId": null,
+      "Text": "x",
+      "Filled": false,
+      "Points": []
+    }
+  ],
+  "HasStoredLibraryId": true
+}
