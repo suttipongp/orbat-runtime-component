@@ -5,6 +5,7 @@ from pathlib import Path
 CONTRACT_VERSION="1.0"
 LIBRARY_ID="orbat.standard-symbol-library"
 LIBRARY_REVISION=1
+STROKE_REFERENCE_SIZE=256
 KNOWN={"Version","Name","LibraryId","LibraryVersion","UnitType","UnitCategory","UnitMainFunction","EquipmentCategory","EquipmentFunction","Variant","SymbolRole","CompositionMode","Layout","Modifier1Type","Modifier2Type","LandUnitModifier1Type","LandUnitModifier2Type","MobilityType","EchelonType","Affiliation","PhysicalDomain","FrameShape","FrameStatus","OperatingState","Commands"}
 ROLE_MAP={"MainFunction":"main-function","Modifier1":"modifier-1","Modifier2":"modifier-2","EchelonIndicator":"echelon-indicator","MobilityIndicator":"mobility-indicator","Composite":"composite"}
 
@@ -48,7 +49,7 @@ def legacy_effective_id(raw,domain,role):
     return hashlib.sha256(key.encode()).hexdigest()[:32]
 def identity(raw,domain,role):return "orbat.definition."+slug(legacy_effective_id(raw,domain,role))
 def style(command):
-    return {"stroke":"#111111","strokeWidth":max(0,float(command.get("StrokeWidth") or 2)/100),"fill":"#111111" if command.get("Filled") else None,"lineCap":"round","lineJoin":"round"}
+    return {"stroke":"#111111","strokeWidth":max(0,float(command.get("StrokeWidth") or 2)/STROKE_REFERENCE_SIZE),"fill":"#111111" if command.get("Filled") else None,"lineCap":"round","lineJoin":"round"}
 def primitive(command,index):
     kind=str(command.get("Kind") or "").lower(); start=point(command.get("Start")); end=point(command.get("End")); base={"id":f"p{index:03d}","style":style(command)}
     if command.get("GroupId"):base["groupId"]=str(command["GroupId"])

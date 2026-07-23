@@ -1271,6 +1271,310 @@
         }
       },
       "size": 256
+    },
+    {
+      "id": "equipment-function-direct-32",
+      "instance": {
+        "affiliation": "friend",
+        "amplifierValues": {},
+        "components": {
+          "equipmentFunction": {
+            "contractVersion": "1.0",
+            "definitionId": "orbat.definition.56c6739fe4c06e6a6b6bc8d85719b143",
+            "definitionRevision": 2,
+            "libraryId": "orbat.standard-symbol-library",
+            "libraryRevision": 1
+          },
+          "mainFunction": {
+            "contractVersion": "1.0",
+            "definitionId": "orbat.definition.3209c4c77199207165405c131f7b84d4",
+            "definitionRevision": 2,
+            "libraryId": "orbat.standard-symbol-library",
+            "libraryRevision": 1
+          }
+        },
+        "contractVersion": "1.0",
+        "domain": "equipment",
+        "id": "fixture.equipment-function-direct",
+        "status": {
+          "frame": "present",
+          "operatingState": "Ground"
+        },
+        "template": {
+          "contractVersion": "1.0",
+          "definitionId": "orbat.definition.3209c4c77199207165405c131f7b84d4",
+          "definitionRevision": 2,
+          "libraryId": "orbat.standard-symbol-library",
+          "libraryRevision": 1
+        }
+      },
+      "size": 32
+    },
+    {
+      "id": "equipment-function-direct-48",
+      "instance": {
+        "affiliation": "friend",
+        "amplifierValues": {},
+        "components": {
+          "equipmentFunction": {
+            "contractVersion": "1.0",
+            "definitionId": "orbat.definition.56c6739fe4c06e6a6b6bc8d85719b143",
+            "definitionRevision": 2,
+            "libraryId": "orbat.standard-symbol-library",
+            "libraryRevision": 1
+          },
+          "mainFunction": {
+            "contractVersion": "1.0",
+            "definitionId": "orbat.definition.3209c4c77199207165405c131f7b84d4",
+            "definitionRevision": 2,
+            "libraryId": "orbat.standard-symbol-library",
+            "libraryRevision": 1
+          }
+        },
+        "contractVersion": "1.0",
+        "domain": "equipment",
+        "id": "fixture.equipment-function-direct",
+        "status": {
+          "frame": "present",
+          "operatingState": "Ground"
+        },
+        "template": {
+          "contractVersion": "1.0",
+          "definitionId": "orbat.definition.3209c4c77199207165405c131f7b84d4",
+          "definitionRevision": 2,
+          "libraryId": "orbat.standard-symbol-library",
+          "libraryRevision": 1
+        }
+      },
+      "size": 48
+    },
+    {
+      "id": "equipment-function-direct-96",
+      "instance": {
+        "affiliation": "friend",
+        "amplifierValues": {},
+        "components": {
+          "equipmentFunction": {
+            "contractVersion": "1.0",
+            "definitionId": "orbat.definition.56c6739fe4c06e6a6b6bc8d85719b143",
+            "definitionRevision": 2,
+            "libraryId": "orbat.standard-symbol-library",
+            "libraryRevision": 1
+          },
+          "mainFunction": {
+            "contractVersion": "1.0",
+            "definitionId": "orbat.definition.3209c4c77199207165405c131f7b84d4",
+            "definitionRevision": 2,
+            "libraryId": "orbat.standard-symbol-library",
+            "libraryRevision": 1
+          }
+        },
+        "contractVersion": "1.0",
+        "domain": "equipment",
+        "id": "fixture.equipment-function-direct",
+        "status": {
+          "frame": "present",
+          "operatingState": "Ground"
+        },
+        "template": {
+          "contractVersion": "1.0",
+          "definitionId": "orbat.definition.3209c4c77199207165405c131f7b84d4",
+          "definitionRevision": 2,
+          "libraryId": "orbat.standard-symbol-library",
+          "libraryRevision": 1
+        }
+      },
+      "size": 96
+    },
+    {
+      "id": "equipment-function-direct-256",
+      "instance": {
+        "affiliation": "friend",
+        "amplifierValues": {},
+        "components": {
+          "equipmentFunction": {
+            "contractVersion": "1.0",
+            "definitionId": "orbat.definition.56c6739fe4c06e6a6b6bc8d85719b143",
+            "definitionRevision": 2,
+            "libraryId": "orbat.standard-symbol-library",
+            "libraryRevision": 1
+          },
+          "mainFunction": {
+            "contractVersion": "1.0",
+            "definitionId": "orbat.definition.3209c4c77199207165405c131f7b84d4",
+            "definitionRevision": 2,
+            "libraryId": "orbat.standard-symbol-library",
+            "libraryRevision": 1
+          }
+        },
+        "contractVersion": "1.0",
+        "domain": "equipment",
+        "id": "fixture.equipment-function-direct",
+        "status": {
+          "frame": "present",
+          "operatingState": "Ground"
+        },
+        "template": {
+          "contractVersion": "1.0",
+          "definitionId": "orbat.definition.3209c4c77199207165405c131f7b84d4",
+          "definitionRevision": 2,
+          "libraryId": "orbat.standard-symbol-library",
+          "libraryRevision": 1
+        }
+      },
+      "size": 256
+    },
+    {
+      "id": "equipment-variant-direct-32",
+      "instance": {
+        "affiliation": "friend",
+        "amplifierValues": {},
+        "components": {
+          "mainFunction": {
+            "contractVersion": "1.0",
+            "definitionId": "orbat.definition.3209c4c77199207165405c131f7b84d4",
+            "definitionRevision": 2,
+            "libraryId": "orbat.standard-symbol-library",
+            "libraryRevision": 1
+          },
+          "variant": {
+            "contractVersion": "1.0",
+            "definitionId": "orbat.definition.56c6739fe4c06e6a6b6bc8d85719b143.8568ed6f38ca",
+            "definitionRevision": 2,
+            "libraryId": "orbat.standard-symbol-library",
+            "libraryRevision": 1
+          }
+        },
+        "contractVersion": "1.0",
+        "domain": "equipment",
+        "id": "fixture.equipment-variant-direct",
+        "status": {
+          "frame": "present",
+          "operatingState": "Ground"
+        },
+        "template": {
+          "contractVersion": "1.0",
+          "definitionId": "orbat.definition.3209c4c77199207165405c131f7b84d4",
+          "definitionRevision": 2,
+          "libraryId": "orbat.standard-symbol-library",
+          "libraryRevision": 1
+        }
+      },
+      "size": 32
+    },
+    {
+      "id": "equipment-variant-direct-48",
+      "instance": {
+        "affiliation": "friend",
+        "amplifierValues": {},
+        "components": {
+          "mainFunction": {
+            "contractVersion": "1.0",
+            "definitionId": "orbat.definition.3209c4c77199207165405c131f7b84d4",
+            "definitionRevision": 2,
+            "libraryId": "orbat.standard-symbol-library",
+            "libraryRevision": 1
+          },
+          "variant": {
+            "contractVersion": "1.0",
+            "definitionId": "orbat.definition.56c6739fe4c06e6a6b6bc8d85719b143.8568ed6f38ca",
+            "definitionRevision": 2,
+            "libraryId": "orbat.standard-symbol-library",
+            "libraryRevision": 1
+          }
+        },
+        "contractVersion": "1.0",
+        "domain": "equipment",
+        "id": "fixture.equipment-variant-direct",
+        "status": {
+          "frame": "present",
+          "operatingState": "Ground"
+        },
+        "template": {
+          "contractVersion": "1.0",
+          "definitionId": "orbat.definition.3209c4c77199207165405c131f7b84d4",
+          "definitionRevision": 2,
+          "libraryId": "orbat.standard-symbol-library",
+          "libraryRevision": 1
+        }
+      },
+      "size": 48
+    },
+    {
+      "id": "equipment-variant-direct-96",
+      "instance": {
+        "affiliation": "friend",
+        "amplifierValues": {},
+        "components": {
+          "mainFunction": {
+            "contractVersion": "1.0",
+            "definitionId": "orbat.definition.3209c4c77199207165405c131f7b84d4",
+            "definitionRevision": 2,
+            "libraryId": "orbat.standard-symbol-library",
+            "libraryRevision": 1
+          },
+          "variant": {
+            "contractVersion": "1.0",
+            "definitionId": "orbat.definition.56c6739fe4c06e6a6b6bc8d85719b143.8568ed6f38ca",
+            "definitionRevision": 2,
+            "libraryId": "orbat.standard-symbol-library",
+            "libraryRevision": 1
+          }
+        },
+        "contractVersion": "1.0",
+        "domain": "equipment",
+        "id": "fixture.equipment-variant-direct",
+        "status": {
+          "frame": "present",
+          "operatingState": "Ground"
+        },
+        "template": {
+          "contractVersion": "1.0",
+          "definitionId": "orbat.definition.3209c4c77199207165405c131f7b84d4",
+          "definitionRevision": 2,
+          "libraryId": "orbat.standard-symbol-library",
+          "libraryRevision": 1
+        }
+      },
+      "size": 96
+    },
+    {
+      "id": "equipment-variant-direct-256",
+      "instance": {
+        "affiliation": "friend",
+        "amplifierValues": {},
+        "components": {
+          "mainFunction": {
+            "contractVersion": "1.0",
+            "definitionId": "orbat.definition.3209c4c77199207165405c131f7b84d4",
+            "definitionRevision": 2,
+            "libraryId": "orbat.standard-symbol-library",
+            "libraryRevision": 1
+          },
+          "variant": {
+            "contractVersion": "1.0",
+            "definitionId": "orbat.definition.56c6739fe4c06e6a6b6bc8d85719b143.8568ed6f38ca",
+            "definitionRevision": 2,
+            "libraryId": "orbat.standard-symbol-library",
+            "libraryRevision": 1
+          }
+        },
+        "contractVersion": "1.0",
+        "domain": "equipment",
+        "id": "fixture.equipment-variant-direct",
+        "status": {
+          "frame": "present",
+          "operatingState": "Ground"
+        },
+        "template": {
+          "contractVersion": "1.0",
+          "definitionId": "orbat.definition.3209c4c77199207165405c131f7b84d4",
+          "definitionRevision": 2,
+          "libraryId": "orbat.standard-symbol-library",
+          "libraryRevision": 1
+        }
+      },
+      "size": 256
     }
   ],
   "contractVersion": "1.0"

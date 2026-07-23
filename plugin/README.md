@@ -1,6 +1,10 @@
-# ORBAT Runtime Static Plugin v1.0.0
+# ORBAT Runtime Static Plugin v1.1.0
 
 This source builds a deterministic, platform-neutral static plugin for C4ISR Workbench. It contains no WinForms, GDI, System.Drawing, database, authentication, authorization, map placement, or C4ISR operational state.
+
+Canonical plugin ID: `c4isr.orbat-runtime`
+
+Renderer API v1: `renderSymbol(instance, options)`. The `options.definitions` collection must contain the exact definition revisions referenced by the instance.
 
 ## Ownership boundary
 
@@ -9,7 +13,9 @@ ORBAT owns symbol semantics, definitions, composition, legacy migration, and det
 ## Build and verify
 
 ```powershell
+npm run solution:build
 npm run plugin:build
+npm run plugin:verify
 ```
 
 The command converts the tracked legacy `.orbatsymbol.json` and `.orbatoverlay.json` files read-only, validates all JSON with Draft 2020-12 schemas, writes inspectable golden SVG fixtures, runs golden hash tests, creates checksums, and verifies the complete package.

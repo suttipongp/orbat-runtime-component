@@ -1,11 +1,13 @@
 {
   "name": "orbat-runtime-component",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
+    "solution:build": "dotnet build OrgHierarchyRuntimeComponents.slnx -c Release -m:1",
     "plugin:build": "py -3 plugin/tools/build_plugin.py",
     "plugin:verify": "py -3 plugin/tools/verify_plugin.py",
-    "plugin:golden": "py -3 plugin/tools/build_plugin.py --update-golden"
+    "plugin:golden": "py -3 plugin/tools/build_plugin.py --update-golden",
+    "web:harness": "py -3 -m http.server 4173 --directory ."
   }
 }

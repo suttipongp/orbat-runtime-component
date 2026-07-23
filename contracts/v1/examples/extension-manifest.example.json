@@ -1,8 +1,8 @@
 {
   "contractVersion": "1.0",
-  "id": "c4isr.orbat-platform",
+  "id": "c4isr.orbat-runtime",
   "name": "ORBAT Platform Module",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "publisher": "Sutti",
   "description": "ORBAT symbol definitions, renderers, and operational graphics for C4ISR Workbench.",
   "enabled": true,
@@ -55,7 +55,7 @@
         "title": "ORBAT SVG renderer",
         "requiredPermission": "orbat.read",
         "standard": "MIL-STD-2525",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "renderer": "orbat.renderers.svg",
         "supportedAffiliations": [
           "Friendly",

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 fill=%22%2311191f%22/%3E%3Ctext x=%2216%22 y=%2221%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2212%22 font-weight=%22700%22 fill=%22%2336c2b4%22%3EOR%3C/text%3E%3C/svg%3E">
+  <title>ORBAT Runtime Harness</title>
+  <link rel="stylesheet" href="./app.css">
+</head>
+<body>
+  <header class="command-bar">
+    <div class="product-mark" aria-label="ORBAT Runtime Harness">
+      <span class="mark" aria-hidden="true">OR</span>
+      <span><strong>ORBAT Runtime</strong><small>Web harness</small></span>
+    </div>
+    <div class="command-status" id="packageStatus" role="status"><span class="status-dot loading"></span>Loading package</div>
+    <div class="command-actions">
+      <button class="icon-button" id="reloadButton" type="button" title="Reload package" aria-label="Reload package">↻</button>
+      <button class="download-button" id="downloadButton" type="button" disabled>↓ SVG</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="library-panel" aria-label="Symbol templates">
+      <div class="panel-heading">
+        <div><h1>Templates</h1><p id="templateCount">0 placeable</p></div>
+      </div>
+      <div class="domain-switch" role="group" aria-label="Domain filter">
+        <button type="button" class="active" data-domain="all">All</button>
+        <button type="button" data-domain="land-unit">Land unit</button>
+        <button type="button" data-domain="equipment">Equipment</button>
+      </div>
+      <label class="search-field">
+        <span class="sr-only">Search templates</span>
+        <input id="searchInput" type="search" placeholder="Search function or variant">
+      </label>
+      <div class="template-list" id="templateList" tabindex="0"></div>
+    </aside>
+
+    <section class="preview-workspace" aria-label="Rendered symbol preview">
+      <div class="workspace-heading">
+        <div>
+          <h2 id="selectedName">Select a template</h2>
+          <p id="selectedMeta">Waiting for package definitions</p>
+        </div>
+        <div class="size-control">
+          <label for="primarySize">Canvas</label>
+          <select id="primarySize">
+            <option value="96">96 px</option>
+            <option value="160">160 px</option>
+            <option value="256" selected>256 px</option>
+            <option value="384">384 px</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="primary-stage">
+        <div class="symbol-canvas" id="primaryPreview" aria-live="polite"></div>
+        <div class="render-state" id="renderState"><span class="status-dot"></span><span>Not rendered</span></div>
+      </div>
+
+      <section class="comparison-band" aria-labelledby="affiliationHeading">
+        <div class="section-heading"><h3 id="affiliationHeading">Affiliation matrix</h3><span>Same definition and scale</span></div>
+        <div class="affiliation-grid" id="affiliationGrid"></div>
+      </section>
+
+      <section class="comparison-band" aria-labelledby="sizeHeading">
+        <div class="section-heading"><h3 id="sizeHeading">Output sizes</h3><span>Golden test dimensions</span></div>
+        <div class="size-grid" id="sizeGrid"></div>
+      </section>
+    </section>
+
+    <aside class="inspector-panel" aria-label="Composition inspector">
+      <div class="tabs" role="tablist">
+        <button type="button" class="active" role="tab" aria-selected="true" data-tab="compose">Compose</button>
+        <button type="button" role="tab" aria-selected="false" data-tab="diagnostics">Diagnostics</button>
+      </div>
+
+      <div class="tab-panel active" id="composePanel" role="tabpanel">
+        <div class="control-section">
+          <h3>Frame</h3>
+          <label>Affiliation<select id="affiliationSelect"><option value="friend">Friendly</option><option value="hostile">Hostile</option><option value="neutral">Neutral</option><option value="unknown">Unknown</option><option value="suspect">Suspect</option><option value="civilian">Civilian</option></select></label>
+          <label>Status<select id="statusSelect"><option value="present">Present</option><option value="planned-anticipated">Planned / anticipated</option></select></label>
+        </div>
+        <div class="control-section">
+          <h3>Composition</h3>
+          <label>Modifier 1<select id="modifier1Select"></select></label>
+          <label>Modifier 2<select id="modifier2Select"></select></label>
+          <label>Echelon<select id="echelonSelect"></select></label>
+          <label>Mobility<select id="mobilitySelect"></select></label>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="diagnosticsPanel" role="tabpanel" hidden>
+        <div class="metric-strip">
+          <div><strong id="definitionMetric">0</strong><span>Definitions</span></div>
+          <div><strong id="templateMetric">0</strong><span>Templates</span></div>
+          <div><strong id="checksumMetric">0</strong><span>Checksums</span></div>
+        </div>
+        <label class="check-row"><input id="missingRevisionToggle" type="checkbox"><span>Inject missing revision</span></label>
+        <div class="diagnostic-block"><h3>Renderer</h3><pre id="capabilitiesOutput">Loading…</pre></div>
+        <div class="diagnostic-block"><h3>Exact template reference</h3><pre id="referenceOutput">None</pre></div>
+        <div class="diagnostic-block"><h3>Warnings</h3><ul id="warningList"><li>None</li></ul></div>
+      </div>
+    </aside>
+  </main>
+
+  <div class="fatal-error" id="fatalError" role="alert" hidden></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

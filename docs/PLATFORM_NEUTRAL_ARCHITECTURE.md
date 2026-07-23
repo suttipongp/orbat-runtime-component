@@ -32,6 +32,14 @@ The ORBAT runtime supplies definitions, composition, rendering, and drawing
 tools to that host. It does not duplicate the host's overlay persistence,
 authorization, audit, synchronization, or MapLibre workspace.
 
+The canonical static plugin identity is `c4isr.orbat-runtime`. The legacy
+`c4isr.orbat-static-plugin` identifier is a transition alias owned by the host
+and must not be persisted as the configuration identity.
+
+Renderer API v1 is `renderSymbol(instance, options)`, where
+`options.definitions` contains the exact definition revisions required by the
+instance.
+
 ## Definition, Instance, and Placement
 
 These concerns remain separate:
